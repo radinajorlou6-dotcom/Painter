@@ -34,9 +34,9 @@ public class PlayerMovement : MonoBehaviour
     public float wallSlideSpeed = 2f;
     bool isWallSliding;
     //Wall jump variables
-    bool isWallJumping;
+    bool isWallJumping = false; //Prevents the player from changing direction mid air after a wall jump 
     float wallJumpDirection;
-    float wallJumpTime = 0.5f;
+    float wallJumpTime = 0.35f;
     float wallJumpTimer;
     public Vector2 wallJumpPower = new Vector2(5f, 10f);
 
@@ -99,12 +99,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isWallSliding)
         {
-            isWallJumping = false;
+            if (wallJumpTimer <= 0) isWallJumping = false;
             wallJumpDirection = -transform.localScale.x; //Jump in the opposite direction of the wall
-            wallJumpTimer = wallJumpTime; //Start wall jump timer
-            CancelInvoke(nameof(CancelWallJump)); //Cancel any existing wall jump cancellation
         }
-        else if(wallJumpTimer > 0f)
+        if(wallJumpTimer > 0f)
         {
             wallJumpTimer -= Time.deltaTime; //Decrease wall jump timer    
         }
@@ -123,39 +121,30 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump(InputAction.CallbackContext context)
     {
-        if (isGrounded) //prevents double jumping
+        if (context.performed && isGrounded) //hold jump = full jump power
         {
-            if (context.performed) //hold jump = full jump power
-            {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
-            }
-            else if (context.canceled) //if player taps rather than hold
-            {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
-            }   
-        } 
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
+        }
+        else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
+        }   
 
         //Wall jump mechanics
-        else if(context.performed && wallJumpTimer > 0f)
+        else if(context.performed && isWallSliding)
         {
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
-            wallJumpTimer = 0; //Reset wall jump timer
+            wallJumpTimer = wallJumpTime; //Reset wall jump timer
 
             //Force Flip
             if (transform.localScale.x != wallJumpDirection)
             {
                 FlipMain();
             }
-            Invoke(nameof(CancelWallJump), wallJumpTime + 0.1f); //Cancel wall jump after a short duration to prevent unintended movement)
-                                                                //Wall jump will last wallJumpTime seconds, but we can jump again after 
-                                                                //wallJumpTime + 0.1 seconds 
         }
 
-        while(!isGrounded && !WallCheck())
-        {
-            //do nothing player cant change velocity in the air unless they are wall jumping
-        }
+    
     }
 
     private void GroundCheck()
@@ -163,6 +152,8 @@ public class PlayerMovement : MonoBehaviour
         if(Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
         {
             isGrounded = true;
+            isWallJumping = false; //Reset wall jump state when grounded
+            wallJumpTimer = 0; //Reset wall jump timer when grounded
         }
         else
         {
