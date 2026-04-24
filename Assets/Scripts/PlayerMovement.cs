@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public Rigidbody2D rb;
+    [SerializeField] private Rigidbody2D rb;
     bool isFacingRight = true;
 
     //Movement variables
@@ -17,17 +17,17 @@ public class PlayerMovement : MonoBehaviour
 
     //Ground check variables
     [Header("GroundCheck")]
-    public Transform groundCheck;
-    public Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
-    public LayerMask groundLayer;
+    [SerializeField] Transform groundCheck;
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
+    [SerializeField] private LayerMask groundLayer;
     bool isGrounded = true;
 
 
     //Wallcheck variables
     [Header("WallCheck")]
-    public Transform wallCheck;
-    public Vector2 wallCheckSize = new Vector2(0.5f, 0.05f);
-    public LayerMask wallLayer;
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private Vector2 wallCheckSize = new Vector2(0.5f, 0.05f);
+    [SerializeField] private LayerMask wallLayer;
 
     //Wall movement variables
     [Header("WallMovement")]
@@ -38,13 +38,13 @@ public class PlayerMovement : MonoBehaviour
     float wallJumpDirection;
     float wallJumpTime = 0.35f;
     float wallJumpTimer;
-    public Vector2 wallJumpPower = new Vector2(5f, 10f);
+    [SerializeField] private Vector2 wallJumpPower = new Vector2(5f, 10f);
 
     //Gravity variables
     [Header("Gravity")]
-    public float baseGravity = 2;
-    public float maxFallSpeed = 18f;
-    public float fallMultiplier = 2f;
+    [SerializeField] private float baseGravity = 2;
+    [SerializeField] private float maxFallSpeed = 18f;
+    [SerializeField] private float fallMultiplier = 2f;
 
     // Start is called; once before the first execution of Update after the MonoBehaviour is created
     void Start()
