@@ -485,6 +485,8 @@ MonoBehaviour:
   firePoint: {fileID: 1861288808}
   projectileSpeed: 10
   fireRate: 0.5
+  shieldPrefab: {fileID: 0}
+  shieldDuration: 5
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1776,6 +1778,7 @@ GameObject:
   - component: {fileID: 1861288805}
   - component: {fileID: 1861288804}
   - component: {fileID: 1861288803}
+  - component: {fileID: 1861288809}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1839,9 +1842,81 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents:
   - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1861288803}
+        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+        m_MethodName: Move
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: d1a08337-5e7c-49ba-974e-36b9f3ba9be6
+    m_ActionName: 'Player/Move[/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]'
+  - m_PersistentCalls:
       m_Calls: []
     m_ActionId: b1ba10c9-bda2-4475-a08b-9de82ab28dad
     m_ActionName: 'Player/Look[/Mouse/delta,/Pen/delta]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1861288803}
+        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+        m_MethodName: Jump
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 7cbbfea1-0ed2-464c-b038-0bf3b1949aa5
+    m_ActionName: 'Player/Jump[/Keyboard/space,/Keyboard/upArrow,/Keyboard/w]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: ad409242-b364-4283-aee9-8d3a9cd68861
+    m_ActionName: 'Player/Melee attack[/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1861288809}
+        m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
+        m_MethodName: OnPrimaryAttack
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: fa9b81af-03bc-4930-917c-1bc2a4b7eb92
+    m_ActionName: Combat/New action
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1861288809}
+        m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
+        m_MethodName: OnPrimaryAttack
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 237ebe23-2c94-45cb-9bfe-409bd0ecd6bc
+    m_ActionName: 'Combat/Fire[/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: db6a133c-f271-4225-bada-98bfa20e9118
+    m_ActionName: 'Combat/Shield[/Mouse/rightButton]'
   - m_PersistentCalls:
       m_Calls: []
     m_ActionId: 15c67b26-8ba2-4e7f-8f79-3b22c899e5e3
@@ -1882,78 +1957,6 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 32e926a4-d11c-4ba6-8e5d-561b12b968ae
     m_ActionName: UI/TrackedDeviceOrientation
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1861288803}
-        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
-        m_MethodName: Jump
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 7cbbfea1-0ed2-464c-b038-0bf3b1949aa5
-    m_ActionName: 'Player/Jump[/Keyboard/space,/Keyboard/upArrow,/Keyboard/w]'
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: d1a08337-5e7c-49ba-974e-36b9f3ba9be6
-    m_ActionName: 'Player/Move[/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]'
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: ad409242-b364-4283-aee9-8d3a9cd68861
-    m_ActionName: 'Player/Melee attack[/Mouse/leftButton]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: fa9b81af-03bc-4930-917c-1bc2a4b7eb92
-    m_ActionName: Combat/New action
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 237ebe23-2c94-45cb-9bfe-409bd0ecd6bc
-    m_ActionName: 'Combat/Fire[/Mouse/leftButton]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: db6a133c-f271-4225-bada-98bfa20e9118
-    m_ActionName: 'Combat/Shield[/Mouse/rightButton]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -2099,6 +2102,20 @@ Transform:
   - {fileID: 409794980}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1861288809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861288802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+  PlayerCombat: {fileID: 409794981}
+  dragThreshold: 0.5
 --- !u!1 &2031669001
 GameObject:
   m_ObjectHideFlags: 0

@@ -24,17 +24,17 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float meleeDuration = 0.2f;
     [SerializeField] private float dmgMult = 1f;
     [SerializeField] private float meleeRange = 1f;
-
+    */ 
     //Shield variables
     [Header("Shield")]
     [SerializeField] private GameObject shieldPrefab;
+    public static bool isShieldActive = false;
     private GameObject currShield;
     private LineRenderer currLine;
     private EdgeCollider2D currCollider;
     private List<Vector2> shieldPoints;
     private float minPointDistance = 0.1f;
     [SerializeField] private float shieldDuration = 5f;
-    */
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -46,5 +46,18 @@ public class PlayerCombat : MonoBehaviour
     void Update()
     {
 
+    }
+
+    public void ToggleShield(bool isActive)
+    {
+        isShieldActive = isActive;
+        if (isActive)
+        {
+            // Logic to spawn the Shield Prefab goes here
+        }
+        else
+        {
+            // Logic to stop drawing goes here
+        }
     }
 }

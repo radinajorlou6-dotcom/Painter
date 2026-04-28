@@ -216,7 +216,7 @@
             "id": "2e654798-0b78-458c-b8fa-6ab927b1ba1a",
             "actions": [
                 {
-                    "name": "New action",
+                    "name": "Melee",
                     "type": "Button",
                     "id": "fa9b81af-03bc-4930-917c-1bc2a4b7eb92",
                     "expectedControlType": "",
@@ -247,11 +247,11 @@
                 {
                     "name": "",
                     "id": "b76d1c69-187d-4c04-aff9-e7965ea520cc",
-                    "path": "",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "Melee",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
