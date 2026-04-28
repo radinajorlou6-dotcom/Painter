@@ -13,7 +13,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform firePoint;
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private float fireRate = 0.5f;
-    private float nextFireTime = 0f;
+    [SerializeField] private float nextFireTime = 0f;
 
     //VARIABLES FOR LATER USE
     /*
@@ -36,6 +36,34 @@ public class PlayerCombat : MonoBehaviour
     private float minPointDistance = 0.1f;
     [SerializeField] private float shieldDuration = 5f;
 
+    public void RangedAttack(Vector2 target)
+    {
+        if (nextFireTime > 0)
+        {
+            nextFireTime -= Time.deltaTime;
+            return;
+        }
+        Debug.Log("Ranged Attack function called with target: " + target);
+
+        Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(new Vector3(target.x, target.y, 10f));
+        worldMousePos.z = 0f; // Ensure the z-coordinate is zero for 2D
+
+        Vector2 direction = (worldMousePos - firePoint.position).normalized;
+
+        GameObject bullet = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity); //Spawn projectile at firePoint
+
+        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = direction * projectileSpeed;
+        }
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        bullet.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        nextFireTime = fireRate; //Reset fire timer
+
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

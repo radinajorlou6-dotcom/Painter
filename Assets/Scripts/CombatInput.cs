@@ -26,6 +26,7 @@ public class CombatInput : MonoBehaviour
             {
                 // Call ranged attack function in PlayerCombat.cs
                 Debug.Log("Ranged Attack\n distance: " + distance);
+                PlayerCombat.RangedAttack(startPoint);
             }
             else
             {
