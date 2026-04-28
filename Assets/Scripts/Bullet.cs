@@ -9,7 +9,6 @@ public class Bullet : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Debug.Log("Bullet collided with: " + collision.gameObject.name);
-        /*
         // Check if the bullet collides with an enemy
         if (collision.CompareTag("Enemy"))
         {
@@ -21,7 +20,6 @@ public class Bullet : MonoBehaviour
             }
             // Destroy the bullet after hitting an enemy
         }
-              */  //YET TO BE IMPLEMENTED MAKE ENEMY FIRST
 
         if (!collision.CompareTag("Player"))
         {
