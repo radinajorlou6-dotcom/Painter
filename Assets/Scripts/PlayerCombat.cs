@@ -15,8 +15,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float fireRate = 0.5f;
     [SerializeField] private float nextFireTime = 0f;
 
-    //VARIABLES FOR LATER USE
-    /*
     //Melee attack variables
     [Header("Mellee Attack")]
     [SerializeField] private Transform weaponPoint;
@@ -24,7 +22,8 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float meleeDuration = 0.2f;
     [SerializeField] private float dmgMult = 1f;
     [SerializeField] private float meleeRange = 1f;
-    */ 
+    [SerializeField] private LayerMask enemyLayers;
+
     //Shield variables
     [Header("Shield")]
     [SerializeField] private GameObject shieldPrefab;
@@ -63,6 +62,20 @@ public class PlayerCombat : MonoBehaviour
 
         nextFireTime = fireRate; //Reset fire timer
 
+    }
+
+    public void PerformMelee(Vector2 attackDir)
+    {
+        weaponPoint.localPosition = attackDir.normalized * meleeRange; //Point weapon in the direction of users vector
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(weaponPoint.position, meleeRange, enemyLayers); //Detect enemies in range
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(10f * dmgMult); //Apply damage to enemies
+            }
+        }
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

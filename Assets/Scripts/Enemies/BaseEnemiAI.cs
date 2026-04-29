@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Rendering;
+using System.Collections.Specialized;
 
 public class BaseEnemyAI : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class BaseEnemyAI : MonoBehaviour
     [SerializeField] private float leapForce = 12f;
     [SerializeField] private float jumpInterval = 2f;
     [SerializeField] private float timeToTarget = 1f;
+
+    [Header("Attack")]
+    [SerializeField] private float damage = 34;
 
     private Rigidbody2D rb;
     private bool isJumping = false;
@@ -85,8 +89,12 @@ public class BaseEnemyAI : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             // Do Damage to Player (You'll need a PlayerHealth script!)
-            Debug.Log("BOOM! Enemy exploded on player!");
-
+            PlayerHealth ph = collision.gameObject.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(damage);
+                Debug.Log("BOOM! Enemy exploded on player!");
+            }
             // Suicide logic
             healthScript.TakeDamage(999);
         }

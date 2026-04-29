@@ -1,11 +1,11 @@
-//This script is intended to figure out what the player is trying to do in combat and then call the appropriate functions in PlayerCombat.cs
+//This script is intended to figure out what the player is trying to do in combat and then call the appropriate functions in playerCombat.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 
 public class CombatInput : MonoBehaviour
 {
-    [SerializeField] private PlayerCombat PlayerCombat; //Reference to the PlayerCombat script, assign in inspector
+    [SerializeField] private PlayerCombat playerCombat; //Reference to the PlayerCombat script, assign in inspector
 
     //Mouse tracker variables
     private Vector2 startPoint; //Where the player starts dragging the mouse
@@ -24,9 +24,9 @@ public class CombatInput : MonoBehaviour
             float distance = Vector2.Distance(startPoint, endPoint); //Calculate distance between start and end points
             if (distance < dragThreshold)
             {
-                // Call ranged attack function in PlayerCombat.cs
+                // Call ranged attack function in playerCombat.cs
                 Debug.Log("Ranged Attack\n distance: " + distance);
-                PlayerCombat.RangedAttack(startPoint);
+                playerCombat.RangedAttack(startPoint);
             }
             else
             {
@@ -39,8 +39,7 @@ public class CombatInput : MonoBehaviour
                 // Test it! Your console will output a clean vector like (0.5, -0.5)
                 Debug.Log("Swung Melee! Direction is: " + swipeDirection + "\n distance: " + distance);
 
-                // Note: Later, you will send this 'swipeDirection' variable 
-                // over to your WeaponController script to rotate the actual hitbox!
+                playerCombat.PerformMelee(swipeDirection);
             }
         }
     }
@@ -48,11 +47,11 @@ public class CombatInput : MonoBehaviour
     public void Shielddefend(InputAction.CallbackContext context)
     {
         if (context.started) {
-            PlayerCombat.ToggleShield(true);
+            playerCombat.ToggleShield(true);
             Debug.Log("Shield Activated");
         }
         else if (context.canceled) {
-            PlayerCombat.ToggleShield(false);
+            playerCombat.ToggleShield(false);
             Debug.Log("Shield Deactivated");
         }
     }
@@ -61,7 +60,6 @@ public class CombatInput : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
     }
 
     // Update is called once per frame
