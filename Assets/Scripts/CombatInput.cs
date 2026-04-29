@@ -31,7 +31,7 @@ public class CombatInput : MonoBehaviour
             else
             {
                 // 1. Calculate the raw vector (Destination minus Origin)
-                Vector2 rawDirection = endPoint - startPoint;
+                Vector2 rawDirection = endPoint - startPoint; 
 
                 // 2. Normalize it (Shrink length to 1, keep the exact direction)
                 Vector2 swipeDirection = rawDirection.normalized;
