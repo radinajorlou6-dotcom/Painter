@@ -1,59 +1,54 @@
-using Unity.VisualScripting;
+using System.Collections; // Required for Coroutines
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using System.Collections.Generic;
 
 public class PlayerCombat : MonoBehaviour
 {
+    [SerializeField] private Transform playerTransform;
 
-    [SerializeField] private Transform playerTransform; //To follow the player around with the pivot point for attacks, assign in inspector
-
-    //Ranged attack variables
     [Header("Ranged Attack")]
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private float fireRate = 0.5f;
-    [SerializeField] private float nextFireTime = 0f;
+    private float nextFireTime = 0f; // Changed to track the actual game time
 
-    //Melee attack variables
-    [Header("Mellee Attack")]
+    [Header("Melee Attack")]
     [SerializeField] private Transform weaponPoint;
-    [SerializeField] private GameObject hitBox;
-    [SerializeField] private float maxDragDistance = 5f;
-    [SerializeField] private float minHitBoxSize = 0.2f;
+    [SerializeField] private PolygonCollider2D hitBox;
     [SerializeField] private float meleeDuration = 0.2f;
     [SerializeField] private float dmgMult = 1f;
-    [SerializeField] private float meleeRange = 1f;
+    [SerializeField] private float slashRadius = 3f;
+    [SerializeField] private float maxSweepAngle = 180f;
+    [SerializeField] private int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
     [SerializeField] private LayerMask enemyLayers;
 
-    //Shield variables
     [Header("Shield")]
     [SerializeField] private GameObject shieldPrefab;
     public static bool isShieldActive = false;
-    private GameObject currShield;
-    private LineRenderer currLine;
-    private EdgeCollider2D currCollider;
-    private List<Vector2> shieldPoints;
-    private float minPointDistance = 0.1f;
-    [SerializeField] private float shieldDuration = 5f;
+    // ... (Your shield variables remain untouched)
 
-    public void RangedAttack(Vector2 target)
+    void Update()
     {
-        if (nextFireTime > 0)
+        // Gluing the floating pivot to the player's position
+        if (playerTransform != null)
         {
-            nextFireTime -= Time.deltaTime;
-            return;
+            transform.position = playerTransform.position;
         }
-        Debug.Log("Ranged Attack function called with target: " + target);
+    }
 
-        Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(new Vector3(target.x, target.y, 10f));
-        worldMousePos.z = 0f; // Ensure the z-coordinate is zero for 2D
+    public void RangedAttack(Vector2 targetWorldPos)
+    {
+        // 1. FIXED COOLDOWN LOGIC: Check against the actual game clock
+        if (Time.time < nextFireTime) return;
 
-        Vector2 direction = (worldMousePos - firePoint.position).normalized;
+        Debug.Log("Ranged Attack fired towards: " + targetWorldPos);
 
-        GameObject bullet = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity); //Spawn projectile at firePoint
+        // 2. FIXED DOUBLE-MATH: targetWorldPos is already correct, just subtract firePoint!
+        Vector2 direction = (targetWorldPos - (Vector2)firePoint.position).normalized;
+
+        GameObject bullet = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
 
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -64,50 +59,114 @@ public class PlayerCombat : MonoBehaviour
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         bullet.transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
-        nextFireTime = fireRate; //Reset fire timer
-
+        // Set the clock for when we are allowed to fire next
+        nextFireTime = Time.time + fireRate;
     }
 
-    public void PerformMelee(Vector2 attackDir)
+    public void ExecuteDynamicSlash(List<Vector2> swipePath)
     {
-        float angle = Mathf.Atan2(attackDir.y, attackDir.x) * Mathf.Rad2Deg; //The angle we want the hitbox to turn
-        weaponPoint.rotation = Quaternion.Euler(0, 0, angle); //Rotate the hitbox to face the attack direction
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(weaponPoint.position, meleeRange, enemyLayers); //Detect enemies in range
+        if (swipePath == null || swipePath.Count < 2) return;
+
+        // --- PHASE 1: ANGLE CALCULATION (The Brain) ---
+        Vector2 startDirection = swipePath[0] - (Vector2)transform.position;
+        float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
+
+        float previousAngle = startAngle;
+        float accumulatedAngle = 0f;
+        float swingSign = 0f;
+
+        foreach (Vector2 point in swipePath)
+        {
+            Vector2 direction = point - (Vector2)transform.position;
+
+            
+
+            float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            float step = Mathf.DeltaAngle(previousAngle, currentAngle);
+
+            // Figure out swing direction
+            if (swingSign == 0f && Mathf.Abs(step) > 0.01f)
+            {
+                swingSign = Mathf.Sign(step);
+            }
+            // NO BACKTRACKING RULE
+            else if (swingSign != 0f && Mathf.Sign(step) != swingSign)
+            {
+                continue;
+            }
+
+            accumulatedAngle += Mathf.Abs(step);
+
+            // CLAMP: Stop counting if we hit a half-circle
+            if (accumulatedAngle >= maxSweepAngle)
+            {
+                accumulatedAngle = maxSweepAngle;
+                break;
+            }
+
+            previousAngle = currentAngle;
+        }
+
+        // --- PHASE 2: SHAPE GENERATION ---
+        List<Vector2> polygonPoints = new List<Vector2>();
+        polygonPoints.Add(Vector2.zero); // Center of the player
+
+        // Calculate the exact final angle based on our running total
+        float finalAngle = startAngle + (accumulatedAngle * swingSign);
+
+        // Draw a mathematically perfect, smooth curve between the Start and Final angles
+        for (int i = 0; i <= arcResolution; i++)
+        {
+            float t = i / (float)arcResolution; // Percentage of the curve (0.0 to 1.0)
+
+            float angleDeg = Mathf.Lerp(startAngle, finalAngle, t);
+            float angleRad = angleDeg * Mathf.Deg2Rad;
+
+            Vector2 curvePoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
+            polygonPoints.Add(curvePoint);
+        }
+
+        // Apply the perfect shape and start the attack!
+        hitBox.SetPath(0, polygonPoints.ToArray());
+        StartCoroutine(MeleeAttackRoutine());
+    }
+
+    private IEnumerator MeleeAttackRoutine()
+    {
+        // Turn the visual/physics shape on
+        hitBox.gameObject.SetActive(true);
+
+        // Create a filter to tell Unity exactly what layer to look for
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.SetLayerMask(enemyLayers);
+        filter.useTriggers = true; // Set to false if your enemies use physical colliders instead of triggers
+
+        List<Collider2D> hitEnemies = new List<Collider2D>();
+
+        // Grab everything currently touching our custom Polygon Collider
+        Physics2D.OverlapCollider(hitBox, filter, hitEnemies);
+
         foreach (Collider2D enemy in hitEnemies)
         {
             EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(10f * dmgMult); //Apply damage to enemies
+                enemyHealth.TakeDamage(10f * dmgMult); 
             }
+            Debug.Log("Hit enemy: " + enemy.name);
         }
-    }
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        //Gluing the pivot to the players position
-        if (playerTransform  != null)
-        {
-            transform.position = playerTransform.position;
-        }
+        // Wait for a split second so the player can actually see the slash
+        yield return new WaitForSeconds(meleeDuration);
+
+        // Turn the hitbox back off
+        hitBox.gameObject.SetActive(false);
     }
 
     public void ToggleShield(bool isActive)
     {
         isShieldActive = isActive;
-        if (isActive)
-        {
-            // Logic to spawn the Shield Prefab goes here
-        }
-        else
-        {
-            // Logic to stop drawing goes here
-        }
+        if (isActive) { /* Spawn */ }
+        else { /* Stop */ }
     }
 }

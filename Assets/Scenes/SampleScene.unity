@@ -446,7 +446,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.51
+      value: 5.080002
       objectReference: {fileID: 0}
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -492,6 +492,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseEnemy (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5248116592175409411, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -507,6 +511,7 @@ GameObject:
   m_Component:
   - component: {fileID: 409794980}
   - component: {fileID: 409794981}
+  - component: {fileID: 409794982}
   m_Layer: 0
   m_Name: WeaponPivot
   m_TagString: Player
@@ -522,14 +527,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 409794979}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.73, y: -1.18, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1245257925}
   - {fileID: 1071937691}
-  m_Father: {fileID: 1861288808}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &409794981
 MonoBehaviour:
@@ -543,21 +548,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 280bda736492f1e4381c0df9fd397e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
+  playerTransform: {fileID: 1861288808}
   projectilePrefab: {fileID: 1706238613815357001, guid: e5457b28d80aee74bb848b6da48721f5, type: 3}
   firePoint: {fileID: 1071937691}
   projectileSpeed: 10
   fireRate: 0.16
-  nextFireTime: 0
-  weaponPoint: {fileID: 409794980}
-  hitBox: {fileID: 1245257924}
+  weaponPoint: {fileID: 1245257925}
+  hitBox: {fileID: 1245257926}
   meleeDuration: 0.2
   dmgMult: 1
-  meleeRange: 1
+  slashRadius: 3
+  maxSweepAngle: 180
+  arcResolution: 15
   enemyLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
   shieldPrefab: {fileID: 7337317707166962721, guid: da7bd5cca9dbd3d419a7813e5663ec60, type: 3}
-  shieldDuration: 5
+--- !u!114 &409794982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409794979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+  playerCombat: {fileID: 409794981}
+  dragThreshold: 0.5
+  slashDuration: 0.5
+  minDragDistance: 0.1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -738,7 +760,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.6
+      value: 7.05
       objectReference: {fileID: 0}
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -783,6 +805,10 @@ PrefabInstance:
     - target: {fileID: 5248116592175409411, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_Name
       value: BaseEnemy (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5248116592175409411, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1421,7 +1447,7 @@ Transform:
   m_GameObject: {fileID: 1245257924}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.03, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1893,26 +1919,6 @@ MonoBehaviour:
     m_ActionId: 7cbbfea1-0ed2-464c-b038-0bf3b1949aa5
     m_ActionName: 'Player/Jump[/Keyboard/space,/Keyboard/upArrow,/Keyboard/w]'
   - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: ad409242-b364-4283-aee9-8d3a9cd68861
-    m_ActionName: 'Player/Melee attack[/Mouse/leftButton]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1861288809}
-        m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
-        m_MethodName: OnPrimaryAttack
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: fa9b81af-03bc-4930-917c-1bc2a4b7eb92
-    m_ActionName: Combat/New action
-  - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1861288809}
         m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
@@ -2126,7 +2132,6 @@ Transform:
   m_Children:
   - {fileID: 1414468934}
   - {fileID: 1686903989}
-  - {fileID: 409794980}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1861288809
@@ -2141,7 +2146,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+  playerCombat: {fileID: 409794981}
   dragThreshold: 0.5
+  slashDuration: 0.5
+  minDragDistance: 0.1
 --- !u!114 &1861288810
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2456,7 +2464,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.52
+      value: 2.250001
       objectReference: {fileID: 0}
     - target: {fileID: 2680660087328434082, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2502,6 +2510,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseEnemy
       objectReference: {fileID: 0}
+    - target: {fileID: 5248116592175409411, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2519,3 +2531,4 @@ SceneRoots:
   - {fileID: 7150818042087843969}
   - {fileID: 388611463}
   - {fileID: 592359974}
+  - {fileID: 409794980}

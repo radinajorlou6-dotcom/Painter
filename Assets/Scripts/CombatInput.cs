@@ -1,69 +1,108 @@
-//This script is intended to figure out what the player is trying to do in combat and then call the appropriate functions in playerCombat.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using System.Collections.Generic; // Required to use Lists
 
 public class CombatInput : MonoBehaviour
 {
-    [SerializeField] private PlayerCombat playerCombat; //Reference to the PlayerCombat script, assign in inspector
+    [SerializeField] private PlayerCombat playerCombat;
 
-    //Mouse tracker variables
-    private Vector2 startPoint; //Where the player starts dragging the mouse
-    private Vector2 endPoint; //Where the player releases the mouse
-    [SerializeField] private float dragThreshold = 0.5f; //Minimum distance for a drag to be a melee
+    [Header("Combat Tuning")]
+    [Tooltip("Minimum distance in World Units for a click to become a slash")]
+    [SerializeField] private float dragThreshold = 1.5f;
+    [SerializeField] private float slashDuration = 0.5f; // How long the slash effect should last (seconds)
+    private float slashTimer = 0f; // Timer to track slash duration
+
+    [Tooltip("How far the mouse must move to drop a new breadcrumb (World Units)")]
+    [SerializeField] private float minDragDistance = 0.1f;
+
+    // Mouse tracker variables
+    private List<Vector2> mousePath = new List<Vector2>();
+    private bool isDragging = false;
+    private Camera mainCam;
+
+    void Start()
+    {
+        // Caching the main camera is an essential performance optimization
+        mainCam = Camera.main;
+    }
 
     public void OnPrimaryAttack(InputAction.CallbackContext context)
     {
-        if (context.started) //When the player presses down
+        if (context.started) // When the player presses down
         {
-            startPoint = Mouse.current.position.ReadValue(); //Record initial mouse position
+            isDragging = true;
+            mousePath.Clear(); // Clear the old slash
+
+            // Record the first point in World Space
+            Vector2 worldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            mousePath.Add(worldPos);
         }
-        if (context.canceled) //When player lets go 
+        else if (context.canceled) // When player lets go 
         {
-            endPoint = Mouse.current.position.ReadValue(); ; //Record final mouse position
-            float distance = Vector2.Distance(startPoint, endPoint); //Calculate distance between start and end points
+            isDragging = false;
+
+            // Make sure we have at least one point to avoid errors
+            if (mousePath.Count == 0) return;
+
+            // Record the absolute final point
+            Vector2 endWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            mousePath.Add(endWorldPos);
+
+            // Calculate distance between the very first point and the final point
+            float distance = Vector2.Distance(mousePath[0], endWorldPos);
+
             if (distance < dragThreshold)
             {
-                // Call ranged attack function in playerCombat.cs
-                Debug.Log("Ranged Attack\n distance: " + distance);
-                playerCombat.RangedAttack(startPoint);
+                // The drag was too short. Treat it as a Tap/Click to shoot!
+                Debug.Log("Ranged Attack! Distance: " + distance);
+                playerCombat.RangedAttack(mousePath[0]);
             }
             else
             {
-                // 1. Calculate the raw vector (Destination minus Origin)
-                Vector2 rawDirection = endPoint - startPoint; 
+                // They dragged it far enough! Pass the full breadcrumb list to the muscle.
+                Debug.Log("Swung Melee! Path length (breadcrumbs): " + mousePath.Count);
 
-                // 2. Normalize it (Shrink length to 1, keep the exact direction)
-                Vector2 swipeDirection = rawDirection.normalized;
-
-                // Test it! Your console will output a clean vector like (0.5, -0.5)
-                Debug.Log("Swung Melee! Direction is: " + swipeDirection + "\n distance: " + distance);
-
-                playerCombat.PerformMelee(swipeDirection);
+                // IMPORTANT: Make sure you update your playerCombat script to accept the List!
+                playerCombat.ExecuteDynamicSlash(mousePath);
             }
         }
     }
 
-    public void Shielddefend(InputAction.CallbackContext context)
+    public void ShieldDefend(InputAction.CallbackContext context)
     {
-        if (context.started) {
+        if (context.started)
+        {
             playerCombat.ToggleShield(true);
             Debug.Log("Shield Activated");
         }
-        else if (context.canceled) {
+        else if (context.canceled)
+        {
             playerCombat.ToggleShield(false);
             Debug.Log("Shield Deactivated");
         }
     }
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
     void Update()
     {
+        // If the player is currently holding down the attack button, record the path
+        if (isDragging)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector2 lastPoint = mousePath[mousePath.Count - 1];
+
+            // Only drop a breadcrumb if we moved far enough from the last point
+            if (Vector2.Distance(lastPoint, currentWorldPos) > minDragDistance)
+            {
+                mousePath.Add(currentWorldPos);
+            }
+            slashTimer += Time.deltaTime;
+            if (slashTimer >= slashDuration)
+            {
+                isDragging = false;
+                slashTimer = 0f;
+                playerCombat.ExecuteDynamicSlash(mousePath);
+                mousePath.Clear();
+            }
+        }
     }
 }
