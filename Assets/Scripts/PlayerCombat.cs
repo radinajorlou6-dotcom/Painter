@@ -24,10 +24,188 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
     [SerializeField] private LayerMask enemyLayers;
 
-    [Header("Shield")]
-    [SerializeField] private GameObject shieldPrefab;
-    public static bool isShieldActive = false;
-    // ... (Your shield variables remain untouched)
+    [Header("Shield Drawing Settings")]
+    [SerializeField] private LineRenderer shieldLine;
+    [SerializeField] private EdgeCollider2D shieldCollider;
+    [SerializeField] private float maxShieldRadius = 3f;
+    [SerializeField] private float minShieldRadius = 0.5f;
+    [SerializeField] private float minPointDistance = 0.2f;
+    [Tooltip("The total physical length of the line the player is allowed to draw")]
+    [SerializeField] private float maxPaintAmount = 10f;
+    private struct ShieldNode
+    {
+        public Vector2 localPosition;
+        public float birthTime;
+    }
+
+    [Header("Shield Durability Settings")]
+    [Tooltip("How long the shield lasts after letting go")]
+    [SerializeField] private float shieldDuration = 1f;
+    [Tooltip("How many hits the shield can take before breaking")]
+    [SerializeField] private int maxShieldHits = 1;
+
+    // Internal State
+    private List<ShieldNode> shieldNodes = new List<ShieldNode>();
+    private float currentPaintUsed = 0f;
+    private bool outOfPaint = false;
+    private int currentHitsRemaining;
+    private Coroutine shieldTimerRoutine;
+
+
+    #region ShieldLogic
+    public void StartNewShield()
+    {
+        // Cancel any active self-destruct timers from a previous shield
+        if (shieldTimerRoutine != null) StopCoroutine(shieldTimerRoutine);
+
+        shieldNodes.Clear();
+        currentPaintUsed = 0f;
+        outOfPaint = false;
+
+        shieldLine.positionCount = 0;
+        shieldCollider.points = new Vector2[0];
+
+        shieldLine.enabled = true;
+        shieldCollider.enabled = true;
+    }
+
+    public void AddShieldPoint(Vector2 worldPos)
+    {
+        if (outOfPaint) return; // Stop drawing if the paint tube is empty
+
+        Vector2 offset = worldPos - (Vector2)transform.position;
+        float distanceFromCenter = offset.magnitude;
+
+        // THE DEADZONE: Ignore points too close to the center
+        if (distanceFromCenter < minShieldRadius) return;
+
+        // CLAMP TO RADIUS: Pull the point to the edge of the bubble if it's too far
+        if (distanceFromCenter > maxShieldRadius)
+        {
+            offset = offset.normalized * maxShieldRadius;
+        }
+
+        if (shieldNodes.Count == 0)
+        {
+            shieldNodes.Add(new ShieldNode { localPosition = offset, birthTime = Time.time });
+            UpdateShieldVisuals();
+            return;
+        }
+
+        // Calculate the physical length of this new line segment
+        float segmentLength = Vector2.Distance(shieldNodes[shieldNodes.Count - 1].localPosition, offset);
+
+        if (segmentLength > minPointDistance)
+        {
+            // THE PAINT LIMIT: Check if adding this line would exceed our total ink
+            if (currentPaintUsed + segmentLength > maxPaintAmount)
+            {
+                outOfPaint = true; // Lock the shield
+                return;
+            }
+
+            // Consume the paint and add the point!
+            currentPaintUsed += segmentLength;
+
+            ShieldNode newNode = new ShieldNode
+            {
+                localPosition = offset,
+                birthTime = Time.time,
+            };
+            shieldNodes.Add(newNode);
+            UpdateShieldVisuals();
+        }
+    }
+
+    public void DeployShield()
+    {
+        // The player let go! Arm the shield with health and start the countdown.
+        currentHitsRemaining = maxShieldHits;
+        shieldTimerRoutine = StartCoroutine(ShieldCountdown());
+    }
+
+    private IEnumerator ShieldCountdown()
+    {
+        // Wait for the editable duration
+        yield return new WaitForSeconds(shieldDuration);
+        BreakShield();
+    }
+
+    // Call this from your Enemy or Projectile script when they hit the shield!
+    public void TakeShieldHit()
+    {
+        currentHitsRemaining--;
+        if (currentHitsRemaining <= 0)
+        {
+            BreakShield();
+        }
+    }
+
+    private void BreakShield()
+    {
+        // Turn the visuals and physics off
+        shieldLine.enabled = false;
+        shieldCollider.enabled = false;
+    }
+
+    private void UpdateShieldVisuals()
+    {
+        shieldLine.positionCount = shieldNodes.Count;
+        for (int i = 0; i < shieldNodes.Count; i++)
+        {
+            shieldLine.SetPosition(i, new Vector3(shieldNodes[i].localPosition.x, shieldNodes[i].localPosition.y, 0));
+        }
+
+        // Edge Colliders legally require at least 2 points to exist.
+        if (shieldNodes.Count > 1)
+        {
+            shieldCollider.enabled = true;
+
+            // Convert our Nodes back into a Vector2 array for the physics engine
+            Vector2[] physicsPoints = new Vector2[shieldNodes.Count];
+            for (int i = 0; i < shieldNodes.Count; i++)
+            {
+                physicsPoints[i] = shieldNodes[i].localPosition;
+            }
+            shieldCollider.points = physicsPoints;
+        }
+        else
+        {
+            // If we only have 1 point left, physics can't run, so turn the wall off early
+            shieldCollider.enabled = false;
+        }
+    }
+
+    private void FadeOldShieldInk()
+    {
+        if (shieldNodes.Count == 0) return;
+
+        bool nodesRemoved = false;
+
+        // Look at the oldest node (Index 0). If it's older than our duration, delete it!
+        // We use a while-loop because multiple points might expire in the exact same frame.
+        while (shieldNodes.Count > 0 && Time.time - shieldNodes[0].birthTime > shieldDuration)
+        {
+            shieldNodes.RemoveAt(0);
+            nodesRemoved = true;
+        }
+
+        // If we deleted points, we need to update the visual line and the physics wall
+        if (nodesRemoved)
+        {
+            UpdateShieldVisuals();
+
+            // If the entire shield faded away, completely turn off the colliders
+            if (shieldNodes.Count == 0)
+            {
+                shieldLine.enabled = false;
+                shieldCollider.enabled = false;
+            }
+        }
+    }
+
+    #endregion
+
 
     void Update()
     {
@@ -36,6 +214,7 @@ public class PlayerCombat : MonoBehaviour
         {
             transform.position = playerTransform.position;
         }
+        FadeOldShieldInk(); // Continuously check if any shield points need to fade away
     }
 
     public void RangedAttack(Vector2 targetWorldPos)
@@ -161,12 +340,5 @@ public class PlayerCombat : MonoBehaviour
 
         // Turn the hitbox back off
         hitBox.gameObject.SetActive(false);
-    }
-
-    public void ToggleShield(bool isActive)
-    {
-        isShieldActive = isActive;
-        if (isActive) { /* Spawn */ }
-        else { /* Stop */ }
     }
 }

@@ -86,7 +86,21 @@ public class BaseEnemyAI : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        // Example inside an EnemyBullet.cs script
+        if (collision.gameObject.CompareTag("Shield"))
+        {
+            // Find the PlayerCombat script and tell it the shield took a hit
+            PlayerCombat cS = collision.gameObject.GetComponentInParent<PlayerCombat>();
+            if(cS != null)
+            {
+                cS.TakeShieldHit();
+            }
+
+            healthScript.TakeDamage(999);
+            
+        }
+
+        else if (collision.gameObject.CompareTag("Player"))
         {
             // Do Damage to Player (You'll need a PlayerHealth script!)
             PlayerHealth ph = collision.gameObject.GetComponent<PlayerHealth>();
@@ -98,5 +112,7 @@ public class BaseEnemyAI : MonoBehaviour
             // Suicide logic
             healthScript.TakeDamage(999);
         }
+
+        Debug.Log("Enemy collided with: " + collision.gameObject.name);
     }
 }

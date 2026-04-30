@@ -272,11 +272,11 @@
                 },
                 {
                     "name": "",
-                    "id": "04efcd07-a19f-4ba3-9f0d-79ebec5edde3",
+                    "id": "04a1eccd-856b-4356-aaec-66cd0648d9b7",
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Keyboard&Mouse",
+                    "groups": "",
                     "action": "Shield",
                     "isComposite": false,
                     "isPartOfComposite": false

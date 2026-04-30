@@ -6,7 +6,7 @@ public class PlayerHealth : MonoBehaviour
 {
 
     [SerializeField] private float maxHealth = 100f;
-    private float health;
+    [SerializeField] private float health;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

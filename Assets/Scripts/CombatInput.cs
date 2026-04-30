@@ -20,9 +20,10 @@ public class CombatInput : MonoBehaviour
     private bool isDragging = false;
     private Camera mainCam;
 
+    private bool isShieldActive = false;
+
     void Start()
     {
-        // Caching the main camera is an essential performance optimization
         mainCam = Camera.main;
     }
 
@@ -31,9 +32,9 @@ public class CombatInput : MonoBehaviour
         if (context.started) // When the player presses down
         {
             isDragging = true;
-            mousePath.Clear(); // Clear the old slash
+            slashTimer = 0f; // FIX 2: Reset the timer on every new click!
+            mousePath.Clear();
 
-            // Record the first point in World Space
             Vector2 worldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             mousePath.Add(worldPos);
         }
@@ -41,28 +42,21 @@ public class CombatInput : MonoBehaviour
         {
             isDragging = false;
 
-            // Make sure we have at least one point to avoid errors
             if (mousePath.Count == 0) return;
 
-            // Record the absolute final point
             Vector2 endWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             mousePath.Add(endWorldPos);
 
-            // Calculate distance between the very first point and the final point
             float distance = Vector2.Distance(mousePath[0], endWorldPos);
 
             if (distance < dragThreshold)
             {
-                // The drag was too short. Treat it as a Tap/Click to shoot!
                 Debug.Log("Ranged Attack! Distance: " + distance);
                 playerCombat.RangedAttack(mousePath[0]);
             }
             else
             {
-                // They dragged it far enough! Pass the full breadcrumb list to the muscle.
-                Debug.Log("Swung Melee! Path length (breadcrumbs): " + mousePath.Count);
-
-                // IMPORTANT: Make sure you update your playerCombat script to accept the List!
+                Debug.Log("Swung Melee! Path length: " + mousePath.Count);
                 playerCombat.ExecuteDynamicSlash(mousePath);
             }
         }
@@ -72,37 +66,54 @@ public class CombatInput : MonoBehaviour
     {
         if (context.started)
         {
-            playerCombat.ToggleShield(true);
-            Debug.Log("Shield Activated");
+            isShieldActive = true;
+            playerCombat.StartNewShield();
         }
         else if (context.canceled)
         {
-            playerCombat.ToggleShield(false);
-            Debug.Log("Shield Deactivated");
+            isShieldActive = false;
+            // Note: Since we switched to fading ink segments in the last step, 
+            // you might not actually need DeployShield() anymore if your PlayerCombat Update handles the fading!
+            // But leaving it here is safe if you still use it.
         }
     }
 
     void Update()
     {
-        // If the player is currently holding down the attack button, record the path
+        // 1. --- SLASH LOGIC ---
         if (isDragging)
         {
             Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             Vector2 lastPoint = mousePath[mousePath.Count - 1];
 
-            // Only drop a breadcrumb if we moved far enough from the last point
             if (Vector2.Distance(lastPoint, currentWorldPos) > minDragDistance)
             {
                 mousePath.Add(currentWorldPos);
             }
+
+            // The Auto-Slash Timeout
             slashTimer += Time.deltaTime;
             if (slashTimer >= slashDuration)
             {
                 isDragging = false;
                 slashTimer = 0f;
-                playerCombat.ExecuteDynamicSlash(mousePath);
+
+                // Safety check: Don't execute a slash if they barely moved before the timeout
+                float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
+                if (distanceTraveled >= dragThreshold)
+                {
+                    playerCombat.ExecuteDynamicSlash(mousePath);
+                }
+
                 mousePath.Clear();
             }
+        }
+
+        // 2. --- SHIELD LOGIC (FIX 1: Added back in!) ---
+        if (isShieldActive)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            playerCombat.AddShieldPoint(currentWorldPos);
         }
     }
 }
