@@ -43,6 +43,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float shieldDuration = 1f;
     [Tooltip("How many hits the shield can take before breaking")]
     [SerializeField] private int maxShieldHits = 1;
+    [SerializeField] private LayerMask environment;
 
     // Internal State
     private List<ShieldNode> shieldNodes = new List<ShieldNode>();
@@ -84,9 +85,11 @@ public class PlayerCombat : MonoBehaviour
         {
             offset = offset.normalized * maxShieldRadius;
         }
-
+        Vector2 clampWorldPos = (Vector2)transform.position + offset;
         if (shieldNodes.Count == 0)
         {
+            RaycastHit2D hitFirst = Physics2D.Linecast(transform.position, clampWorldPos, environment);
+            if (hitFirst.collider != null) return; //We hit environment abort
             shieldNodes.Add(new ShieldNode { localPosition = offset, birthTime = Time.time });
             UpdateShieldVisuals();
             return;
@@ -97,10 +100,17 @@ public class PlayerCombat : MonoBehaviour
 
         if (segmentLength > minPointDistance)
         {
+            Vector2 lastWorldPos = (Vector2)transform.position + shieldNodes[shieldNodes.Count - 1].localPosition; //Find pos of last dot
+            RaycastHit2D hit = Physics2D.Linecast(lastWorldPos, clampWorldPos, environment);
+            if (hit.collider != null)
+            {
+                outOfPaint = true; // Lock the shield if we hit an obstacle
+                return;
+            }
             // THE PAINT LIMIT: Check if adding this line would exceed our total ink
             if (currentPaintUsed + segmentLength > maxPaintAmount)
             {
-                outOfPaint = true; // Lock the shield
+             // Lock the shield
                 return;
             }
 
