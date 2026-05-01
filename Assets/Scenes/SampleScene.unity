@@ -566,7 +566,7 @@ MonoBehaviour:
   hitBox: {fileID: 1245257926}
   meleeDuration: 0.2
   dmgMult: 1
-  slashRadius: 3
+  slashRadius: 1
   maxSweepAngle: 180
   arcResolution: 15
   enemyLayers:
@@ -574,7 +574,7 @@ MonoBehaviour:
     m_Bits: 8
   shieldLine: {fileID: 871835975}
   shieldCollider: {fileID: 871835973}
-  maxShieldRadius: 3
+  maxShieldRadius: 1
   minShieldRadius: 0.5
   minPointDistance: 0.2
   maxPaintAmount: 10
@@ -1767,7 +1767,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1245257925
 Transform:
   m_ObjectHideFlags: 0
@@ -1791,7 +1791,7 @@ PolygonCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1245257924}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}

@@ -264,14 +264,13 @@ public class PlayerCombat : MonoBehaviour
         float accumulatedAngle = 0f;
         float swingSign = 0f;
 
+
         foreach (Vector2 point in swipePath)
         {
             Vector2 direction = point - (Vector2)transform.position;
-
-            
-
             float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             float step = Mathf.DeltaAngle(previousAngle, currentAngle);
+
 
             // Figure out swing direction
             if (swingSign == 0f && Mathf.Abs(step) > 0.01f)
@@ -284,14 +283,14 @@ public class PlayerCombat : MonoBehaviour
                 continue;
             }
 
-            accumulatedAngle += Mathf.Abs(step);
-
             // CLAMP: Stop counting if we hit a half-circle
             if (accumulatedAngle >= maxSweepAngle)
             {
                 accumulatedAngle = maxSweepAngle;
                 break;
             }
+            accumulatedAngle += Mathf.Abs(step);
+
 
             previousAngle = currentAngle;
         }
@@ -303,16 +302,48 @@ public class PlayerCombat : MonoBehaviour
         // Calculate the exact final angle based on our running total
         float finalAngle = startAngle + (accumulatedAngle * swingSign);
 
+        // We need to track the physical WORLD position of the blade's edge as it swings
+        float startAngleRad = startAngle * Mathf.Deg2Rad;
+        Vector2 prevCurveLocal = new Vector2(Mathf.Cos(startAngleRad), Mathf.Sin(startAngleRad)) * slashRadius;
+        Vector2 prevCurveWorld = (Vector2)transform.position + prevCurveLocal;
+
         // Draw a mathematically perfect, smooth curve between the Start and Final angles
         for (int i = 0; i <= arcResolution; i++)
         {
-            float t = i / (float)arcResolution; // Percentage of the curve (0.0 to 1.0)
-
+            float t = i / (float)arcResolution;
             float angleDeg = Mathf.Lerp(startAngle, finalAngle, t);
             float angleRad = angleDeg * Mathf.Deg2Rad;
 
-            Vector2 curvePoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
-            polygonPoints.Add(curvePoint);
+            // Calculate exactly where this chunk of the blade is
+            Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
+            Vector2 curveWorldPoint = (Vector2)transform.position + curveLocalPoint;
+
+            // Don't raycast on the very first point (it has no previous point to cast from)
+            if (i == 0)
+            {
+                RaycastHit2D firstHit = Physics2D.Linecast(transform.position, curveWorldPoint, environment); //shoot a linecast from player to first point
+
+                if (firstHit.collider != null) break;
+            }
+            else if (i > 0)
+            {
+                // Shoot a laser along the perimeter edge of the blade as it swings
+                RaycastHit2D edgeHit = Physics2D.Linecast(prevCurveWorld, curveWorldPoint, environment);
+
+                if (edgeHit.collider != null)
+                {
+                    // THE SWORD HIT A WALL!
+                    // We BREAK out of the loop. This stops adding points, effectively 
+                    // "chopping off" the rest of the pie slice right at the wall.
+                    break;
+                }
+            }
+
+            // If no wall was hit, safely add the point to our hitbox shape
+            polygonPoints.Add(curveLocalPoint);
+
+            // Update the tracker for the next frame of the swing
+            prevCurveWorld = curveWorldPoint;
         }
 
         // Apply the perfect shape and start the attack!
