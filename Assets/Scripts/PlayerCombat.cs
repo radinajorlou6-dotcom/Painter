@@ -318,7 +318,7 @@ public class PlayerCombat : MonoBehaviour
             Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
             Vector2 curveWorldPoint = (Vector2)transform.position + curveLocalPoint;
 
-            // Don't raycast on the very first point (it has no previous point to cast from)
+            // Raycast from player to point on first point
             if (i == 0)
             {
                 RaycastHit2D firstHit = Physics2D.Linecast(transform.position, curveWorldPoint, environment); //shoot a linecast from player to first point
@@ -328,9 +328,10 @@ public class PlayerCombat : MonoBehaviour
             else if (i > 0)
             {
                 // Shoot a laser along the perimeter edge of the blade as it swings
-                RaycastHit2D edgeHit = Physics2D.Linecast(prevCurveWorld, curveWorldPoint, environment);
+                RaycastHit2D edgeHit = Physics2D.Linecast(prevCurveWorld, curveWorldPoint, environment); //Check if theres obstacle between last point and curr point
+                RaycastHit2D playerhit = Physics2D.Linecast(transform.position, curveWorldPoint, environment); //Check if theres obstacle between player and curr point
 
-                if (edgeHit.collider != null)
+                if (edgeHit.collider != null || playerhit.collider != null)
                 {
                     // THE SWORD HIT A WALL!
                     // We BREAK out of the loop. This stops adding points, effectively 

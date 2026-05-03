@@ -2320,10 +2320,6 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 32e926a4-d11c-4ba6-8e5d-561b12b968ae
     m_ActionName: UI/TrackedDeviceOrientation
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 4bbd82a1-c311-4708-abd7-dff6982c04f4
-    m_ActionName: 'Combat/DrawPlatform[/Keyboard/shift,/Mouse/leftButton]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

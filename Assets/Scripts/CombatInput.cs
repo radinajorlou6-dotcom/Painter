@@ -22,6 +22,10 @@ public class CombatInput : MonoBehaviour
 
     private bool isShieldActive = false;
 
+    [Header("Platform Drawing")]
+    [SerializeField] private PlayerPlatform drawScript;
+    private bool isDrawActive = false;
+
     void Start()
     {
         mainCam = Camera.main;
@@ -32,7 +36,7 @@ public class CombatInput : MonoBehaviour
         if (context.started) // When the player presses down
         {
             isDragging = true;
-            slashTimer = 0f; // FIX 2: Reset the timer on every new click!
+            slashTimer = 0f; // Reset the timer on every new click!
             mousePath.Clear();
 
             Vector2 worldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
@@ -76,6 +80,13 @@ public class CombatInput : MonoBehaviour
             // you might not actually need DeployShield() anymore if your PlayerCombat Update handles the fading!
             // But leaving it here is safe if you still use it.
         }
+    }
+
+    public void Draw(InputAction.CallbackContext context)
+    {
+        if (context.started) {
+            isDrawActive = true;
+            drawScript.
     }
 
     void Update()
