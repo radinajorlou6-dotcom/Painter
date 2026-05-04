@@ -43,6 +43,18 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Environment
+    uniqueID: 2644255863
+    locked: 0
+  - name: Drawn Platforms
+    uniqueID: 2539216823
+    locked: 0
+  - name: Enemies
+    uniqueID: 1701163479
+    locked: 0
+  - name: Player
+    uniqueID: 794074623
+    locked: 0
   m_RenderingLayers:
   - Default
   m_MigratedRenderPipelines: []
