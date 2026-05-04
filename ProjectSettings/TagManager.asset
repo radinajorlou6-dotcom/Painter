@@ -10,14 +10,14 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Enemies
+  - Drawn Platforms
   - Water
   - UI
   - Ground
   - Walls
   - Player
   - Shield
-  - 
+  - Enemies
   - 
   - 
   - 

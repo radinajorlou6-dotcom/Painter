@@ -519,7 +519,6 @@ GameObject:
   m_Component:
   - component: {fileID: 409794980}
   - component: {fileID: 409794981}
-  - component: {fileID: 409794982}
   m_Layer: 0
   m_Name: WeaponPivot
   m_TagString: Player
@@ -583,22 +582,6 @@ MonoBehaviour:
   environment:
     serializedVersion: 2
     m_Bits: 192
---- !u!114 &409794982
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 409794979}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CombatInput
-  playerCombat: {fileID: 409794981}
-  dragThreshold: 0.5
-  slashDuration: 0.5
-  minDragDistance: 0.1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2148,8 +2131,8 @@ GameObject:
   - component: {fileID: 1861288805}
   - component: {fileID: 1861288804}
   - component: {fileID: 1861288803}
-  - component: {fileID: 1861288809}
   - component: {fileID: 1861288810}
+  - component: {fileID: 1861288811}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -2250,7 +2233,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Jump[/Keyboard/space,/Keyboard/upArrow,/Keyboard/w]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1861288809}
+      - m_Target: {fileID: 1861288811}
         m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
         m_MethodName: OnPrimaryAttack
         m_Mode: 0
@@ -2266,7 +2249,7 @@ MonoBehaviour:
     m_ActionName: 'Combat/Fire[/Mouse/leftButton]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1861288809}
+      - m_Target: {fileID: 1861288811}
         m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
         m_MethodName: ShieldDefend
         m_Mode: 0
@@ -2321,7 +2304,19 @@ MonoBehaviour:
     m_ActionId: 32e926a4-d11c-4ba6-8e5d-561b12b968ae
     m_ActionName: UI/TrackedDeviceOrientation
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1861288811}
+        m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
+        m_MethodName: DrawPlatform
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: 4bbd82a1-c311-4708-abd7-dff6982c04f4
     m_ActionName: 'Combat/DrawPlatform[/Keyboard/shift,/Mouse/leftButton]'
   m_NeverAutoSwitchControlSchemes: 0
@@ -2468,22 +2463,6 @@ Transform:
   - {fileID: 1686903989}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1861288809
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1861288802}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CombatInput
-  playerCombat: {fileID: 409794981}
-  dragThreshold: 0.5
-  slashDuration: 0.5
-  minDragDistance: 0.1
 --- !u!114 &1861288810
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2498,6 +2477,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
   health: 0
+--- !u!114 &1861288811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861288802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+  playerCombat: {fileID: 409794981}
+  playerCollider: {fileID: 1861288805}
+  dragThreshold: 1.5
+  slashDuration: 0.5
+  minDragDistance: 0.1
+  drawScript: {fileID: 4823840754483701545, guid: 812f7571709abe945b0bad4a8a286061, type: 3}
+  drawnPlatformPrefab: {fileID: 1130969275877922875, guid: 812f7571709abe945b0bad4a8a286061, type: 3}
+  drawnLines: []
+  maxDrawInk: 50
 --- !u!1 &2031669001
 GameObject:
   m_ObjectHideFlags: 0

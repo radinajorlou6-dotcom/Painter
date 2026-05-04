@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2317408566075421429}
   - component: {fileID: 4778310768649401333}
   - component: {fileID: 4589836848847484306}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: BaseEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -81,8 +81,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1701163479
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
@@ -190,3 +190,4 @@ MonoBehaviour:
   leapForce: 6
   jumpInterval: 2
   timeToTarget: 1
+  damage: 34

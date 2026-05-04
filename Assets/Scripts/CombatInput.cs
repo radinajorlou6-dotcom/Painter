@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections.Generic; // Required to use Lists
+using System.Collections.Generic;
+using System.Xml; 
+using System.Collections;
 
 public class CombatInput : MonoBehaviour
 {
     [SerializeField] private PlayerCombat playerCombat;
+    [SerializeField] private Collider2D playerCollider; // Reference to the player's collider for shield point checks
 
     [Header("Combat Tuning")]
     [Tooltip("Minimum distance in World Units for a click to become a slash")]
@@ -24,11 +27,18 @@ public class CombatInput : MonoBehaviour
 
     [Header("Platform Drawing")]
     [SerializeField] private PlayerPlatform drawScript;
+    [SerializeField] private GameObject drawnPlatformPrefab; // Prefab for the drawn platform (with LineRenderer and EdgeCollider2D)
+    [SerializeField] private List<GameObject> drawnLines = new List<GameObject>(); //List of all the lines currently drawn
+    [SerializeField] private float maxDrawInk = 50f; // Max ink for drawing platforms
+    private GameObject newLine; // Reference to the currently drawn line's GameObject
+    private int currentLineIndex = -1; // Index of the current line being drawn in the drawnLines list
+    private float currentDrawInk = 0f; // Current total ink used
     private bool isDrawActive = false;
 
     void Start()
     {
         mainCam = Camera.main;
+        StartCoroutine(RemoveDrawLines(10f)); // Start the coroutine to remove old drawn lines every 10 seconds
     }
 
     public void OnPrimaryAttack(InputAction.CallbackContext context)
@@ -76,17 +86,36 @@ public class CombatInput : MonoBehaviour
         else if (context.canceled)
         {
             isShieldActive = false;
-            // Note: Since we switched to fading ink segments in the last step, 
-            // you might not actually need DeployShield() anymore if your PlayerCombat Update handles the fading!
-            // But leaving it here is safe if you still use it.
         }
     }
 
-    public void Draw(InputAction.CallbackContext context)
+    public void DrawPlatform(InputAction.CallbackContext context)
     {
-        if (context.started) {
+        if (context.started)
+        {
+            Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
+            newLine = Instantiate(drawnPlatformPrefab); // Create a new instance of the drawn platform prefab
+            drawScript = newLine.GetComponent<PlayerPlatform>(); // Get the PlayerPlatform script from the new instance
+            drawScript.maxInk = maxDrawInk - currentDrawInk; // Set the max ink for the new line
             isDrawActive = true;
-            drawScript.
+            drawScript.StartDraw();
+        }
+        else if (context.canceled)
+        {
+            currentDrawInk += drawScript.currentInkUsed; // Update the total ink used with the ink used by the current line
+            currentLineIndex++; // Move to the next line index
+            drawnLines.Add(newLine); // Add the new line to the list of drawn lines
+            isDrawActive = false;
+        }
+    }
+
+    private IEnumerator RemoveDrawLines(float timer)
+    {
+        while (true) {
+            drawnLines.RemoveAll(drawnLine => drawnLine == null); // Remove any null entries from the list
+            yield return new WaitForSeconds(timer);
+        }
     }
 
     void Update()
@@ -125,6 +154,13 @@ public class CombatInput : MonoBehaviour
         {
             Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             playerCombat.AddShieldPoint(currentWorldPos);
+        }
+
+        if (isDrawActive)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            if (playerCollider.OverlapPoint(currentWorldPos)) return; // Prevent drawing if mouse is over the player
+            drawScript.UpdateDraw(currentWorldPos);
         }
     }
 }

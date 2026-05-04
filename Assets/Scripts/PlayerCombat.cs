@@ -127,20 +127,6 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-    public void DeployShield()
-    {
-        // The player let go! Arm the shield with health and start the countdown.
-        currentHitsRemaining = maxShieldHits;
-        shieldTimerRoutine = StartCoroutine(ShieldCountdown());
-    }
-
-    private IEnumerator ShieldCountdown()
-    {
-        // Wait for the editable duration
-        yield return new WaitForSeconds(shieldDuration);
-        BreakShield();
-    }
-
     // Call this from your Enemy or Projectile script when they hit the shield!
     public void TakeShieldHit()
     {
