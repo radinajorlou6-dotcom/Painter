@@ -25,6 +25,7 @@ public class PlayerPlatform : MonoBehaviour
     [SerializeField] private LineRenderer drawLineRender;
     [SerializeField] private EdgeCollider2D lineCollider; 
     [SerializeField] private LayerMask playerLayer; //What the drawn points will collide with
+    private CombatInput cIScript;
 
     //Internal variables
     private List<DrawnPoint> drawnPoints = new List<DrawnPoint>(); //List of current element being drawn
@@ -46,11 +47,9 @@ public class PlayerPlatform : MonoBehaviour
     {
         if (!ableToDraw) return;
 
-        //Might add code later to avoid drawing on enemies or other objects, but for now the player can draw anywhere as long as they have ink and time
-
         if (currentDrawLength >= maxDrawLength) return; //Code to check drawn length
-        float segmentLength = drawnPoints.Count > 0 ? Vector2.Distance(drawnPoints[drawnPoints.Count - 1].position, newPoint) : 0;
-        if(drawnPoints.Count > 0 && segmentLength < minPointDistance) return; //Code to check distance between points
+        float segmentLength = drawnPoints.Count > 0 ? Vector2.Distance(drawnPoints[drawnPoints.Count - 1].position, newPoint) : 0f;
+        if (drawnPoints.Count > 0 && segmentLength < minPointDistance) return; //Code to check distance between points
         Vector2 lastPoint = drawnPoints.Count > 0 ? drawnPoints[drawnPoints.Count - 1].position : newPoint;
         RaycastHit2D hit = Physics2D.Linecast(lastPoint, newPoint, playerLayer);
         if (hit.collider != null)
@@ -58,8 +57,9 @@ public class PlayerPlatform : MonoBehaviour
             ableToDraw = false; //Stop the player from drawing if they try to draw through themselves
             return;
         }
-        if (currentInkUsed + segmentLength > maxInk) return; //Code to check ink usage, if the next segment would put the player over the max ink, don't add it
+        if (cIScript.currentDrawInk + segmentLength > cIScript.maxDrawInk) return; //Code to check ink usage, if the next segment would put the player over the max ink, don't add it
         currentInkUsed += segmentLength;
+        cIScript.currentDrawInk += segmentLength; //Update the CombatInput script's current ink variable
         currentDrawLength += segmentLength;
         DrawnPoint newDrawnPoint = new DrawnPoint { position = newPoint, timeCreated = Time.time };
         drawnPoints.Add(newDrawnPoint);
@@ -92,6 +92,7 @@ public class PlayerPlatform : MonoBehaviour
     {
         if (drawnPoints.Count == 0)
         {
+            cIScript.currentDrawInk -= currentInkUsed;
             Destroy(gameObject);
             return;
         }
@@ -117,9 +118,14 @@ public class PlayerPlatform : MonoBehaviour
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void Awake()
     {
-        
+        cIScript = GameObject.FindAnyObjectByType<CombatInput>();
+
+        if (cIScript == null)
+        {
+            Debug.LogError("Platform could not find the CombatInput script in the scene!");
+        }
     }
 
     // Update is called once per frame

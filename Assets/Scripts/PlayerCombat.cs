@@ -18,11 +18,13 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform weaponPoint;
     [SerializeField] private PolygonCollider2D hitBox;
     [SerializeField] private float meleeDuration = 0.2f;
+    [SerializeField] private float meleeCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
     [SerializeField] private float dmgMult = 1f;
     [SerializeField] private float slashRadius = 3f;
     [SerializeField] private float maxSweepAngle = 180f;
     [SerializeField] private int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
     [SerializeField] private LayerMask enemyLayers;
+    [SerializeField] private PlayerMeleeManager PMM;
 
     [Header("Shield Drawing Settings")]
     [SerializeField] private LineRenderer shieldLine;
@@ -51,6 +53,7 @@ public class PlayerCombat : MonoBehaviour
     private bool outOfPaint = false;
     private int currentHitsRemaining;
     private Coroutine shieldTimerRoutine;
+    
 
 
     #region ShieldLogic
@@ -201,7 +204,6 @@ public class PlayerCombat : MonoBehaviour
     }
 
     #endregion
-
 
     void Update()
     {

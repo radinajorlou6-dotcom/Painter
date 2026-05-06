@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     //Movement variables
     [Header("Movement")]
     public float moveSpeed = 2f;
+    [SerializeField] private Animator anim;
 
     //Jumping variables
     [Header("Jumping")]
@@ -59,6 +60,9 @@ public class PlayerMovement : MonoBehaviour
         Gravity(); //Apply custom gravity mechanics
         WallSlide(); //Apply wall sliding mechanics
         ProcessWallJump(); //Handle wall jump mechanics
+        anim.SetFloat("Speed", Mathf.Abs(horizontalMovement));
+        anim.SetBool("isGrounded", isGrounded);
+        anim.SetFloat("yVelocity", rb.linearVelocity.y);
 
         if (!isWallJumping) //Prevent horizontal movement control during wall jump
         { 
@@ -123,6 +127,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (context.performed && isGrounded) //hold jump = full jump power
         {
+            anim.SetTrigger("Jump");
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
         }
         else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
@@ -133,6 +138,7 @@ public class PlayerMovement : MonoBehaviour
         //Wall jump mechanics
         else if(context.performed && isWallSliding)
         {
+            anim.SetTrigger("Jump");
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
             wallJumpTimer = wallJumpTime; //Reset wall jump timer
@@ -143,14 +149,13 @@ public class PlayerMovement : MonoBehaviour
                 FlipMain();
             }
         }
-
-    
     }
 
     private void GroundCheck()
     {
         if(Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
         {
+            Debug.Log("Grounded reached");
             isGrounded = true;
             isWallJumping = false; //Reset wall jump state when grounded
             wallJumpTimer = 0; //Reset wall jump timer when grounded

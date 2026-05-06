@@ -7,6 +7,7 @@ public class PlayerHealth : MonoBehaviour
 
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float health;
+    [SerializeField] private Animator anim;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -22,11 +23,16 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        anim.SetTrigger("gotHurt");
         health -= damage;
         Debug.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
         if (health <= 0)
         {
-            Die();
+            anim.SetTrigger("Died");
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            GetComponent<PlayerMovement>().enabled = false;
+            this.enabled = false;
         }
     }
 

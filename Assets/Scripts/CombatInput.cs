@@ -29,10 +29,10 @@ public class CombatInput : MonoBehaviour
     [SerializeField] private PlayerPlatform drawScript;
     [SerializeField] private GameObject drawnPlatformPrefab; // Prefab for the drawn platform (with LineRenderer and EdgeCollider2D)
     [SerializeField] private List<GameObject> drawnLines = new List<GameObject>(); //List of all the lines currently drawn
-    [SerializeField] private float maxDrawInk = 50f; // Max ink for drawing platforms
+    public float maxDrawInk = 50f; // Max ink for drawing platforms
     private GameObject newLine; // Reference to the currently drawn line's GameObject
     private int currentLineIndex = -1; // Index of the current line being drawn in the drawnLines list
-    private float currentDrawInk = 0f; // Current total ink used
+    public float currentDrawInk = 0f; // Current total ink used
     private bool isDrawActive = false;
 
     void Start()
@@ -96,14 +96,12 @@ public class CombatInput : MonoBehaviour
             Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
             newLine = Instantiate(drawnPlatformPrefab); // Create a new instance of the drawn platform prefab
-            drawScript = newLine.GetComponent<PlayerPlatform>(); // Get the PlayerPlatform script from the new instance
-            drawScript.maxInk = maxDrawInk - currentDrawInk; // Set the max ink for the new line
+            drawScript = newLine.GetComponent<PlayerPlatform>();
             isDrawActive = true;
             drawScript.StartDraw();
         }
         else if (context.canceled)
         {
-            currentDrawInk += drawScript.currentInkUsed; // Update the total ink used with the ink used by the current line
             currentLineIndex++; // Move to the next line index
             drawnLines.Add(newLine); // Add the new line to the list of drawn lines
             isDrawActive = false;
