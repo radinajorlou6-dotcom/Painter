@@ -37,6 +37,7 @@ public class BaseEnemyAI : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(jumpInterval);
+            if (healthScript != null && healthScript.isBeingKnocked) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);
 

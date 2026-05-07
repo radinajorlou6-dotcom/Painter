@@ -671,8 +671,8 @@ MonoBehaviour:
   dmgMult: 1
   slashRadius: 2
   maxSweepAngle: 180
-  arcResolution: 15
-  slashKnockback: 10
+  arcResolution: 30
+  slashKnockback: 1
   enemyLayers:
     serializedVersion: 2
     m_Bits: 1024
@@ -680,7 +680,7 @@ MonoBehaviour:
   stabDuration: 1
   stabCooldown: 0
   stabDmgMult: 2
-  stabKnockback: 20
+  stabKnockback: 1
   shieldLine: {fileID: 871835975}
   shieldCollider: {fileID: 871835973}
   maxShieldRadius: 1
@@ -1078,10 +1078,6 @@ PrefabInstance:
     - target: {fileID: 5248116592175409411, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
       propertyPath: m_Layer
       value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 7094741134197920995, guid: 912ffcb9f464144499f8cef1545730b9, type: 3}
-      propertyPath: m_BodyType
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2718,7 +2714,7 @@ MonoBehaviour:
   anim: {fileID: 1861288812}
   jump_height: 8
   groundCheck: {fileID: 1414468934}
-  groundCheckSize: {x: 0.89, y: 0.14}
+  groundCheckSize: {x: 0.74, y: 0.14}
   groundLayer:
     serializedVersion: 2
     m_Bits: 72

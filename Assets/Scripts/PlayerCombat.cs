@@ -15,6 +15,7 @@ public class PlayerCombat : MonoBehaviour
     private float nextFireTime = 0f; // Changed to track the actual game time
 
     [Header("Melee Attack")]
+    [SerializeField] private float knockbackDuration = 0.2f;
     [SerializeField] private Transform weaponPoint;
     [SerializeField] private PolygonCollider2D hitBox;
     [SerializeField] private float meleeDuration = 0.2f;
@@ -23,8 +24,15 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float slashRadius = 3f;
     [SerializeField] private float maxSweepAngle = 180f;
     [SerializeField] private int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
+    [SerializeField] private float slashKnockback = 1f;
     [SerializeField] private LayerMask enemyLayers;
-    [SerializeField] private PlayerMeleeManager PMM;
+
+    [Header("Stab Attack")]
+    [SerializeField] private float stabThreshold = 0.5f;
+    [SerializeField] private float stabDuration = 1f;
+    [SerializeField] private float stabCooldown = 0f; //INCASE WE WANT STAB COOLDOWN TO BE DIFFERENT FROM STAB ANIMATION LENGTH
+    [SerializeField] private float stabDmgMult = 2f;
+    [SerializeField] private float stabKnockback = 1f;
 
     [Header("Shield Drawing Settings")]
     [SerializeField] private LineRenderer shieldLine;
@@ -53,6 +61,7 @@ public class PlayerCombat : MonoBehaviour
     private bool outOfPaint = false;
     private int currentHitsRemaining;
     private Coroutine shieldTimerRoutine;
+    private bool canAttack = true;
     
 
 
@@ -294,6 +303,7 @@ public class PlayerCombat : MonoBehaviour
         float startAngleRad = startAngle * Mathf.Deg2Rad;
         Vector2 prevCurveLocal = new Vector2(Mathf.Cos(startAngleRad), Mathf.Sin(startAngleRad)) * slashRadius;
         Vector2 prevCurveWorld = (Vector2)transform.position + prevCurveLocal;
+        bool first = true;
 
         // Draw a mathematically perfect, smooth curve between the Start and Final angles
         for (int i = 0; i <= arcResolution; i++)
@@ -306,14 +316,20 @@ public class PlayerCombat : MonoBehaviour
             Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
             Vector2 curveWorldPoint = (Vector2)transform.position + curveLocalPoint;
 
+            //Debug.DrawLine(transform.position, curveWorldPoint, Color.green, 1.0f);
+            //Debug.DrawLine(prevCurveWorld, curveWorldPoint, Color.green, 1.0f);
+
             // Raycast from player to point on first point
-            if (i == 0)
+            if (first)
             {
                 RaycastHit2D firstHit = Physics2D.Linecast(transform.position, curveWorldPoint, environment); //shoot a linecast from player to first point
-
-                if (firstHit.collider != null) break;
+                if (firstHit.collider != null)
+                {
+                    continue;
+                }
+                first = false;
             }
-            else if (i > 0)
+            else
             {
                 // Shoot a laser along the perimeter edge of the blade as it swings
                 RaycastHit2D edgeHit = Physics2D.Linecast(prevCurveWorld, curveWorldPoint, environment); //Check if theres obstacle between last point and curr point
@@ -337,10 +353,17 @@ public class PlayerCombat : MonoBehaviour
 
         // Apply the perfect shape and start the attack!
         hitBox.SetPath(0, polygonPoints.ToArray());
-        StartCoroutine(MeleeAttackRoutine());
+
+        if (accumulatedAngle < stabThreshold)
+        {
+            StartCoroutine(MeleeAttackRoutine(startDirection.normalized, stabDmgMult, stabKnockback, stabDuration));
+            return;
+        }
+        Vector2 slashDir = (swipePath[swipePath.Count - 1] - swipePath[0]).normalized;
+        StartCoroutine(MeleeAttackRoutine(slashDir, dmgMult, slashKnockback, meleeDuration));
     }
 
-    private IEnumerator MeleeAttackRoutine()
+    private IEnumerator MeleeAttackRoutine(Vector2 attackDir, float dmg, float knockback, float attackDur)
     {
         // Turn the visual/physics shape on
         hitBox.gameObject.SetActive(true);
@@ -348,7 +371,7 @@ public class PlayerCombat : MonoBehaviour
         // Create a filter to tell Unity exactly what layer to look for
         ContactFilter2D filter = new ContactFilter2D();
         filter.SetLayerMask(enemyLayers);
-        filter.useTriggers = true; // Set to false if your enemies use physical colliders instead of triggers
+        filter.useTriggers = true; ; // Set to false if your enemies use physical colliders instead of triggers
 
         List<Collider2D> hitEnemies = new List<Collider2D>();
 
@@ -360,13 +383,14 @@ public class PlayerCombat : MonoBehaviour
             EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(10f * dmgMult); 
+                enemyHealth.TakeDamage(10f * dmg);
+                if (enemyHealth != null) StartCoroutine(enemyHealth.TakeKnockback(attackDir, knockback, knockbackDuration));
             }
             Debug.Log("Hit enemy: " + enemy.name);
         }
 
         // Wait for a split second so the player can actually see the slash
-        yield return new WaitForSeconds(meleeDuration);
+        yield return new WaitForSeconds(attackDur);
 
         // Turn the hitbox back off
         hitBox.gameObject.SetActive(false);
