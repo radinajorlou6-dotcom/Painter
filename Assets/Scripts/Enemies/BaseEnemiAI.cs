@@ -1,7 +1,8 @@
-using UnityEngine;
 using System.Collections;
-using UnityEngine.Rendering;
 using System.Collections.Specialized;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.Rendering;
 
 public class BaseEnemyAI : MonoBehaviour
 {
@@ -15,6 +16,13 @@ public class BaseEnemyAI : MonoBehaviour
     [SerializeField] private float leapForce = 12f;
     [SerializeField] private float jumpInterval = 2f;
     [SerializeField] private float timeToTarget = 1f;
+
+    //Ground check variables
+    [Header("GroundCheck")]
+    [SerializeField] Transform groundCheck;
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
+    [SerializeField] private LayerMask groundLayer;
+    private bool isGrounded = true;
 
     [Header("Attack")]
     [SerializeField] private float damage = 34;
@@ -32,11 +40,30 @@ public class BaseEnemyAI : MonoBehaviour
         StartCoroutine(JumpRoutine());
     }
 
+    private void Update()
+    {
+        GroundCheck();
+    }
+
+    private void GroundCheck()
+    {
+        if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
+        {
+            Debug.Log("Grounded reached");
+            isGrounded = true;
+        }
+        else
+        {
+            isGrounded = false;
+        }
+    }
+
     IEnumerator JumpRoutine()
     {
         while (true)
         {
             yield return new WaitForSeconds(jumpInterval);
+            if (!isGrounded) continue;
             if (healthScript != null && healthScript.isBeingKnocked) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);
@@ -115,5 +142,11 @@ public class BaseEnemyAI : MonoBehaviour
         }
 
         Debug.Log("Enemy collided with: " + collision.gameObject.name);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
     }
 }
