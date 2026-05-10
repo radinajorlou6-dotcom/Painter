@@ -92,7 +92,7 @@ public class PlayerPlatform : MonoBehaviour
     {
         if (drawnPoints.Count == 0)
         {
-            cIScript.currentDrawInk -= currentInkUsed;
+            cIScript.StartCoroutine("returnInk", currentInkUsed);
             Destroy(gameObject);
             return;
         }
@@ -107,6 +107,8 @@ public class PlayerPlatform : MonoBehaviour
         {
             drawLineRender.enabled = false;
             lineCollider.enabled = false;
+            cIScript.StartCoroutine("returnInk", currentInkUsed);
+            Destroy(gameObject);
         }
     }
 
@@ -131,6 +133,6 @@ public class PlayerPlatform : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        FadeOldPlatformInk();   
+        FadeOldPlatformInk();
     }
 }

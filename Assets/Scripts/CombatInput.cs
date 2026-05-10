@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System.Xml; 
 using System.Collections;
+using JetBrains.Annotations;
 
 public class CombatInput : MonoBehaviour
 {
@@ -29,6 +30,9 @@ public class CombatInput : MonoBehaviour
     [SerializeField] private PlayerPlatform drawScript;
     [SerializeField] private GameObject drawnPlatformPrefab; // Prefab for the drawn platform (with LineRenderer and EdgeCollider2D)
     [SerializeField] private List<GameObject> drawnLines = new List<GameObject>(); //List of all the lines currently drawn
+    [SerializeField] private float drawCooldown = 1f;
+    [SerializeField] private int maxLines = 10;
+    private int numOfLines = 0;
     public float maxDrawInk = 50f; // Max ink for drawing platforms
     private GameObject newLine; // Reference to the currently drawn line's GameObject
     private int currentLineIndex = -1; // Index of the current line being drawn in the drawnLines list
@@ -95,10 +99,13 @@ public class CombatInput : MonoBehaviour
         {
             Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
+            if (numOfLines >= maxLines) return;
+            if (currentDrawInk >= maxDrawInk) return;
             newLine = Instantiate(drawnPlatformPrefab); // Create a new instance of the drawn platform prefab
             drawScript = newLine.GetComponent<PlayerPlatform>();
             isDrawActive = true;
             drawScript.StartDraw();
+            numOfLines++;
         }
         else if (context.canceled)
         {
@@ -112,8 +119,20 @@ public class CombatInput : MonoBehaviour
     {
         while (true) {
             drawnLines.RemoveAll(drawnLine => drawnLine == null); // Remove any null entries from the list
+            if(drawnLines.Count == 0)
+            {
+                StopCoroutine("returnInk");
+                currentDrawInk = 0;
+            }
             yield return new WaitForSeconds(timer);
         }
+    }
+
+    public IEnumerator returnInk(float inkToBeReturned)
+    {
+        numOfLines--;
+        yield return new WaitForSeconds(drawCooldown);
+        currentDrawInk -= inkToBeReturned;
     }
 
     void Update()

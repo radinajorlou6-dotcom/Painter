@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -21,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] Transform groundCheck;
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private float maxSlopeAngle;
     bool isGrounded = true;
 
 
@@ -29,13 +31,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Vector2 wallCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask wallLayer;
+    bool isWalled = false;
 
     //Wall movement variables
     [Header("WallMovement")]
     public float wallSlideSpeed = 2f;
     bool isWallSliding;
     //Wall jump variables
-    bool isWallJumping = false; //Prevents the player from changing direction mid air after a wall jump 
+    bool isWallJumping = false; //Prevents the player from changing direction mid air after a wall
     float wallJumpDirection;
     float wallJumpTime = 0.35f;
     float wallJumpTimer;
@@ -56,22 +59,37 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GroundCheck(); //Check if player is on the ground
-        Gravity(); //Apply custom gravity mechanics
-        WallSlide(); //Apply wall sliding mechanics
-        ProcessWallJump(); //Handle wall jump mechanics
+        ProcessWallJump();
         anim.SetFloat("Speed", Mathf.Abs(horizontalMovement));
         anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("yVelocity", rb.linearVelocity.y);
 
         if (!isWallJumping) //Prevent horizontal movement control during wall jump
         { 
-            rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
             Flip(); //Flip player sprite based on movement direction
         }
             
     }
-    
+
+    private void FixedUpdate()
+    {
+        GroundCheck();
+        WallCheck();
+        if (!isWallJumping)
+        {
+            if (isWalled)
+            {
+                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            }
+            else
+            {
+                rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
+            }
+        }
+        Gravity();
+        WallSlide();
+    }
+
     //Different falling mechanics to make the game feel better. Increases fall speed the longer you fall, and caps it at a certain point.
     private void Gravity()
     {
@@ -88,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void WallSlide()
     {
-        if (!isGrounded && WallCheck() && horizontalMovement != 0)
+        if (isWalled && horizontalMovement != 0)
         {
             isWallSliding = true;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -wallSlideSpeed)); //Limit fall speed while wall sliding
@@ -125,18 +143,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump(InputAction.CallbackContext context)
     {
-        if (context.performed && isGrounded) //hold jump = full jump power
-        {
-            anim.SetTrigger("Jump");
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
-        }
-        else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
-        }   
-
-        //Wall jump mechanics
-        else if(context.performed && isWallSliding)
+        if(context.performed && isWallSliding)
         {
             anim.SetTrigger("Jump");
             isWallJumping = true;
@@ -149,26 +156,51 @@ public class PlayerMovement : MonoBehaviour
                 FlipMain();
             }
         }
+        else if (context.performed && isGrounded) //hold jump = full jump power
+        {
+            anim.SetTrigger("Jump");
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
+        }
+        else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
+        }   
+
+        //Wall jump mechanics
     }
 
     private void GroundCheck()
     {
-        if(Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
+        // <--- NEW: Using BoxCast to get the angle of the surface
+        RaycastHit2D hit = Physics2D.BoxCast(groundCheck.position, groundCheckSize, 0f, Vector2.down, 0.1f, groundLayer);
+
+        if (hit.collider != null)
         {
-            Debug.Log("Grounded reached");
-            isGrounded = true;
-            isWallJumping = false; //Reset wall jump state when grounded
-            wallJumpTimer = 0; //Reset wall jump timer when grounded
+            // Calculate the angle of the surface compared to completely flat ground (Vector2.up)
+            float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
+
+            // If the surface is flatter than our maximum allowed slope, it's ground
+            if (slopeAngle <= maxSlopeAngle)
+            {
+                isGrounded = true;
+                isWallJumping = false;
+                wallJumpTimer = 0;
+                return; // Exit early, we are grounded
+            }
+        }
+        isGrounded = false;
+    }
+
+    private void WallCheck()
+    {
+        if (Physics2D.OverlapBox(wallCheck.position, wallCheckSize, 0, wallLayer))
+        {
+            isWalled = true;
         }
         else
         {
-            isGrounded = false;
+            isWalled = false;
         }
-    }
-
-    private bool WallCheck()
-    {
-        return Physics2D.OverlapBox(wallCheck.position, wallCheckSize, 0, wallLayer);
     }
 
     private void Flip()

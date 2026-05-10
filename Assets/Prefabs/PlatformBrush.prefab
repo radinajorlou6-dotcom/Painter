@@ -199,7 +199,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af87370e5b99cc74b9863485996763ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPlatform
-  maxInk: 100
+  maxInk: 10
   maxDrawLength: 10
   inkLifeTime: 5
   drawLineRender: {fileID: 4289354960816757399}
