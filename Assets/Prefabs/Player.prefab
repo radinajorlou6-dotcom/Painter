@@ -342,18 +342,18 @@ MonoBehaviour:
   rb: {fileID: 6905779516471068025}
   moveSpeed: 4
   anim: {fileID: 3275910079701954644}
-  jump_height: 8
+  jump_height: 8.25
   groundCheck: {fileID: 810167527649315121}
-  groundCheckSize: {x: 1.62, y: 0.14}
+  groundCheckSize: {x: 1.62, y: 0.61}
   groundLayer:
     serializedVersion: 2
-    m_Bits: 72
+    m_Bits: 73
   maxSlopeAngle: 45
   wallCheck: {fileID: 6559660373697844107}
-  wallCheckSize: {x: 0.32, y: 2.5}
+  wallCheckSize: {x: 0.32, y: 2.19}
   wallLayer:
     serializedVersion: 2
-    m_Bits: 136
+    m_Bits: 137
   wallSlideSpeed: 2
   wallJumpPower: {x: 3, y: 11}
   baseGravity: 2
@@ -445,7 +445,7 @@ Transform:
   m_GameObject: {fileID: 4318114234461415396}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.507, z: 0}
+  m_LocalPosition: {x: 0, y: -0.559, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -476,7 +476,7 @@ Transform:
   m_GameObject: {fileID: 4401969365152903633}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.255, y: -0.049, z: 0}
+  m_LocalPosition: {x: 0.255, y: 0.025, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

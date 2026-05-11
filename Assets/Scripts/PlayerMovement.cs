@@ -78,13 +78,13 @@ public class PlayerMovement : MonoBehaviour
         if (!isWallJumping)
         {
             if (isWalled)
-            {
-                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            }
-            else
-            {
-                rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
-            }
+        {
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        }
+        else
+        {
+            rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
+        }
         }
         Gravity();
         WallSlide();

@@ -154,7 +154,7 @@ EdgeCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 6138ef71877deb0479f686736f7b285f, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -179,7 +179,7 @@ EdgeCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_EdgeRadius: 0.13
+  m_EdgeRadius: 0
   m_Points:
   - {x: 0.23000002, y: 1.18}
   - {x: 1.23, y: 1.18}
@@ -201,7 +201,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPlatform
   maxInk: 10
   maxDrawLength: 10
-  inkLifeTime: 5
+  inkLifeTime: 7
   drawLineRender: {fileID: 4289354960816757399}
   lineCollider: {fileID: 1626507537240967046}
   playerLayer:
