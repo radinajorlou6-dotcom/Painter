@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 public class PlayerCombat : MonoBehaviour
 {
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private float xOffset = 0f;
+    [SerializeField] private float yOffset = 0f;
 
     [Header("Ranged Attack")]
     [SerializeField] private GameObject projectilePrefab;
@@ -220,6 +222,7 @@ public class PlayerCombat : MonoBehaviour
         if (playerTransform != null)
         {
             transform.position = playerTransform.position;
+            transform.Translate(xOffset, yOffset, 0);
         }
         FadeOldShieldInk(); // Continuously check if any shield points need to fade away
     }
