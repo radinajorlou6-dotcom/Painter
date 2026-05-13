@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8165115639021989854}
   - component: {fileID: -1483772411910887450}
   - component: {fileID: -3837231292618845293}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Projectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -169,3 +169,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e6ec430289af894fb3445d1623596d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
+  damage: 10

@@ -55,6 +55,9 @@ TagManager:
   - name: Player
     uniqueID: 794074623
     locked: 0
+  - name: In front
+    uniqueID: 3385335251
+    locked: 0
   m_RenderingLayers:
   - Default
   m_MigratedRenderPipelines: []

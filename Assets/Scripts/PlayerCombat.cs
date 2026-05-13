@@ -297,7 +297,6 @@ public class PlayerCombat : MonoBehaviour
 
         // --- PHASE 2: SHAPE GENERATION ---
         List<Vector2> polygonPoints = new List<Vector2>();
-        polygonPoints.Add(Vector2.zero); // Center of the player
 
         // Calculate the exact final angle based on our running total
         float finalAngle = startAngle + (accumulatedAngle * swingSign);
@@ -308,6 +307,7 @@ public class PlayerCombat : MonoBehaviour
         Vector2 prevCurveWorld = (Vector2)transform.position + prevCurveLocal;
         bool first = true;
 
+        BoxCollider2D bodyCollider = playerTransform.GetComponent<BoxCollider2D>();
         // Draw a mathematically perfect, smooth curve between the Start and Final angles
         for (int i = 0; i <= arcResolution; i++)
         {
@@ -326,10 +326,11 @@ public class PlayerCombat : MonoBehaviour
             if (first)
             {
                 RaycastHit2D firstHit = Physics2D.Linecast(transform.position, curveWorldPoint, environment); //shoot a linecast from player to first point
-                if (firstHit.collider != null)
-                {
-                    continue;
-                }
+                if (firstHit.collider != null) continue;
+                Vector2 firstPoint = bodyCollider.ClosestPoint(curveWorldPoint);
+                RaycastHit2D closingHit = Physics2D.Linecast(firstPoint, curveWorldPoint, environment);
+                if (closingHit.collider != null) continue;
+                polygonPoints.Add(transform.InverseTransformPoint(firstPoint));
                 first = false;
             }
             else
@@ -353,6 +354,9 @@ public class PlayerCombat : MonoBehaviour
             // Update the tracker for the next frame of the swing
             prevCurveWorld = curveWorldPoint;
         }
+
+        Vector2 lastPoint = bodyCollider.ClosestPoint(prevCurveWorld);
+        polygonPoints.Add(transform.InverseTransformPoint(lastPoint));
 
         // Apply the perfect shape and start the attack!
         hitBox.SetPath(0, polygonPoints.ToArray());
