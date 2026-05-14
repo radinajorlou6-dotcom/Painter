@@ -375,6 +375,10 @@ public class PlayerCombat : MonoBehaviour
         // Turn the visual/physics shape on
         hitBox.gameObject.SetActive(true);
 
+        // Wait one frame so the physics engine has a chance to register the enabled collider
+        // This makes overlap queries more reliable immediately after enabling a collider
+        yield return null;
+
         // Create a filter to tell Unity exactly what layer to look for
         ContactFilter2D filter = new ContactFilter2D();
         filter.SetLayerMask(enemyLayers);
@@ -382,8 +386,9 @@ public class PlayerCombat : MonoBehaviour
 
         List<Collider2D> hitEnemies = new List<Collider2D>();
 
-        // Grab everything currently touching our custom Polygon Collider
-        Physics2D.OverlapCollider(hitBox, filter, hitEnemies);
+        // Grab everything currently touching our custom Polygon Collider using the collider instance
+        // This ensures the actual polygon shape is used for the overlap test
+        hitBox.Overlap(filter, hitEnemies);
 
         foreach (Collider2D enemy in hitEnemies)
         {

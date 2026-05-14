@@ -4,7 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class BaseEnemyAI : MonoBehaviour
+public class BaseEnemyAI : EnemyHealth
 {
     [Header("Detection")]
     [SerializeField] private float detectionRange = 10f;
@@ -17,46 +17,26 @@ public class BaseEnemyAI : MonoBehaviour
     [SerializeField] private float jumpInterval = 2f;
     [SerializeField] private float timeToTarget = 1f;
 
-    //Ground check variables
-    [Header("GroundCheck")]
-    [SerializeField] Transform groundCheck;
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
-    [SerializeField] private LayerMask groundLayer;
-    private bool isGrounded = true;
-
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
     private Rigidbody2D rb;
     private bool isJumping = false;
-    private EnemyHealth healthScript; // To call Die() later
 
-    void Start()
+    protected override void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        healthScript = GetComponent<EnemyHealth>();
 
         // Start the jumping loop
         StartCoroutine(JumpRoutine());
     }
 
-    private void Update()
+    protected override void Update()
     {
         GroundCheck();
+        CollideCheck();
     }
 
-    private void GroundCheck()
-    {
-        if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
-        {
-            Debug.Log("Grounded reached");
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-    }
 
     IEnumerator JumpRoutine()
     {
@@ -64,7 +44,7 @@ public class BaseEnemyAI : MonoBehaviour
         {
             yield return new WaitForSeconds(jumpInterval);
             if (!isGrounded) continue;
-            if (healthScript != null && healthScript.isBeingKnocked) continue;
+            if (isBeingKnocked) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);
 
@@ -124,7 +104,7 @@ public class BaseEnemyAI : MonoBehaviour
                 cS.TakeShieldHit();
             }
 
-            healthScript.TakeDamage(999);
+            Die();
             
         }
 
@@ -138,15 +118,11 @@ public class BaseEnemyAI : MonoBehaviour
                 Debug.Log("BOOM! Enemy exploded on player!");
             }
             // Suicide logic
-            healthScript.TakeDamage(999);
+            Die();
         }
 
         Debug.Log("Enemy collided with: " + collision.gameObject.name);
     }
 
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
-    }
+
 }

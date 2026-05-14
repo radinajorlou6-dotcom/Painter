@@ -1,32 +1,46 @@
 using System.Collections;
+using TMPro.EditorUtilities;
 using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour
+public abstract class EnemyHealth : MonoBehaviour
 {
-    [SerializeField] private float maxHealth = 100f;
-    public float health;
-    public bool isBeingKnocked = false;
-    private Rigidbody2D rb;
+    [SerializeField] protected float maxHealth = 100f;
+    protected float health;
+    protected bool isBeingKnocked = false;
+    protected Rigidbody2D rb;
+    protected bool dirIsRight = true;
 
-    private void Awake()
+    //Ground check variables
+    [Header("GroundCheck")]
+    [SerializeField] protected Transform groundCheck;
+    [SerializeField] protected Transform collideCheck;
+    [SerializeField] protected Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
+    [SerializeField] protected Vector2 collideCheckSize = new Vector2(0.05f, 0.5f);
+    [SerializeField] protected LayerMask groundLayer;
+    [SerializeField] protected LayerMask collideWithLayer;
+    protected bool isGrounded = true;
+    protected bool isColliding = false;
+
+    protected virtual void Awake()
     {
         health = maxHealth; // Initialize health to maxHealth at the start
         rb = GetComponent<Rigidbody2D>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    protected virtual void Start()
     {
         
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
-        
+        GroundCheck();
+        CollideCheck();
     }
 
-    public void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage)
     {
         health -= damage;
         Debug.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
@@ -36,7 +50,7 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    public IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
+    public virtual IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
     {
         if (rb == null) yield break;
 
@@ -63,9 +77,49 @@ public class EnemyHealth : MonoBehaviour
         isBeingKnocked = false;
     }
 
-    private void Die()
+    public virtual void Die()
     {
         Debug.Log(gameObject.name + " has died.");
         Destroy(gameObject);
+    }
+
+    protected virtual void GroundCheck()
+    {
+        if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
+        {
+            Debug.Log("Grounded reached");
+            isGrounded = true;
+        }
+        else
+        {
+            isGrounded = false;
+        }
+    }
+
+    protected virtual void CollideCheck()
+    {
+        if (Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer))
+        {
+            Debug.Log("Colliding with");
+            isColliding = true;
+        }
+        else
+        {
+            isColliding= false;
+        }
+    }
+
+    protected virtual void Flip()
+    {
+        dirIsRight = !dirIsRight;
+        transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+    }
+
+    protected virtual void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(collideCheck.position, collideCheckSize);
     }
 }
