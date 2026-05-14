@@ -6,11 +6,6 @@ using UnityEngine.Rendering;
 
 public class BaseEnemyAI : EnemyHealth
 {
-    [Header("Detection")]
-    [SerializeField] private float detectionRange = 10f;
-    [SerializeField] private float leapRange = 4f;
-    [SerializeField] private Transform player;
-
     [Header("Movement")]
     [SerializeField] private float hopForce = 5f;
     [SerializeField] private float leapForce = 12f;
@@ -50,7 +45,7 @@ public class BaseEnemyAI : EnemyHealth
 
             if (distance <= detectionRange && !isJumping)
             {
-                if (distance <= leapRange)
+                if (distance <= attackRange)
                 {
                     LeapAttack();
                 }
@@ -60,6 +55,11 @@ public class BaseEnemyAI : EnemyHealth
                 }
             }
         }
+    }
+
+    protected override void Attack()
+    {
+        //DO NOTHING
     }
 
     void SmallHop()

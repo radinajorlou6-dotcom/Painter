@@ -9,6 +9,8 @@ public abstract class EnemyHealth : MonoBehaviour
     [SerializeField] protected float detectionRange = 10f;
     [SerializeField] protected float attackRange = 4f;
     [SerializeField] protected Transform player;
+    private float currDistanceFromPlayer;
+    protected bool canSeePlayer = false;
 
     [SerializeField] protected float maxHealth = 100f;
     protected float health;
@@ -24,6 +26,7 @@ public abstract class EnemyHealth : MonoBehaviour
     [SerializeField] protected Vector2 collideCheckSize = new Vector2(0.05f, 0.5f);
     [SerializeField] protected LayerMask groundLayer;
     [SerializeField] protected LayerMask collideWithLayer;
+    [SerializeField] protected LayerMask environment;
     protected bool isGrounded = true;
     protected bool isColliding = false;
 
@@ -31,6 +34,7 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         health = maxHealth; // Initialize health to maxHealth at the start
         rb = GetComponent<Rigidbody2D>();
+        StartCoroutine(DetectionRoutine());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -46,8 +50,32 @@ public abstract class EnemyHealth : MonoBehaviour
         CollideCheck();
     }
 
-    
+    protected IEnumerator DetectionRoutine()
+    {
+        while (true)
+        {
+            CheckPlayerDetection();
+            float interval = currDistanceFromPlayer / 100; //Run based on how far the player is
+            if (canSeePlayer) Attack();
+            yield return new WaitForSeconds(interval);
+        }
+    }
 
+    protected abstract void Attack();
+
+    protected void CheckPlayerDetection()
+    {
+        currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
+        RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
+        if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
+        {
+            canSeePlayer = true;
+        }
+        else
+        {
+            canSeePlayer = false;
+        }
+    }
     public virtual void TakeDamage(float damage)
     {
         health -= damage;
