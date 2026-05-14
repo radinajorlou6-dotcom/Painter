@@ -4,6 +4,7 @@ using UnityEngine;
 public class KnightAI : EnemyHealth
 {
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveToPlayerSpeed = 5f;
 
     [Header("Melee Attack")]
     [SerializeField] protected float knockbackDuration = 0.2f;
@@ -28,7 +29,14 @@ public class KnightAI : EnemyHealth
     // Update is called once per frame
     protected override void Update()
     {
-        Move();
+        if (canSeePlayer)
+        {
+            AttackMove();
+        }
+        else
+        {
+            Move();
+        }
         base.Update();
     }
 
@@ -42,6 +50,23 @@ public class KnightAI : EnemyHealth
         {
             transform.Translate(Vector2.left * Time.deltaTime * moveSpeed);
         }
+    }
+
+    private void AttackMove()
+    {
+        if (dirIsRight)
+        {
+            transform.Translate(Vector2.right * Time.deltaTime * (moveSpeed + moveToPlayerSpeed));
+        }
+        else
+        {
+            transform.Translate(Vector2.left * Time.deltaTime * (moveSpeed + moveToPlayerSpeed));
+        }
+    }
+
+    protected override void Attack()
+    {
+        //ATTACK ATTACK ATTACK ATTACK
     }
 
     public override void TakeDamage(float damage)

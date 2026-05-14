@@ -4,6 +4,12 @@ using UnityEngine;
 
 public abstract class EnemyHealth : MonoBehaviour
 {
+
+    [Header("Detection")]
+    [SerializeField] protected float detectionRange = 10f;
+    [SerializeField] protected float attackRange = 4f;
+    [SerializeField] protected Transform player;
+
     [SerializeField] protected float maxHealth = 100f;
     protected float health;
     protected bool isBeingKnocked = false;
@@ -39,6 +45,8 @@ public abstract class EnemyHealth : MonoBehaviour
         GroundCheck();
         CollideCheck();
     }
+
+    
 
     public virtual void TakeDamage(float damage)
     {
@@ -107,6 +115,11 @@ public abstract class EnemyHealth : MonoBehaviour
         {
             isColliding= false;
         }
+    }
+
+    protected virtual void PlayerInSight()
+    {
+
     }
 
     protected virtual void Flip()
