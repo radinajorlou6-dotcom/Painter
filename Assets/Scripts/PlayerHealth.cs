@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 //FOR NOW EXACT SAME AS ENEMY HEALTH
 
@@ -8,10 +9,12 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float health;
     [SerializeField] private Animator anim;
+    Rigidbody rb;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         health = maxHealth;
     }
 
@@ -28,17 +31,37 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
         if (health <= 0)
         {
-            anim.SetTrigger("Died");
-            Rigidbody2D rb = GetComponent<Rigidbody2D>();
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            GetComponent<PlayerMovement>().enabled = false;
-            this.enabled = false;
+            Die();
         }
+    }
+
+    public IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
+    {
+        if (rb == null) yield break;
+
+        Vector2 initialVelocity = attackDir.normalized * knockbackMult;
+        float elapsed = 0f;
+
+        while (elapsed < knockbackDur)
+        {
+            if (this == null || rb == null) yield break;
+
+            float t = elapsed / knockbackDur;
+            rb.linearVelocity = Vector2.Lerp(initialVelocity, Vector2.zero, t * t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (rb != null) rb.linearVelocity = Vector2.zero;
     }
 
     private void Die()
     {
-        Debug.Log(gameObject.name + " has died.");
+        anim.SetTrigger("Died");
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        GetComponent<PlayerMovement>().enabled = false;
+        this.enabled = false;
         Destroy(gameObject);
     }
 }

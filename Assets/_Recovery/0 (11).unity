@@ -252,74 +252,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1786557130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &129063811
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 129063813}
-  - component: {fileID: 129063812}
-  m_Layer: 10
-  m_Name: AttackHitbox
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!58 &129063812
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 129063811}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0.5, y: 0}
-  m_Radius: 0.5
---- !u!4 &129063813
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 129063811}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1786557130}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &324494630
 GameObject:
   m_ObjectHideFlags: 0
@@ -421,7 +353,7 @@ Transform:
   m_GameObject: {fileID: 324494630}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.543238, y: 10.925009, z: -10}
+  m_LocalPosition: {x: 39.98654, y: 4.0050087, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -569,7 +501,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.543238, y: 10.925009, z: -10}
+  m_LocalPosition: {x: 39.98654, y: 4.0050087, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3586,11 +3518,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -13.79
+      value: 27.33
       objectReference: {fileID: 0}
     - target: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.96
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3644,9 +3576,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
       insertIndex: -1
       addedObject: {fileID: 25982260}
-    - targetCorrespondingSourceObject: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 129063813}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7159905540023114441, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
       insertIndex: -1
@@ -14852,7 +14781,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KnightAI
   detectionRange: 10
   attackRange: 4
-  player: {fileID: 385513173}
+  player: {fileID: 0}
   maxHealth: 100
   groundCheck: {fileID: 25982260}
   collideCheck: {fileID: 670446281}
@@ -14866,24 +14795,22 @@ MonoBehaviour:
     m_Bits: 1271
   environment:
     serializedVersion: 2
-    m_Bits: 256
-  playerLayer:
-    serializedVersion: 2
     m_Bits: 0
   moveSpeed: 5
   moveToPlayerSpeed: 5
   knockbackDuration: 0.2
-  weaponPoint: {fileID: 129063813}
-  hitBox: {fileID: 129063812}
-  bashDuration: 0.2
-  bashCooldown: 0
-  bashRange: 2
-  chargeDmg: 20
-  chargeKnockback: 5
-  bashDmg: 5
-  bashKnockback: 15
+  weaponPoint: {fileID: 0}
+  hitBox: {fileID: 0}
+  meleeDuration: 0.2
+  meleeCooldown: 0
+  dmgMult: 1
   slashRadius: 3
+  maxSweepAngle: 180
+  arcResolution: 15
   slashKnockback: 1
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!4 &1786557130 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4693894007026264882, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
@@ -16184,11 +16111,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -19.99
+      value: 31.54
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.75
+      value: -0.16999996
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.z

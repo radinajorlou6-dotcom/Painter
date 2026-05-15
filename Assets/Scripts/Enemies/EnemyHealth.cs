@@ -9,7 +9,7 @@ public abstract class EnemyHealth : MonoBehaviour
     [SerializeField] protected float detectionRange = 10f;
     [SerializeField] protected float attackRange = 4f;
     [SerializeField] protected Transform player;
-    private float currDistanceFromPlayer;
+    protected float currDistanceFromPlayer;
     protected bool canSeePlayer = false;
 
     [SerializeField] protected float maxHealth = 100f;
@@ -27,6 +27,7 @@ public abstract class EnemyHealth : MonoBehaviour
     [SerializeField] protected LayerMask groundLayer;
     [SerializeField] protected LayerMask collideWithLayer;
     [SerializeField] protected LayerMask environment;
+    [SerializeField] protected LayerMask playerLayer;
     protected bool isGrounded = true;
     protected bool isColliding = false;
 
@@ -56,12 +57,11 @@ public abstract class EnemyHealth : MonoBehaviour
         {
             CheckPlayerDetection();
             float interval = currDistanceFromPlayer / 100; //Run based on how far the player is
-            if (canSeePlayer) Attack();
             yield return new WaitForSeconds(interval);
         }
     }
 
-    protected abstract void Attack();
+    protected abstract void BaseAttack();
 
     protected void CheckPlayerDetection()
     {
@@ -115,6 +115,7 @@ public abstract class EnemyHealth : MonoBehaviour
 
     public virtual void Die()
     {
+        StopAllCoroutines();
         Debug.Log(gameObject.name + " has died.");
         Destroy(gameObject);
     }

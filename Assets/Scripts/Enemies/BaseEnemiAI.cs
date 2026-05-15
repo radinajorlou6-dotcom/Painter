@@ -57,7 +57,7 @@ public class BaseEnemyAI : EnemyHealth
         }
     }
 
-    protected override void Attack()
+    protected override void BaseAttack()
     {
         //DO NOTHING
     }

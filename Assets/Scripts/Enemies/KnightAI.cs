@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEditor.Tilemaps;
 using UnityEngine;
 
@@ -9,15 +11,16 @@ public class KnightAI : EnemyHealth
     [Header("Melee Attack")]
     [SerializeField] protected float knockbackDuration = 0.2f;
     [SerializeField] protected Transform weaponPoint;
-    [SerializeField] protected PolygonCollider2D hitBox;
-    [SerializeField] protected float meleeDuration = 0.2f;
-    [SerializeField] protected float meleeCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
-    [SerializeField] protected float dmgMult = 1f;
+    [SerializeField] protected CircleCollider2D hitBox;
+    [SerializeField] protected float bashDuration = 0.2f;
+    [SerializeField] protected float bashCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
+    [SerializeField] protected float bashRange = 2f;
+    [SerializeField] protected float chargeDmg = 20f;
+    [SerializeField] protected float chargeKnockback = 5f;
+    [SerializeField] protected float bashDmg = 5f;
+    [SerializeField] protected float bashKnockback = 15f;
     [SerializeField] protected float slashRadius = 3f;
-    [SerializeField] protected float maxSweepAngle = 180f;
-    [SerializeField] protected int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
     [SerializeField] protected float slashKnockback = 1f;
-    [SerializeField] protected LayerMask enemyLayers;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -54,19 +57,43 @@ public class KnightAI : EnemyHealth
 
     private void AttackMove()
     {
-        if (dirIsRight)
+        if (currDistanceFromPlayer <= bashRange)
         {
-            transform.Translate(Vector2.right * Time.deltaTime * (moveSpeed + moveToPlayerSpeed));
-        }
-        else
-        {
-            transform.Translate(Vector2.left * Time.deltaTime * (moveSpeed + moveToPlayerSpeed));
+            BashAttack();
         }
     }
 
-    protected override void Attack()
+    protected override void BaseAttack()
     {
-        //ATTACK ATTACK ATTACK ATTACK
+        throw new System.NotImplementedException();
+    }
+
+    private IEnumerator BashAttack()
+    {
+        // Turn the visual/physics shape on
+        hitBox.gameObject.SetActive(true);
+
+        // Wait one frame so the physics engine has a chance to register the enabled collider
+        yield return null;
+
+        // Create a filter to tell Unity exactly what layer to look for
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.SetLayerMask(playerLayer);
+        filter.useTriggers = true; ; // Set to false if your enemies use physical colliders instead of triggers
+
+        Collider2D hit = Physics2D.OverlapCircle(transform.position, attackRange, playerLayer);
+        if (hit != null)
+        {
+            PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+            playerHealth.TakeDamage(bashDmg);
+            Vector2 knockbackDir = (player.transform.position - transform.position).normalized;
+            StartCoroutine(playerHealth.TakeKnockback(knockbackDir, bashKnockback, knockbackDuration));
+            yield return new WaitForSeconds(bashDuration);
+        }
+        
+
+        // Turn the hitbox back off
+        hitBox.gameObject.SetActive(false);
     }
 
     public override void TakeDamage(float damage)
