@@ -1,5 +1,4 @@
 using System.Collections;
-using TMPro.EditorUtilities;
 using UnityEngine;
 
 public abstract class EnemyHealth : MonoBehaviour
@@ -61,14 +60,29 @@ public abstract class EnemyHealth : MonoBehaviour
         }
     }
 
-    protected abstract void BaseAttack();
+    protected abstract IEnumerator BaseAttack();
 
-    protected void CheckPlayerDetection()
+    protected virtual void CheckPlayerDetection()
     {
         currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
         RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
+        Debug.Log("Here");
         if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
         {
+            // Determine if the player is to the left or right of us
+            bool playerIsRight = player.position.x > transform.position.x;
+
+            // If player is to the right but we are facing left
+            if (playerIsRight && !dirIsRight)
+            {
+                Flip();
+            }
+            // If player is to the left but we are facing right
+            else if (!playerIsRight && dirIsRight)
+            {
+                Flip();
+            }
+
             canSeePlayer = true;
         }
         else
@@ -89,6 +103,7 @@ public abstract class EnemyHealth : MonoBehaviour
     public virtual IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
     {
         if (rb == null) yield break;
+        rb.linearVelocity = Vector2.zero;
 
         isBeingKnocked = true;
         Vector2 initialVelocity = attackDir.normalized * knockbackMult;

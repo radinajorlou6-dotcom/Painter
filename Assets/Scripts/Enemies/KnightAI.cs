@@ -1,117 +1,187 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Tilemaps;
-using UnityEngine;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEditor.Tilemaps;
+    using UnityEngine;
 
-public class KnightAI : EnemyHealth
-{
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float moveToPlayerSpeed = 5f;
-
-    [Header("Melee Attack")]
-    [SerializeField] protected float knockbackDuration = 0.2f;
-    [SerializeField] protected Transform weaponPoint;
-    [SerializeField] protected CircleCollider2D hitBox;
-    [SerializeField] protected float bashDuration = 0.2f;
-    [SerializeField] protected float bashCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
-    [SerializeField] protected float bashRange = 2f;
-    [SerializeField] protected float chargeDmg = 20f;
-    [SerializeField] protected float chargeKnockback = 5f;
-    [SerializeField] protected float bashDmg = 5f;
-    [SerializeField] protected float bashKnockback = 15f;
-    [SerializeField] protected float slashRadius = 3f;
-    [SerializeField] protected float slashKnockback = 1f;
-
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    protected override void Start()
+    public class KnightAI : EnemyHealth
     {
+        [SerializeField] private float moveSpeed = 5f;
+        [SerializeField] private float chargeSpeed = 5f;
+
+        [Header("Melee Attack")]
+        [SerializeField] protected float knockbackDuration = 0.2f;
+        [SerializeField] protected Transform weaponPoint;
+        [SerializeField] protected CircleCollider2D hitBox;
+        [SerializeField] protected float bashDuration = 0.2f;
+        [SerializeField] protected float bashCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
+        [SerializeField] protected float bashRange = 2f;
+        [SerializeField] protected float bashDmg = 5f;
+        [SerializeField] protected float bashKnockback = 15f;
+        [SerializeField] protected float chargeDmg = 20f;
+        [SerializeField] protected float chargeKnockback = 5f;
+        [SerializeField] protected float chargeDuration = 1f;
+        [SerializeField] protected float chargeCooldown = 0f;
         
-    }
+        private bool isAttacking = false;
 
-    // Update is called once per frame
-    protected override void Update()
-    {
-        if (canSeePlayer)
+        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        protected override void Start()
         {
-            AttackMove();
+            base.Start();
         }
-        else
+
+        // Update is called once per frame
+        protected override void Update()
         {
-            Move();
+            base.Update();
+            Debug.Log("Is attacking: " + isAttacking);
+            if (isAttacking) return; // Prevent moving or starting new attacks while already attacking
+
+            if (canSeePlayer)
+            {
+                Debug.Log("Going into attackMove");
+                AttackMove();
+            }
+            else
+            {
+                Move();
+            }
         }
-        base.Update();
-    }
 
-    private void Move()
-    {
-        if (dirIsRight)
+        private void Move()
         {
-            transform.Translate(Vector2.right * Time.deltaTime * moveSpeed);
+            if (dirIsRight)
+            {
+                // Do not use Time.deltaTime when setting linearVelocity directly
+                rb.linearVelocity = new Vector2(moveSpeed, rb.linearVelocity.y);
+            }
+            else
+            {
+                rb.linearVelocity = new Vector2(-moveSpeed, rb.linearVelocity.y);
+            }
         }
-        else
+
+        private void AttackMove()
         {
-            transform.Translate(Vector2.left * Time.deltaTime * moveSpeed);
+            if (isAttacking) return;
+            else if (currDistanceFromPlayer <= bashRange)
+            {
+                StartCoroutine(BashAttack());
+            }
+            else
+            {
+                StartCoroutine(BaseAttack());
+            }
+            
         }
-    }
 
-    private void AttackMove()
-    {
-        if (currDistanceFromPlayer <= bashRange)
+        protected override void CheckPlayerDetection()
         {
-            BashAttack();
+            currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
+            RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
+            Debug.Log("Here");
+            if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
+            {
+                // Determine if the player is to the left or right of us
+                bool playerOnRight = player.position.x > transform.position.x;
+
+                // Check if the player is on the side we are actually facing
+                canSeePlayer = (playerOnRight == dirIsRight);
+            }
+            else
+            {
+                canSeePlayer = false;
+            }
         }
-    }
 
-    protected override void BaseAttack()
-    {
-        throw new System.NotImplementedException();
-    }
-
-    private IEnumerator BashAttack()
-    {
-        // Turn the visual/physics shape on
-        hitBox.gameObject.SetActive(true);
-
-        // Wait one frame so the physics engine has a chance to register the enabled collider
-        yield return null;
-
-        // Create a filter to tell Unity exactly what layer to look for
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(playerLayer);
-        filter.useTriggers = true; ; // Set to false if your enemies use physical colliders instead of triggers
-
-        Collider2D hit = Physics2D.OverlapCircle(transform.position, attackRange, playerLayer);
-        if (hit != null)
+        protected override IEnumerator BaseAttack()
         {
-            PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
-            playerHealth.TakeDamage(bashDmg);
-            Vector2 knockbackDir = (player.transform.position - transform.position).normalized;
-            StartCoroutine(playerHealth.TakeKnockback(knockbackDir, bashKnockback, knockbackDuration));
+            isAttacking = true;
+            hitBox.gameObject.SetActive(true); // Enable ONCE before the loop
+        
+            // Determine charge direction and set velocity ONCE
+            float chargeDir = dirIsRight ? 1f : -1f;
+            rb.linearVelocity = new Vector2(chargeDir * chargeSpeed, rb.linearVelocity.y);
+
+            yield return null;
+
+            while (!isColliding)
+            {
+                Collider2D hit = Physics2D.OverlapCircle(hitBox.transform.position, hitBox.radius, playerLayer);
+                Debug.Log("WE GOT HIM " + hit != null);
+                if (hit != null)
+                {
+                    PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                    if (playerHealth != null)
+                    {
+                        playerHealth.TakeDamage(chargeDmg);
+                        Vector2 knockbackDir = (player.position - transform.position).normalized;
+                        StartCoroutine(playerHealth.TakeKnockback(knockbackDir, chargeKnockback, knockbackDuration));
+                    }
+                    break; // Stop charging once we hit the player
+                }
+                yield return null;
+            }
+
+            // Clean up after charge ends (hit wall or hit player)
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            hitBox.gameObject.SetActive(false); // Disable ONCE after the loop
+        
+            yield return new WaitForSeconds(chargeDuration);
+            yield return new WaitForSeconds(chargeCooldown);
+            isAttacking = false;
+        }
+
+        private IEnumerator BashAttack()
+        {
+            isAttacking = true;
+
+            // Turn the visual/physics shape on
+            hitBox.gameObject.SetActive(true);
+
+            // Wait one frame so the physics engine has a chance to register the enabled collider
+            yield return null;
+
+            // Use the hitBox's actual position and radius for accuracy
+            Collider2D hit = Physics2D.OverlapCircle(hitBox.transform.position, hitBox.radius, playerLayer);
+            
+            if (hit != null)
+            {
+                PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(bashDmg);
+                    Vector2 knockbackDir = (player.position - transform.position).normalized;
+                    StartCoroutine(playerHealth.TakeKnockback(knockbackDir, bashKnockback, knockbackDuration));
+                }
+            }
+
             yield return new WaitForSeconds(bashDuration);
+
+            // Turn the hitbox back off
+            hitBox.gameObject.SetActive(false);
+
+            // Apply cooldown before allowing another attack
+            yield return new WaitForSeconds(bashCooldown);
+            isAttacking = false;
         }
-        
 
-        // Turn the hitbox back off
-        hitBox.gameObject.SetActive(false);
-    }
-
-    public override void TakeDamage(float damage)
-    {
-        //This enemy does not take damage from player
-        //PLAY ANIMATION
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Spikes"))
+        public override void TakeDamage(float damage)
         {
-            Die();
+            //This enemy does not take damage from player
+            //PLAY ANIMATION
         }
-        else if ((collideWithLayer.value & (1 << collision.gameObject.layer)) != 0
-                  && isColliding) //Check if the collision is something that should make the knight turn around
+
+        private void OnCollisionEnter2D(Collision2D collision)
         {
-            Flip();
+            if (collision.gameObject.CompareTag("Spikes"))
+            {
+                Die();
+            }
+            else if ((collideWithLayer.value & (1 << collision.gameObject.layer)) != 0
+                    && isColliding) //Check if the collision is something that should make the knight turn around
+            {
+                Flip();
+            }
         }
     }
-}

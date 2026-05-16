@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections;
 using System.Collections.Specialized;
 using Unity.VisualScripting;
@@ -15,13 +16,10 @@ public class BaseEnemyAI : EnemyHealth
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
-    private Rigidbody2D rb;
     private bool isJumping = false;
 
     protected override void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
         // Start the jumping loop
         StartCoroutine(JumpRoutine());
     }
@@ -57,9 +55,10 @@ public class BaseEnemyAI : EnemyHealth
         }
     }
 
-    protected override void BaseAttack()
+    protected override IEnumerator BaseAttack()
     {
-        //DO NOTHING
+        //do nothing
+        yield break;
     }
 
     void SmallHop()

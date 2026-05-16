@@ -9,12 +9,12 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float health;
     [SerializeField] private Animator anim;
-    Rigidbody rb;
+    Rigidbody2D rb;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody2D>();
         health = maxHealth;
     }
 
@@ -58,7 +58,6 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         anim.SetTrigger("Died");
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         GetComponent<PlayerMovement>().enabled = false;
         this.enabled = false;
