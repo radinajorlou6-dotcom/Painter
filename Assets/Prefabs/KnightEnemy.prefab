@@ -298,6 +298,7 @@ MonoBehaviour:
     m_Bits: 256
   moveSpeed: 5
   chargeSpeed: 15
+  edgeCheckDistance: 2
   knockbackDuration: 0.2
   weaponPoint: {fileID: 3144247016150098345}
   hitBox: {fileID: 1521220330626458133}

@@ -56,10 +56,10 @@
         {
             if (!isGrounded || isBeingKnocked) return; // Do not move if we're in the air or being knocked back
             
-            // Check if there's ground ahead when moving
-            if (!IsGroundAhead())
+            // Check if there's ground ahead or a spike in front when patrolling
+            if (!IsGroundAhead() || IsSpikeAhead())
             {
-                Flip(); // Turn around if walking off an edge
+                Flip(); // Turn around if walking off an edge or into spikes
                 return;
             }
             
@@ -79,6 +79,22 @@
             // Check in front of the knight at ground level
             Vector2 checkPos = new Vector2(transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance), groundCheck.position.y);
             return Physics2D.OverlapBox(checkPos, groundCheckSize, 0, groundLayer);
+        }
+
+        private bool IsSpikeAhead()
+        {
+            // Expand the detection area so it catches spikes on the ground and on walls ahead of the knight.
+            Vector2 checkPos = new Vector2(transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance), transform.position.y);
+            Vector2 spikeCheckSize = new Vector2(edgeCheckDistance + groundCheckSize.x, groundCheckSize.y + collideCheckSize.y + 0.5f);
+            Collider2D[] hits = Physics2D.OverlapBoxAll(checkPos, spikeCheckSize, 0f);
+            foreach (Collider2D hit in hits)
+            {
+                if (hit != null && hit.CompareTag("Spikes"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void AttackMove()
