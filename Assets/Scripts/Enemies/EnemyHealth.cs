@@ -64,6 +64,7 @@ public abstract class EnemyHealth : MonoBehaviour
 
     protected virtual void CheckPlayerDetection()
     {
+        if (player == null) return;
         currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
         RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
         Debug.Log("Here");
@@ -152,12 +153,13 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         if (Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer))
         {
-            Debug.Log("Colliding with");
+            Debug.Log(gameObject.name + " Colliding with " + collideCheck.name);
             isColliding = true;
         }
         else
         {
-            isColliding= false;
+            Debug.Log(gameObject.name + " Not Colliding");
+            isColliding = false;
         }
     }
 

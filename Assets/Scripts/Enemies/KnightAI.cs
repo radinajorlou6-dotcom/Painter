@@ -11,7 +11,7 @@
         [Header("Melee Attack")]
         [SerializeField] protected float knockbackDuration = 0.2f;
         [SerializeField] protected Transform weaponPoint;
-        [SerializeField] protected CircleCollider2D hitBox;
+        [SerializeField] protected BoxCollider2D hitBox;
         [SerializeField] protected float bashDuration = 0.2f;
         [SerializeField] protected float bashCooldown = 0f; //INCASE WE WANT MELEE COOLDOWN TO BE DIFFERENT FROM MELEE ANIMATION LENGTH
         [SerializeField] protected float bashRange = 2f;
@@ -21,7 +21,8 @@
         [SerializeField] protected float chargeKnockback = 5f;
         [SerializeField] protected float chargeDuration = 1f;
         [SerializeField] protected float chargeCooldown = 0f;
-        
+
+
         private bool isAttacking = false;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -77,6 +78,7 @@
 
         protected override void CheckPlayerDetection()
         {
+            if (player == null) return;
             currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
             RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
             Debug.Log("Here");
@@ -107,8 +109,10 @@
 
             while (!isColliding)
             {
-                Collider2D hit = Physics2D.OverlapCircle(hitBox.transform.position, hitBox.radius, playerLayer);
-                Debug.Log("WE GOT HIM " + hit != null);
+                Vector2 hitCenter = hitBox.bounds.center;
+                float hitRadius = hitBox.bounds.extents.x;
+                Collider2D hit = Physics2D.OverlapCircle(hitCenter, hitRadius, playerLayer);
+                Debug.Log("WE GOT HIM " + (hit != null));
                 if (hit != null)
                 {
                     PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
@@ -142,9 +146,12 @@
             // Wait one frame so the physics engine has a chance to register the enabled collider
             yield return null;
 
-            // Use the hitBox's actual position and radius for accuracy
-            Collider2D hit = Physics2D.OverlapCircle(hitBox.transform.position, hitBox.radius, playerLayer);
+            // Use the hitBox's actual world center and radius for accuracy
+            Vector2 hitCenter = hitBox.bounds.center;
+            float hitRadius = hitBox.bounds.extents.x;
+            Collider2D hit = Physics2D.OverlapCircle(hitCenter, hitRadius, playerLayer);
             
+            Debug.Log("Bash hit: " + (hit != null));
             if (hit != null)
             {
                 PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();

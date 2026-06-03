@@ -38,6 +38,7 @@ public class BaseEnemyAI : EnemyHealth
             yield return new WaitForSeconds(jumpInterval);
             if (!isGrounded) continue;
             if (isBeingKnocked) continue;
+            if (player == null) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);
 
