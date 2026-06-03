@@ -8,6 +8,9 @@
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float chargeSpeed = 5f;
 
+        [Header("Edge Detection")]
+        [SerializeField] private float edgeCheckDistance = 0.5f; // How far ahead to check for ground
+
         [Header("Melee Attack")]
         [SerializeField] protected float knockbackDuration = 0.2f;
         [SerializeField] protected Transform weaponPoint;
@@ -51,6 +54,15 @@
 
         private void Move()
         {
+            if (!isGrounded || isBeingKnocked) return; // Do not move if we're in the air or being knocked back
+            
+            // Check if there's ground ahead when moving
+            if (!IsGroundAhead())
+            {
+                Flip(); // Turn around if walking off an edge
+                return;
+            }
+            
             if (dirIsRight)
             {
                 // Do not use Time.deltaTime when setting linearVelocity directly
@@ -60,6 +72,13 @@
             {
                 rb.linearVelocity = new Vector2(-moveSpeed, rb.linearVelocity.y);
             }
+        }
+
+        private bool IsGroundAhead()
+        {
+            // Check in front of the knight at ground level
+            Vector2 checkPos = new Vector2(transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance), groundCheck.position.y);
+            return Physics2D.OverlapBox(checkPos, groundCheckSize, 0, groundLayer);
         }
 
         private void AttackMove()
