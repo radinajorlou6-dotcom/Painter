@@ -16,6 +16,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jumping")]
     public float jump_height = 2f;
     float horizontalMovement;
+    [Header("Physics")]
+    [Tooltip("How quickly the player accelerates toward target ground speed (units/s^2)")]
+    [SerializeField] private float groundAcceleration = 80f;
+    [Tooltip("Ground friction: rate at which horizontal speed is reduced when there's no input (units/s^2)")]
+    [SerializeField] private float groundFriction = 30f;
+    [Tooltip("Air drag: rate at which horizontal speed decays while airborne (units/s^2)")]
+    [SerializeField] private float airDrag = 5f;
 
     //Ground check variables
     [Header("GroundCheck")]
@@ -75,17 +82,42 @@ public class PlayerMovement : MonoBehaviour
     {
         GroundCheck();
         WallCheck();
+
         if (!isWallJumping)
         {
             if (isWalled)
-        {
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            {
+                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            }
+            else
+            {
+                if (isGrounded)
+                {
+                    float desiredX = horizontalMovement * moveSpeed;
+
+                    if (Mathf.Abs(horizontalMovement) > 0.01f)
+                    {
+                        // Accelerate toward target ground speed
+                        float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, groundAcceleration * Time.fixedDeltaTime);
+                        rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+                    }
+                    else
+                    {
+                        // Apply ground friction toward zero when no input
+                        float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, groundFriction * Time.fixedDeltaTime);
+                        rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+                    }
+                }
+                else
+                {
+                    // Airborne: do not allow input to change horizontal velocity directly.
+                    // Apply gentle air drag so momentum decays realistically.
+                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, airDrag * Time.fixedDeltaTime);
+                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+                }
+            }
         }
-        else
-        {
-            rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
-        }
-        }
+
         Gravity();
         WallSlide();
     }
@@ -138,7 +170,15 @@ public class PlayerMovement : MonoBehaviour
 
     public void Move(InputAction.CallbackContext context)
     {
-        horizontalMovement = context.ReadValue<Vector2>().x;
+        if (context.canceled)
+         {
+             horizontalMovement = 0;
+         }
+         else
+         {
+            // Directly set horizontal input each frame to feed acceleration logic
+            horizontalMovement = context.ReadValue<Vector2>().x;
+         }
     }
 
     public void Jump(InputAction.CallbackContext context)
@@ -205,7 +245,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Flip()
     {
-        if(isFacingRight && horizontalMovement < 0 || !isFacingRight && horizontalMovement > 0)
+        // Only allow flipping when grounded to prevent mid-air facing/instant direction changes
+
+        if (isFacingRight && horizontalMovement < 0 || !isFacingRight && horizontalMovement > 0)
         {
             FlipMain();
         }
