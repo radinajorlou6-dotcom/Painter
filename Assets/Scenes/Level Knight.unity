@@ -17448,7 +17448,23 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1855131141}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.size
+      value: 17
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_ActionId
+      value: c71445ef-0c7b-4ef7-92f2-bcf92bcf5242
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_ActionName
+      value: 'Combat/SlingshotMove[/Keyboard/shift,/Mouse/rightButton]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
@@ -17456,20 +17472,52 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 912592361}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnSlingshotClick
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
       value: CombatInput, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: SlingshotAbility, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 6414296493766734255, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: healthBar
       value: 
       objectReference: {fileID: 1142062786}
     - target: {fileID: 6905779516471068025, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6905779516471068025, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_GravityScale
       value: 1.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 8367687422013033490, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_Material
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.x

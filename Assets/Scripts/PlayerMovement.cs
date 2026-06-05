@@ -91,9 +91,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else
             {
-                if (isGrounded)
-                {
-                    float desiredX = horizontalMovement * moveSpeed;
+                    float desiredX = isGrounded ? horizontalMovement * moveSpeed : horizontalMovement * (moveSpeed / 2); // Reduce horizontal control in air
 
                     if (Mathf.Abs(horizontalMovement) > 0.01f)
                     {
@@ -106,14 +104,6 @@ public class PlayerMovement : MonoBehaviour
                         // Apply ground friction toward zero when no input
                         float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, groundFriction * Time.fixedDeltaTime);
                         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
-                    }
-                }
-                else
-                {
-                    // Airborne: do not allow input to change horizontal velocity directly.
-                    // Apply gentle air drag so momentum decays realistically.
-                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, airDrag * Time.fixedDeltaTime);
-                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
                 }
             }
         }
