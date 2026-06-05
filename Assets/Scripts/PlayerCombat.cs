@@ -65,7 +65,9 @@ public class PlayerCombat : MonoBehaviour
     private Coroutine shieldTimerRoutine;
     private bool canAttack = true;
     
-
+    // Public accessors for combat preview
+    public float GetSlashRadius() => slashRadius;
+    public LayerMask GetEnvironmentLayerMask() => environment;
 
     #region ShieldLogic
     public void StartNewShield()
