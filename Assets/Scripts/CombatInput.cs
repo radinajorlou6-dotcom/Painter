@@ -51,6 +51,7 @@ public class CombatInput : MonoBehaviour
 
     public void OnPrimaryAttack(InputAction.CallbackContext context)
     {
+        if (isDrawActive || isShieldActive) return; // Prevent attacking while drawing or shielding
         if (context.started) // When the player presses down
         {
             isDragging = true;
@@ -94,6 +95,8 @@ public class CombatInput : MonoBehaviour
     {
         if (context.started)
         {
+            if (isDrawActive || isDragging) return; // Prevent shielding while drawing or slashing
+
             isShieldActive = true;
             playerCombat.StartNewShield();
         }
@@ -147,6 +150,14 @@ public class CombatInput : MonoBehaviour
 
     void Update()
     {
+        if (isDrawActive && isDragging)
+        {
+            // Cancel any active slash while drawing to keep preview and attack disabled
+            isDragging = false;
+            DestroySlashPreview();
+            mousePath.Clear();
+        }
+
         // 1. --- SLASH LOGIC ---
         if (isDragging)
         {
@@ -197,6 +208,7 @@ public class CombatInput : MonoBehaviour
         }
     }
 
+    #region SlashPreview
     private void CreateSlashPreview()
     {
         // Create a new GameObject to hold the LineRenderer
@@ -368,4 +380,5 @@ public class CombatInput : MonoBehaviour
         }
         slashPreviewRenderer = null;
     }
+    #endregion
 }
