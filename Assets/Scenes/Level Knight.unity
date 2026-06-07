@@ -313,20 +313,40 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 385513173}
     - target: {fileID: 4357709001839216379, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
+      propertyPath: edgeCheckDistance
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4357709001839216379, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: groundCheckSize.x
-      value: 1.89
+      value: 1.77
       objectReference: {fileID: 0}
     - target: {fileID: 4357709001839216379, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: groundCheckSize.y
       value: -0.37
       objectReference: {fileID: 0}
+    - target: {fileID: 4357709001839216379, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
+      propertyPath: collideCheckSize.y
+      value: 2.32
+      objectReference: {fileID: 0}
+    - target: {fileID: 7368570698721308655, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
+      propertyPath: m_Layer
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.463723
+      objectReference: {fileID: 0}
+    - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2.5025024
+      objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.86
+      value: 1.5935
       objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.85352
+      value: 0.0689
       objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2145,6 +2165,17 @@ MonoBehaviour:
   previewLine: {fileID: 912592360}
   previewColor: {r: 0.2, g: 0.9, b: 1, a: 0.8}
   previewWidth: 0.08
+--- !u!114 &912592370 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -8986424987948369841, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+  m_PrefabInstance: {fileID: 2033819484}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912592351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a24f5918d41cd0b4cb56d596b6d48a23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SlingshotAbility
 --- !u!1 &917361065
 GameObject:
   m_ObjectHideFlags: 0
@@ -17453,11 +17484,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_ActionId
-      value: c71445ef-0c7b-4ef7-92f2-bcf92bcf5242
+      value: ffb6fea5-8e2a-4955-b301-914f84350265
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_ActionName
-      value: 'Combat/SlingshotMove[/Keyboard/shift,/Mouse/rightButton]'
+      value: 'Player/Slingshot[/Keyboard/leftShift,/Mouse/rightButton]'
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.size
@@ -17478,7 +17509,7 @@ PrefabInstance:
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 912592361}
+      objectReference: {fileID: 912592370}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_CallState
       value: 2

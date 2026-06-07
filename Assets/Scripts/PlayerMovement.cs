@@ -80,6 +80,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Debug.Log($"isWalled: {isWalled}  isGrounded: {isGrounded}");
         GroundCheck();
         WallCheck();
 
@@ -91,19 +92,18 @@ public class PlayerMovement : MonoBehaviour
             }
             else
             {
-                    float desiredX = isGrounded ? horizontalMovement * moveSpeed : horizontalMovement * (moveSpeed / 2); // Reduce horizontal control in air
-
-                    if (Mathf.Abs(horizontalMovement) > 0.01f)
-                    {
-                        // Accelerate toward target ground speed
-                        float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, groundAcceleration * Time.fixedDeltaTime);
-                        rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
-                    }
-                    else
-                    {
-                        // Apply ground friction toward zero when no input
-                        float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, groundFriction * Time.fixedDeltaTime);
-                        rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+                if (Mathf.Abs(horizontalMovement) > 0.01f)
+                {
+                    float desiredX = horizontalMovement * moveSpeed;
+                    float accel = isGrounded ? groundAcceleration : airDrag; // was always groundAcceleration
+                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
+                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+                }
+                else
+                {
+                    float drag = isGrounded ? groundFriction : airDrag; // was always groundFriction
+                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, drag * Time.fixedDeltaTime);
+                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
                 }
             }
         }
@@ -201,21 +201,22 @@ public class PlayerMovement : MonoBehaviour
 
     private void GroundCheck()
     {
-        // <--- NEW: Using BoxCast to get the angle of the surface
-        RaycastHit2D hit = Physics2D.BoxCast(groundCheck.position, groundCheckSize, 0f, Vector2.down, 0.1f, groundLayer);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.SetLayerMask(groundLayer);
+        filter.useLayerMask = true;
 
-        if (hit.collider != null)
+        ContactPoint2D[] contacts = new ContactPoint2D[10];
+        int count = rb.GetContacts(filter, contacts);
+
+        for (int i = 0; i < count; i++)
         {
-            // Calculate the angle of the surface compared to completely flat ground (Vector2.up)
-            float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
-
-            // If the surface is flatter than our maximum allowed slope, it's ground
+            float slopeAngle = Vector2.Angle(contacts[i].normal, Vector2.up);
             if (slopeAngle <= maxSlopeAngle)
             {
                 isGrounded = true;
                 isWallJumping = false;
                 wallJumpTimer = 0;
-                return; // Exit early, we are grounded
+                return;
             }
         }
         isGrounded = false;

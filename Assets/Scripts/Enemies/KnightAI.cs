@@ -38,12 +38,12 @@
         protected override void Update()
         {
             base.Update();
-            Debug.Log("Is attacking: " + isAttacking);
+            //Debug.Log("Is attacking: " + isAttacking);
             if (isAttacking) return; // Prevent moving or starting new attacks while already attacking
 
             if (canSeePlayer)
             {
-                Debug.Log("Going into attackMove");
+                //Debug.Log("Going into attackMove");
                 AttackMove();
             }
             else
@@ -116,7 +116,7 @@
             if (player == null) return;
             currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
             RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
-            Debug.Log("Here");
+            //Debug.Log("Here");
             if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
             {
                 // Determine if the player is to the left or right of us
@@ -147,7 +147,7 @@
                 Vector2 hitCenter = hitBox.bounds.center;
                 float hitRadius = hitBox.bounds.extents.x;
                 Collider2D hit = Physics2D.OverlapCircle(hitCenter, hitRadius, playerLayer);
-                Debug.Log("WE GOT HIM " + (hit != null));
+                //Debug.Log("WE GOT HIM " + (hit != null));
                 if (hit != null)
                 {
                     PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
@@ -186,7 +186,7 @@
             float hitRadius = hitBox.bounds.extents.x;
             Collider2D hit = Physics2D.OverlapCircle(hitCenter, hitRadius, playerLayer);
             
-            Debug.Log("Bash hit: " + (hit != null));
+            //Debug.Log("Bash hit: " + (hit != null));
             if (hit != null)
             {
                 PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();

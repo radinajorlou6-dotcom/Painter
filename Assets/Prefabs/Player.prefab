@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6414296493766734255}
   - component: {fileID: 3089227504797308296}
   - component: {fileID: 3275910079701954644}
+  - component: {fileID: -8986424987948369841}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -323,6 +324,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 4bbd82a1-c311-4708-abd7-dff6982c04f4
     m_ActionName: 'Combat/DrawPlatform[/Keyboard/shift,/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -8986424987948369841}
+        m_TargetAssemblyTypeName: SlingshotAbility, Assembly-CSharp
+        m_MethodName: OnSlingshotClick
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: ffb6fea5-8e2a-4955-b301-914f84350265
+    m_ActionName: 'Player/Slingshot[/Keyboard/leftShift,/Mouse/rightButton]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -344,17 +361,23 @@ MonoBehaviour:
   moveSpeed: 4
   anim: {fileID: 3275910079701954644}
   jump_height: 8.25
+  groundAcceleration: 80
+  groundFriction: 30
+  airDrag: 1
   groundCheck: {fileID: 810167527649315121}
   groundCheckSize: {x: 1.62, y: 0.61}
   groundLayer:
     serializedVersion: 2
     m_Bits: 73
-  maxSlopeAngle: 45
+  maxSlopeAngle: 60
   wallCheck: {fileID: 6559660373697844107}
   wallCheckSize: {x: 0.32, y: 2.19}
   wallLayer:
     serializedVersion: 2
-    m_Bits: 137
+    m_Bits: 129
+  drawnPlatformLayer:
+    serializedVersion: 2
+    m_Bits: 8
   wallSlideSpeed: 2
   wallJumpPower: {x: 3, y: 11}
   baseGravity: 2
@@ -422,6 +445,25 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-8986424987948369841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2141820239114053640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a24f5918d41cd0b4cb56d596b6d48a23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SlingshotAbility
+  maxDragDistance: 3
+  launchPower: 10
+  arrowheadLength: 0.3
+  arrowheadAngle: 25
+  previewLine: {fileID: 0}
+  previewColor: {r: 0.2, g: 0.9, b: 1, a: 0.8}
+  previewWidth: 0.08
 --- !u!1 &4318114234461415396
 GameObject:
   m_ObjectHideFlags: 0
