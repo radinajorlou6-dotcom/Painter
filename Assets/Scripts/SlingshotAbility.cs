@@ -65,6 +65,7 @@ public class SlingshotAbility : MonoBehaviour
 
     public void OnSlingshotClick(InputAction.CallbackContext context)
     {
+        if (!GameManager.Instance.hasSlingshot) return;
         if (context.started)
         {
             if (!IsShiftHeld()) return;

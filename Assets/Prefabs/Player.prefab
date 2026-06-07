@@ -340,6 +340,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: ffb6fea5-8e2a-4955-b301-914f84350265
     m_ActionName: 'Player/Slingshot[/Keyboard/leftShift,/Mouse/rightButton]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3089227504797308296}
+        m_TargetAssemblyTypeName: CombatInput, Assembly-CSharp
+        m_MethodName: Interact
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 95f28495-6301-47e3-b3c2-bffab70a358e
+    m_ActionName: 'Player/Interact[/Keyboard/g]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -408,6 +424,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+  interactionPoint: {fileID: 6559660373697844107}
+  interactionRadius: 0.5
+  interactableLayer:
+    serializedVersion: 2
+    m_Bits: 4096
   playerCombat: {fileID: 0}
   playerCollider: {fileID: 8367687422013033490}
   dragThreshold: 1.5

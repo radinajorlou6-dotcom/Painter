@@ -7,6 +7,42 @@ using JetBrains.Annotations;
 
 public class CombatInput : MonoBehaviour
 {
+    
+    [Header("Interaction System")]
+    [Header("Interaction System")]
+    [SerializeField] private Transform interactionPoint; // An empty GameObject placed in front of the player
+    [SerializeField] private float interactionRadius = 0.5f; // How close you need to be to interact
+    [SerializeField] private LayerMask interactableLayer; 
+
+// Hook this up directly to your Player Input component event slot for "Interact"
+public void Interact(InputAction.CallbackContext context)
+{
+    // ONLY fire on the exact frame the key is physically pressed down
+    if (context.performed)
+    {
+        // Draw a temporary mathematical circle to see if any interactable colliders are inside it
+        Collider2D hit = Physics2D.OverlapCircle(interactionPoint.position, interactionRadius, interactableLayer);
+
+        if (hit != null)
+        {
+            // Ask the object: "Do you have an IInteractable interface contract attached?"
+            if (hit.TryGetComponent(out IInteractable interactable))
+            {
+                interactable.Interact(); // Pass the baton! The chest script takes over execution here.
+            }
+        }
+    }
+}
+
+// Visualizes the interaction circle in the Unity Editor scene view
+private void OnDrawGizmosSelected()
+{
+    if (interactionPoint == null) return;
+    Gizmos.color = Color.yellow;
+    Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+}
+    
+
     [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private Collider2D playerCollider; // Reference to the player's collider for shield point checks
 
