@@ -26,6 +26,14 @@ public class PlayerHealth : MonoBehaviour
         
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Spikes"))
+        {
+            TakeDamage(9999); //Instant death
+        }
+    }
+
     public void TakeDamage(float damage)
     {
         anim.SetTrigger("gotHurt");
