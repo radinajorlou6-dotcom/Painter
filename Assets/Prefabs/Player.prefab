@@ -374,10 +374,7 @@ MonoBehaviour:
   wallCheckSize: {x: 0.32, y: 2.19}
   wallLayer:
     serializedVersion: 2
-    m_Bits: 129
-  drawnPlatformLayer:
-    serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 137
   wallSlideSpeed: 2
   wallJumpPower: {x: 3, y: 11}
   baseGravity: 2
