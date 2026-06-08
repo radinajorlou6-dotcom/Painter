@@ -21,6 +21,7 @@ public class FinishPoint : MonoBehaviour
         if(collision.CompareTag("Player") || collision.gameObject.CompareTag("Player"))
         {
             //DO STUFF GIVE POWER GIVE COLOUR ETC
+            GameManager.Instance.UpdateMaxLevelReached(SceneManager.GetActiveScene().buildIndex + 1); // Update max level reached
             LoadNextLevel();
         }
     }

@@ -3,6 +3,7 @@ using UnityEngine;
 public abstract class PaintBucketScript : MonoBehaviour, IInteractable
 {
     [SerializeField] protected string bucketColour;
+    [SerializeField] protected string abilityToUnlock;
     protected bool isEmpty = false;
     public virtual void Interact()
     {
@@ -12,6 +13,7 @@ public abstract class PaintBucketScript : MonoBehaviour, IInteractable
         if (GameManager.Instance != null)
         {
             GameManager.Instance.SaveBucketState(bucketColour, true);
+            GameManager.Instance.UnlockAbility(abilityToUnlock);
         }
         //PLAY ANIMATION OF EMPTYING BUCKET
         // Implement the logic for what happens when the player interacts with the paint bucket

@@ -1,10 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class GameManager : MonoBehaviour
 {
 
     public static GameManager Instance { get; private set; }
+    public static event Action<String> OnColourUnlocked;
+    public int maxLevelReached { get; private set; } = 1; // Track the highest level reached by the player
 
     //Player abilitys
     public bool hasSlingshot { get; private set; } = false;
@@ -55,6 +58,8 @@ public class GameManager : MonoBehaviour
     public void SaveBucketState(string colour, bool isEmpty)
     {
         bucketStates[colour] = isEmpty;
+        OnColourUnlocked?.Invoke(colour); // Notify listeners that a colour has been unlocked
+        
     }
 
     public void UnlockAbility(string abilityName)
@@ -99,5 +104,10 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("Unknown colour: " + colourName);
                 break;
         }
+    }
+
+    public void UpdateMaxLevelReached(int levelIndex)
+    {
+        maxLevelReached = Mathf.Max(maxLevelReached, levelIndex);
     }
 }
