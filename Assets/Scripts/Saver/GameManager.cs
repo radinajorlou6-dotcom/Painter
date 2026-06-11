@@ -10,16 +10,15 @@ public class GameManager : MonoBehaviour
     public int maxLevelReached { get; private set; } = 1; // Track the highest level reached by the player
 
     //Player abilitys
-    public bool hasSlingshot { get; private set; } = false;
-    public bool hasPlatformDraw { get; private set; } = false;
-    public bool hasShieldDraw { get; private set; } = false;
+    public Dictionary<string, bool> unlockedAbilities { get; private set; } = new Dictionary<string, bool>()
+    {
+        {"Slingshot", false},
+        {"PlatformDraw", false},
+        {"ShieldDraw", false}
+    };
 
     //Colours unlocked (not sure which ones will use yet just putting eveything here for now)
-    public bool hasRed { get; private set; } = false;
-    public bool hasBlue { get; private set; } = false;
-    public bool hasYellow { get; private set; } = false;
-    public bool hasGreen { get; private set; } = false;
-    public bool hasPurple { get; private set; } = false;
+    public List<string> unlockedColours { get; private set; } = new List<string>() {};
 
     //Paint bucket states
     private Dictionary<string, bool> bucketStates = new Dictionary<string, bool>();
@@ -64,45 +63,19 @@ public class GameManager : MonoBehaviour
 
     public void UnlockAbility(string abilityName)
     {
-        switch (abilityName)
+        if (unlockedAbilities.ContainsKey(abilityName) && !unlockedAbilities[abilityName])
         {
-            case "Slingshot":
-                hasSlingshot = true;
-                break;
-            case "PlatformDraw":
-                hasPlatformDraw = true;
-                break;
-            case "ShieldDraw":
-                hasShieldDraw = true;
-                break;
-            default:
-                Debug.LogWarning("Unknown ability: " + abilityName);
-                break;
+            unlockedAbilities[abilityName] = true;
+            // You can also add an event here to notify listeners that an ability has been unlocked
         }
     }
 
     public void UnlockColour(string colourName)
     {
-        switch (colourName)
+        if (!unlockedColours.Contains(colourName))
         {
-            case "red":
-                hasRed = true;
-                break;
-            case "blue":
-                hasBlue = true;
-                break;
-            case "yellow":
-                hasYellow = true;
-                break;
-            case "green":
-                hasGreen = true;
-                break;
-            case "purple":
-                hasPurple = true;
-                break;
-            default:
-                Debug.LogWarning("Unknown colour: " + colourName);
-                break;
+            unlockedColours.Add(colourName);
+            OnColourUnlocked?.Invoke(colourName); // Notify listeners that a colour has been unlocked
         }
     }
 

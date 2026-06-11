@@ -30,7 +30,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float maxSlopeAngle;
-    bool isGrounded = true;
+    public bool isGrounded {get; private set;} = true;
 
 
     //Wallcheck variables
@@ -38,7 +38,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Vector2 wallCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask wallLayer;
-    bool isWalled = false;
+    public bool isWalled {get; private set;} = false;
+    public string isGroundedOn {get; private set;}
 
     //Wall movement variables
     [Header("WallMovement")]
@@ -214,12 +215,15 @@ public class PlayerMovement : MonoBehaviour
             if (slopeAngle <= maxSlopeAngle)
             {
                 isGrounded = true;
+                isGroundedOn =  LayerMask.LayerToName(contacts[i].collider.gameObject.layer);
+                Debug.Log($"Grounded on: {isGroundedOn}");
                 isWallJumping = false;
                 wallJumpTimer = 0;
                 return;
             }
         }
         isGrounded = false;
+        isGroundedOn = string.Empty;
     }
 
     private void WallCheck()

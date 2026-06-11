@@ -10,6 +10,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float yOffset = 0f;
 
     [Header("Ranged Attack")]
+    [SerializeField] private ObjectPooling bulletPool;
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float projectileSpeed = 10f;
@@ -234,12 +235,10 @@ public class PlayerCombat : MonoBehaviour
         // 1. FIXED COOLDOWN LOGIC: Check against the actual game clock
         if (Time.time < nextFireTime) return;
 
-        Debug.Log("Ranged Attack fired towards: " + targetWorldPos);
-
         // 2. FIXED DOUBLE-MATH: targetWorldPos is already correct, just subtract firePoint!
         Vector2 direction = (targetWorldPos - (Vector2)firePoint.position).normalized;
 
-        GameObject bullet = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+        GameObject bullet = bulletPool.SpawnFromPool(firePoint.position, Quaternion.identity);
 
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
         if (rb != null)

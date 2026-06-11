@@ -12,36 +12,7 @@ public class CombatInput : MonoBehaviour
     [Header("Interaction System")]
     [SerializeField] private Transform interactionPoint; // An empty GameObject placed in front of the player
     [SerializeField] private float interactionRadius = 0.5f; // How close you need to be to interact
-    [SerializeField] private LayerMask interactableLayer; 
-
-// Hook this up directly to your Player Input component event slot for "Interact"
-public void Interact(InputAction.CallbackContext context)
-{
-    // ONLY fire on the exact frame the key is physically pressed down
-    if (context.performed)
-    {
-        // Draw a temporary mathematical circle to see if any interactable colliders are inside it
-        Collider2D hit = Physics2D.OverlapCircle(interactionPoint.position, interactionRadius, interactableLayer);
-
-        if (hit != null)
-        {
-            // Ask the object: "Do you have an IInteractable interface contract attached?"
-            if (hit.TryGetComponent(out IInteractable interactable))
-            {
-                interactable.Interact(); // Pass the baton! The chest script takes over execution here.
-            }
-        }
-    }
-}
-
-// Visualizes the interaction circle in the Unity Editor scene view
-private void OnDrawGizmosSelected()
-{
-    if (interactionPoint == null) return;
-    Gizmos.color = Color.yellow;
-    Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
-}
-    
+    [SerializeField] private LayerMask interactableLayer; // Layer for interactable objects   
 
     [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private Collider2D playerCollider; // Reference to the player's collider for shield point checks
@@ -85,6 +56,34 @@ private void OnDrawGizmosSelected()
         StartCoroutine(RemoveDrawLines(10f)); // Start the coroutine to remove old drawn lines every 10 seconds
     }
 
+    public void Interact(InputAction.CallbackContext context)
+    {
+    // ONLY fire on the exact frame the key is physically pressed down
+    if (context.performed)
+    {
+        // Draw a temporary mathematical circle to see if any interactable colliders are inside it
+        Collider2D hit = Physics2D.OverlapCircle(interactionPoint.position, interactionRadius, interactableLayer);
+
+        if (hit != null)
+        {
+            // Ask the object: "Do you have an IInteractable interface contract attached?"
+            if (hit.TryGetComponent(out IInteractable interactable))
+            {
+                interactable.Interact(); // Pass the baton! The chest script takes over execution here.
+            }
+        }
+    }
+    }
+
+// Visualizes the interaction circle in the Unity Editor scene view
+    private void OnDrawGizmosSelected()
+    {
+        if (interactionPoint == null) return;
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+    }
+ 
+
     public void OnPrimaryAttack(InputAction.CallbackContext context)
     {
         if (isDrawActive || isShieldActive) return; // Prevent attacking while drawing or shielding
@@ -113,12 +112,10 @@ private void OnDrawGizmosSelected()
 
             if (distance < dragThreshold)
             {
-                Debug.Log("Ranged Attack! Distance: " + distance);
                 playerCombat.RangedAttack(mousePath[0]);
             }
             else
             {
-                Debug.Log("Swung Melee! Path length: " + mousePath.Count);
                 playerCombat.ExecuteDynamicSlash(mousePath);
             }
 
@@ -131,7 +128,8 @@ private void OnDrawGizmosSelected()
     {
         if (context.started)
         {
-            if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed) return; // Prevent shielding while drawing or slashing
+            if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed || 
+                !GameManager.Instance.unlockedAbilities.ContainsKey("Shield") || !GameManager.Instance.unlockedAbilities["Shield"]) return; // Prevent shielding while drawing or slashing
 
             isShieldActive = true;
             playerCombat.StartNewShield();
@@ -146,6 +144,7 @@ private void OnDrawGizmosSelected()
     {
         if (context.started)
         {
+            if (!GameManager.Instance.unlockedAbilities.ContainsKey("PlatformDraw") || !GameManager.Instance.unlockedAbilities["PlatformDraw"]) return;
             Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
             if (numOfLines >= maxLines) return;

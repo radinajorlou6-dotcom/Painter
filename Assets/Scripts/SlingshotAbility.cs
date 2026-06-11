@@ -20,11 +20,16 @@ public class SlingshotAbility : MonoBehaviour
     [SerializeField] private float previewWidth = 0.08f;
 
     private Camera mainCamera;
+    private PlayerMovement playerMovementScript;
     private Rigidbody2D rb;
     private PlayerMovement playerMovement;
     private Vector2 dragStart;
     private Vector2 dragCurrent;
     private bool isDragging;
+    [SerializeField] private int maxSlingshotUses = 1;
+    private int slingshotsLeft;
+    private bool wasGroundedLastFrame = false;
+
 
     private void Awake()
     {
@@ -49,9 +54,25 @@ public class SlingshotAbility : MonoBehaviour
         ConfigurePreviewLine();
         DisablePreviewLine();
     }
+    private void Start()
+    {
+        playerMovement = GetComponent<PlayerMovement>();
+        slingshotsLeft = maxSlingshotUses;
+        if (playerMovement == null)
+        {
+            Debug.LogError("SlingshotAbility requires a PlayerMovement component on the same GameObject.");
+        }
+    }
 
     private void Update()
     {
+        // Reset slingshot uses only once when landing (transition from not grounded to grounded)
+        if (playerMovement.isGrounded && !wasGroundedLastFrame && playerMovement.isGroundedOn != "Drawn Platforms")
+        {
+            slingshotsLeft = maxSlingshotUses;
+        }
+        wasGroundedLastFrame = playerMovement.isGrounded;
+        
         if (!isDragging) return;
 
         dragCurrent = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
@@ -65,10 +86,11 @@ public class SlingshotAbility : MonoBehaviour
 
     public void OnSlingshotClick(InputAction.CallbackContext context)
     {
-        if (!GameManager.Instance.hasSlingshot) return;
+        if (!GameManager.Instance.unlockedAbilities.ContainsKey("Slingshot") || !GameManager.Instance.unlockedAbilities["Slingshot"]) return;
         if (context.started)
         {
             if (!IsShiftHeld()) return;
+            if (slingshotsLeft <= 0) return;
 
             dragStart = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             isDragging = true;
@@ -77,6 +99,7 @@ public class SlingshotAbility : MonoBehaviour
 
         if (context.canceled && isDragging)
         {
+            slingshotsLeft--;
             dragCurrent = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             Vector2 launchVector = CalculateLaunchVector(dragStart, dragCurrent);
             Launch(launchVector);
