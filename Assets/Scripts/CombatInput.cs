@@ -129,7 +129,7 @@ public class CombatInput : MonoBehaviour
         if (context.started)
         {
             if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed || 
-                !GameManager.Instance.unlockedAbilities.ContainsKey("Shield") || !GameManager.Instance.unlockedAbilities["Shield"]) return; // Prevent shielding while drawing or slashing
+                !GameManager.Instance.unlockedAbilities.ContainsKey("ShieldDraw") || !GameManager.Instance.unlockedAbilities["ShieldDraw"]) return; // Prevent shielding while drawing or slashing
 
             isShieldActive = true;
             playerCombat.StartNewShield();

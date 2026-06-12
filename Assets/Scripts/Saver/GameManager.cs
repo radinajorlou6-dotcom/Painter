@@ -12,9 +12,9 @@ public class GameManager : MonoBehaviour
     //Player abilitys
     public Dictionary<string, bool> unlockedAbilities { get; private set; } = new Dictionary<string, bool>()
     {
-        {"Slingshot", false},
-        {"PlatformDraw", false},
-        {"ShieldDraw", false}
+        {"Slingshot", true},
+        {"PlatformDraw", true},
+        {"ShieldDraw", true}
     };
 
     //Colours unlocked (not sure which ones will use yet just putting eveything here for now)
