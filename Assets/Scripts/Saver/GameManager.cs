@@ -1,11 +1,21 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
 
+    public enum GameState
+    {
+        Playing,
+        Paused,
+        Died,
+    }
+
     public static GameManager Instance { get; private set; }
+    public GameState CurrentState { get; private set; }
+    public static event Action<GameState> OnStateChanged;
     public static event Action<String> OnColourUnlocked;
     public int maxLevelReached { get; private set; } = 1; // Track the highest level reached by the player
 
@@ -83,4 +93,70 @@ public class GameManager : MonoBehaviour
     {
         maxLevelReached = Mathf.Max(maxLevelReached, levelIndex);
     }
+
+    //STATE MANAGER
+    #region StateManager
+    public void UpdateGameState(GameState newState)
+    {
+        CurrentState = newState;
+
+        switch(newState)
+        {
+            case GameState.Playing:
+                HandlePlaying();
+                break;
+            case GameState.Paused:
+                HandlePaused();
+                break;
+            case GameState.Died:
+                HandleDied();
+                break;
+            default:
+                Debug.Log("Wrong GameState name used");
+                break;
+        }
+    }
+
+    private void HandlePlaying()
+    {
+        Time.timeScale = 1f; //Resume everything normally
+        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        {
+            playerInput.actions.FindActionMap("Player")?.Enable();
+            playerInput.actions.FindActionMap("Combat")?.Enable();
+            playerInput.actions.FindActionMap("UI")?.Disable();
+            Debug.Log("Input System: Player action map DISABLED.");
+        }
+        OnStateChanged?.Invoke(GameState.Playing);
+    }
+
+    private void HandlePaused()
+    {
+        Time.timeScale = 0f; //Paused all physics and everything
+        //TODO: DO EXTRA STUFF
+        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        {
+            playerInput.actions.FindActionMap("Player")?.Disable();
+            playerInput.actions.FindActionMap("Combat")?.Disable();
+            playerInput.actions.FindActionMap("UI")?.Enable();
+            Debug.Log("Input System: Player action map DISABLED.");
+        }
+        OnStateChanged?.Invoke(GameState.Paused);
+
+    }
+
+    private void HandleDied()
+    {
+        Time.timeScale = 0f;// Paused all physics and everything
+        //TODO: DO EXTRA STUFF
+        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        {
+            playerInput.actions.FindActionMap("Player")?.Disable();
+            playerInput.actions.FindActionMap("Combat")?.Disable();
+            playerInput.actions.FindActionMap("UI")?.Enable();
+            Debug.Log("Input System: Player action map DISABLED.");
+        }
+        OnStateChanged?.Invoke(GameState.Died);
+    }
+    #endregion
 }

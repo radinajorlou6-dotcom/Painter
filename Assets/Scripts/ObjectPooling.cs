@@ -7,6 +7,22 @@ public class ObjectPooling : MonoBehaviour
     [SerializeField] private GameObject prefab;
     [SerializeField] private int poolSize = 10;
     private Queue<GameObject> objectPool = new Queue<GameObject>();
+    private bool currentlyPlaying = true;
+
+    private void OnEnable()
+    {
+        GameManager.OnStateChanged += HandleGameStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        GameManager.OnStateChanged -= HandleGameStateChanged;
+    }
+
+    private void HandleGameStateChanged(GameManager.GameState newState)
+    {
+        currentlyPlaying = (newState == GameManager.GameState.Playing);
+    }
 
     private void Awake()
     {
@@ -41,6 +57,7 @@ public class ObjectPooling : MonoBehaviour
         GameObject objectToSpawn = objectPool.Dequeue();
         objectToSpawn.transform.position = position;
         objectToSpawn.transform.rotation = rotation;
+        objectToSpawn.transform.SetParent(null); //unparenting so it doesnt move with character after its been shot
         objectToSpawn.SetActive(true);
         return objectToSpawn;
     }
@@ -48,6 +65,7 @@ public class ObjectPooling : MonoBehaviour
     public void ReturnToPool(GameObject obj)
     {
         Debug.Log("Returning object to pool. Pool size before return: " + objectPool.Count);
+        obj.transform.SetParent(this.transform);
         obj.SetActive(false);
         objectPool.Enqueue(obj);
     }
@@ -66,6 +84,6 @@ public class ObjectPooling : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (!currentlyPlaying) return;
     }
 }

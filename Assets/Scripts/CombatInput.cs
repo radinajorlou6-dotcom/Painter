@@ -56,6 +56,66 @@ public class CombatInput : MonoBehaviour
         StartCoroutine(RemoveDrawLines(10f)); // Start the coroutine to remove old drawn lines every 10 seconds
     }
 
+    void Update()
+    {
+        if (isDrawActive && isDragging)
+        {
+            // Cancel any active slash while drawing to keep preview and attack disabled
+            isDragging = false;
+            DestroySlashPreview();
+            mousePath.Clear();
+        }
+
+        // 1. --- SLASH LOGIC ---
+        if (isDragging)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector2 lastPoint = mousePath[mousePath.Count - 1];
+
+            if (Vector2.Distance(lastPoint, currentWorldPos) > minDragDistance)
+            {
+                mousePath.Add(currentWorldPos);
+            }
+
+            // Update the slash preview visualization
+            UpdateSlashPreview();
+
+            // The Auto-Slash Timeout
+            slashTimer += Time.deltaTime;
+            if (slashTimer >= slashDuration)
+            {
+                isDragging = false;
+                slashTimer = 0f;
+
+                // Safety check: Don't execute a slash if they barely moved before the timeout
+                float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
+                if (distanceTraveled >= dragThreshold)
+                {
+                    playerCombat.ExecuteDynamicSlash(mousePath);
+                }
+
+                // Destroy the slash preview on timeout
+                DestroySlashPreview();
+
+                mousePath.Clear();
+            }
+        }
+
+        // 2. --- SHIELD LOGIC (FIX 1: Added back in!) ---
+        if (isShieldActive)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            playerCombat.AddShieldPoint(currentWorldPos);
+        }
+
+        if (isDrawActive)
+        {
+            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            if (playerCollider.OverlapPoint(currentWorldPos)) return; // Prevent drawing if mouse is over the player
+            drawScript.UpdateDraw(currentWorldPos);
+        }
+    }
+
     public void Interact(InputAction.CallbackContext context)
     {
     // ONLY fire on the exact frame the key is physically pressed down
@@ -181,66 +241,6 @@ public class CombatInput : MonoBehaviour
         numOfLines--;
         yield return new WaitForSeconds(drawCooldown);
         currentDrawInk -= inkToBeReturned;
-    }
-
-    void Update()
-    {
-        if (isDrawActive && isDragging)
-        {
-            // Cancel any active slash while drawing to keep preview and attack disabled
-            isDragging = false;
-            DestroySlashPreview();
-            mousePath.Clear();
-        }
-
-        // 1. --- SLASH LOGIC ---
-        if (isDragging)
-        {
-            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector2 lastPoint = mousePath[mousePath.Count - 1];
-
-            if (Vector2.Distance(lastPoint, currentWorldPos) > minDragDistance)
-            {
-                mousePath.Add(currentWorldPos);
-            }
-
-            // Update the slash preview visualization
-            UpdateSlashPreview();
-
-            // The Auto-Slash Timeout
-            slashTimer += Time.deltaTime;
-            if (slashTimer >= slashDuration)
-            {
-                isDragging = false;
-                slashTimer = 0f;
-
-                // Safety check: Don't execute a slash if they barely moved before the timeout
-                float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
-                if (distanceTraveled >= dragThreshold)
-                {
-                    playerCombat.ExecuteDynamicSlash(mousePath);
-                }
-
-                // Destroy the slash preview on timeout
-                DestroySlashPreview();
-
-                mousePath.Clear();
-            }
-        }
-
-        // 2. --- SHIELD LOGIC (FIX 1: Added back in!) ---
-        if (isShieldActive)
-        {
-            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            playerCombat.AddShieldPoint(currentWorldPos);
-        }
-
-        if (isDrawActive)
-        {
-            Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            if (playerCollider.OverlapPoint(currentWorldPos)) return; // Prevent drawing if mouse is over the player
-            drawScript.UpdateDraw(currentWorldPos);
-        }
     }
 
     #region SlashPreview
