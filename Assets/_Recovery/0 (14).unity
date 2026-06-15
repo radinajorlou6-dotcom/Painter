@@ -5550,17 +5550,9 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1855131143}
     - target: {fileID: 5971893531778872950, guid: bd4d17f0ee077cf459f5c6a7c268d645, type: 3}
-      propertyPath: maxShieldRadius
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971893531778872950, guid: bd4d17f0ee077cf459f5c6a7c268d645, type: 3}
       propertyPath: playerTransform
       value: 
       objectReference: {fileID: 385513173}
-    - target: {fileID: 5971893531778872950, guid: bd4d17f0ee077cf459f5c6a7c268d645, type: 3}
-      propertyPath: shieldReplenishTime
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 7057802405019258815, guid: bd4d17f0ee077cf459f5c6a7c268d645, type: 3}
       propertyPath: m_LocalPosition.x
       value: -18.7

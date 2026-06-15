@@ -49,6 +49,9 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float minPointDistance = 0.2f;
     [Tooltip("The total physical length of the line the player is allowed to draw")]
     [SerializeField] private float maxPaintAmount = 10f;
+    [SerializeField] private float shieldReplenishTime = 0f;
+    [SerializeField] private int shieldColliderPoints = 20;
+    private float shieldBeingReplenished;
     private struct ShieldNode
     {
         public Vector2 localPosition;
@@ -68,6 +71,7 @@ public class PlayerCombat : MonoBehaviour
     private bool outOfPaint = false;
     private int currentHitsRemaining;
     private Coroutine shieldTimerRoutine;
+    private bool shieldIsLocked = false;
     private bool canAttack = true;
     
     // Public accessors for combat preview
@@ -77,20 +81,21 @@ public class PlayerCombat : MonoBehaviour
     private void Awake()
     {
         hitEnemies = new Collider2D[maxEnemiesToSlash];
+        shieldCollider.points = new Vector2[shieldColliderPoints];
     }
 
     #region ShieldLogic
     public void StartNewShield()
     {
+        if (outOfPaint) return;
         // Cancel any active self-destruct timers from a previous shield
         if (shieldTimerRoutine != null) StopCoroutine(shieldTimerRoutine);
 
         shieldNodes.Clear();
-        currentPaintUsed = 0f;
+        currentPaintUsed = shieldBeingReplenished;
         outOfPaint = false;
 
         shieldLine.positionCount = 0;
-        shieldCollider.points = new Vector2[0];
 
         shieldLine.enabled = true;
         shieldCollider.enabled = true;
@@ -130,7 +135,7 @@ public class PlayerCombat : MonoBehaviour
             RaycastHit2D hit = Physics2D.Linecast(lastWorldPos, clampWorldPos, environment);
             if (hit.collider != null)
             {
-                outOfPaint = true; // Lock the shield if we hit an obstacle
+                //shieldIsLocked = true; // Lock the shield if we hit an obstacle
                 return;
             }
             // THE PAINT LIMIT: Check if adding this line would exceed our total ink
@@ -168,6 +173,17 @@ public class PlayerCombat : MonoBehaviour
         // Turn the visuals and physics off
         shieldLine.enabled = false;
         shieldCollider.enabled = false;
+        StartCoroutine(ReplenishShield(currentPaintUsed));
+    }
+
+    private IEnumerator ReplenishShield(float amountToReplenish)
+    {
+        shieldIsLocked = true;
+        shieldBeingReplenished = amountToReplenish;
+        yield return new WaitForSeconds(shieldReplenishTime);
+        currentPaintUsed -= amountToReplenish; 
+        shieldIsLocked = false;
+        shieldBeingReplenished = 0;
     }
 
     private void UpdateShieldVisuals()
@@ -184,12 +200,10 @@ public class PlayerCombat : MonoBehaviour
             shieldCollider.enabled = true;
 
             // Convert our Nodes back into a Vector2 array for the physics engine
-            Vector2[] physicsPoints = new Vector2[shieldNodes.Count];
             for (int i = 0; i < shieldNodes.Count; i++)
             {
-                physicsPoints[i] = shieldNodes[i].localPosition;
+                shieldCollider.points[i] = shieldNodes[i].localPosition;
             }
-            shieldCollider.points = physicsPoints;
         }
         else
         {
