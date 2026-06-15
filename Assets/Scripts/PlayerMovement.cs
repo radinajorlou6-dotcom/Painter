@@ -81,7 +81,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Debug.Log($"isWalled: {isWalled}  isGrounded: {isGrounded}");
         GroundCheck();
         WallCheck();
 
@@ -96,13 +95,13 @@ public class PlayerMovement : MonoBehaviour
                 if (Mathf.Abs(horizontalMovement) > 0.01f)
                 {
                     float desiredX = horizontalMovement * moveSpeed;
-                    float accel = isGrounded ? groundAcceleration : airDrag; // was always groundAcceleration
+                    float accel = isGrounded ? groundAcceleration : airDrag; 
                     float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
                     rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
                 }
                 else
                 {
-                    float drag = isGrounded ? groundFriction : airDrag; // was always groundFriction
+                    float drag = isGrounded ? groundFriction : airDrag;
                     float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, drag * Time.fixedDeltaTime);
                     rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
                 }
@@ -153,17 +152,12 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void CancelWallJump()
-    {
-        isWallJumping = false;
-    }
-
 
     public void Move(InputAction.CallbackContext context)
     {
         if (context.canceled)
          {
-             horizontalMovement = 0;
+            horizontalMovement = 0;
          }
          else
          {

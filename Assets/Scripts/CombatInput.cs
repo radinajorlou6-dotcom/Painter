@@ -7,8 +7,6 @@ using JetBrains.Annotations;
 
 public class CombatInput : MonoBehaviour
 {
-    
-    [Header("Interaction System")]
     [Header("Interaction System")]
     [SerializeField] private Transform interactionPoint; // An empty GameObject placed in front of the player
     [SerializeField] private float interactionRadius = 0.5f; // How close you need to be to interact

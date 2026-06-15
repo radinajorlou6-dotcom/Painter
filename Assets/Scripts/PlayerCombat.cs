@@ -1,5 +1,6 @@
 using System.Collections; // Required for Coroutines
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform playerTransform;
     [SerializeField] private float xOffset = 0f;
     [SerializeField] private float yOffset = 0f;
+    
 
     [Header("Ranged Attack")]
     [SerializeField] private ObjectPooling bulletPool;
@@ -29,6 +31,8 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private int arcResolution = 15; // How many points to use for the curve (higher = smoother but more expensive)
     [SerializeField] private float slashKnockback = 1f;
     [SerializeField] private LayerMask enemyLayers;
+    [SerializeField] private int maxEnemiesToSlash = 10;
+    private Collider2D[] hitEnemies;
 
     [Header("Stab Attack")]
     [SerializeField] private float stabThreshold = 0.5f;
@@ -69,6 +73,11 @@ public class PlayerCombat : MonoBehaviour
     // Public accessors for combat preview
     public float GetSlashRadius() => slashRadius;
     public LayerMask GetEnvironmentLayerMask() => environment;
+
+    private void Awake()
+    {
+        hitEnemies = new Collider2D[maxEnemiesToSlash];
+    }
 
     #region ShieldLogic
     public void StartNewShield()
@@ -257,7 +266,7 @@ public class PlayerCombat : MonoBehaviour
     {
         if (swipePath == null || swipePath.Count < 2) return;
 
-        // --- PHASE 1: ANGLE CALCULATION (The Brain) ---
+        // --- PHASE 1: ANGLE CALCULATION ---
         Vector2 startDirection = swipePath[0] - (Vector2)transform.position;
         float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
 
@@ -385,21 +394,19 @@ public class PlayerCombat : MonoBehaviour
         filter.SetLayerMask(enemyLayers);
         filter.useTriggers = true; ; // Set to false if your enemies use physical colliders instead of triggers
 
-        List<Collider2D> hitEnemies = new List<Collider2D>();
-
         // Grab everything currently touching our custom Polygon Collider using the collider instance
         // This ensures the actual polygon shape is used for the overlap test
-        hitBox.Overlap(filter, hitEnemies);
+        int finalHitCount = hitBox.Overlap(filter, hitEnemies);
 
-        foreach (Collider2D enemy in hitEnemies)
+        for (int i = 0; i < finalHitCount; i++)
         {
-            EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+            EnemyHealth enemyHealth = hitEnemies[i].GetComponent<EnemyHealth>();
             if (enemyHealth != null)
             {
+                hitEnemies[i] = null;
                 enemyHealth.TakeDamage(10f * dmg);
                 if (enemyHealth != null) StartCoroutine(enemyHealth.TakeKnockback(attackDir, knockback, knockbackDuration));
             }
-            Debug.Log("Hit enemy: " + enemy.name);
         }
 
         // Wait for a split second so the player can actually see the slash
