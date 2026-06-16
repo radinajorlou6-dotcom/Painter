@@ -66,13 +66,15 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private LayerMask environment;
 
     // Internal State
-    private List<ShieldNode> shieldNodes = new List<ShieldNode>();
+    private Queue<ShieldNode> shieldNodes;
+    private List<Vector2> shieldNodesLst;
     private float currentPaintUsed = 0f;
     private bool outOfPaint = false;
     private int currentHitsRemaining;
     private Coroutine shieldTimerRoutine;
     private bool shieldIsLocked = false;
     private bool canAttack = true;
+    private Vector2 lastShieldNode;
     
     // Public accessors for combat preview
     public float GetSlashRadius() => slashRadius;
@@ -82,6 +84,8 @@ public class PlayerCombat : MonoBehaviour
     {
         hitEnemies = new Collider2D[maxEnemiesToSlash];
         shieldCollider.points = new Vector2[shieldColliderPoints];
+        shieldNodes = new Queue<ShieldNode>(shieldColliderPoints);
+        shieldNodesLst = new List<Vector2>(shieldColliderPoints);
     }
 
     #region ShieldLogic
@@ -121,17 +125,18 @@ public class PlayerCombat : MonoBehaviour
         {
             RaycastHit2D hitFirst = Physics2D.Linecast(transform.position, clampWorldPos, environment);
             if (hitFirst.collider != null) return; //We hit environment abort
-            shieldNodes.Add(new ShieldNode { localPosition = offset, birthTime = Time.time });
+            shieldNodes.Enqueue(new ShieldNode { localPosition = offset, birthTime = Time.time });
+            lastShieldNode = offset;
             UpdateShieldVisuals();
             return;
         }
 
         // Calculate the physical length of this new line segment
-        float segmentLength = Vector2.Distance(shieldNodes[shieldNodes.Count - 1].localPosition, offset);
+        float segmentLength = Vector2.Distance(lastShieldNode, offset);
 
         if (segmentLength > minPointDistance)
         {
-            Vector2 lastWorldPos = (Vector2)transform.position + shieldNodes[shieldNodes.Count - 1].localPosition; //Find pos of last dot
+            Vector2 lastWorldPos = (Vector2)transform.position + lastShieldNode; //Find pos of last dot
             RaycastHit2D hit = Physics2D.Linecast(lastWorldPos, clampWorldPos, environment);
             if (hit.collider != null)
             {
@@ -153,7 +158,7 @@ public class PlayerCombat : MonoBehaviour
                 localPosition = offset,
                 birthTime = Time.time,
             };
-            shieldNodes.Add(newNode);
+            shieldNodes.Enqueue(newNode);
             UpdateShieldVisuals();
         }
     }
@@ -189,21 +194,20 @@ public class PlayerCombat : MonoBehaviour
     private void UpdateShieldVisuals()
     {
         shieldLine.positionCount = shieldNodes.Count;
-        for (int i = 0; i < shieldNodes.Count; i++)
+        shieldNodesLst.Clear();
+        int i = 0;
+        foreach (ShieldNode node in shieldNodes)
         {
-            shieldLine.SetPosition(i, new Vector3(shieldNodes[i].localPosition.x, shieldNodes[i].localPosition.y, 0));
+            shieldLine.SetPosition(i, new Vector3(node.localPosition.x, node.localPosition.y, 0));
+            shieldNodesLst.Add(node.localPosition);
+            i++;
         }
 
         // Edge Colliders legally require at least 2 points to exist.
-        if (shieldNodes.Count > 1)
+        if (i > 1)
         {
             shieldCollider.enabled = true;
-
-            // Convert our Nodes back into a Vector2 array for the physics engine
-            for (int i = 0; i < shieldNodes.Count; i++)
-            {
-                shieldCollider.points[i] = shieldNodes[i].localPosition;
-            }
+            shieldCollider.SetPoints(shieldNodesLst);
         }
         else
         {
@@ -220,9 +224,9 @@ public class PlayerCombat : MonoBehaviour
 
         // Look at the oldest node (Index 0). If it's older than our duration, delete it!
         // We use a while-loop because multiple points might expire in the exact same frame.
-        while (shieldNodes.Count > 0 && Time.time - shieldNodes[0].birthTime > shieldDuration)
+        while (shieldNodes.Count > 0 && Time.time - shieldNodes.Peek().birthTime > shieldDuration)
         {
-            shieldNodes.RemoveAt(0);
+            shieldNodes.Dequeue();
             nodesRemoved = true;
         }
 
