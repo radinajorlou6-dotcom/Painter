@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Rendering;
+using Unity.GraphToolkit.Editor;
 
 public class PlayerPlatform : MonoBehaviour
 {
@@ -28,7 +29,9 @@ public class PlayerPlatform : MonoBehaviour
     private CombatInput cIScript;
 
     //Internal variables
-    private List<DrawnPoint> drawnPoints = new List<DrawnPoint>(); //List of current element being drawn
+    private Queue<DrawnPoint> drawnPoints; //List of current element being drawn
+    private List<Vector2> drawnPointsLst;
+    [SerializeField] private int pointCount = 10;
     public float currentInkUsed = 0; //Current ink used for the current line, CombatInput must be able to access this
     private float currentDrawLength = 0;
     private bool ableToDraw = true; //Variable to check if the player can draw, set to false when they run out of ink or time or wtv else
@@ -48,9 +51,9 @@ public class PlayerPlatform : MonoBehaviour
         if (!ableToDraw) return;
 
         if (currentDrawLength >= maxDrawLength) return; //Code to check drawn length
-        float segmentLength = drawnPoints.Count > 0 ? Vector2.Distance(drawnPoints[drawnPoints.Count - 1].position, newPoint) : 0f;
+        float segmentLength = drawnPoints.Count > 0 ? Vector2.Distance(drawnPoints.Peek().position, newPoint) : 0f;
         if (drawnPoints.Count > 0 && segmentLength < minPointDistance) return; //Code to check distance between points
-        Vector2 lastPoint = drawnPoints.Count > 0 ? drawnPoints[drawnPoints.Count - 1].position : newPoint;
+        Vector2 lastPoint = drawnPoints.Count > 0 ? drawnPoints.Peek().position : newPoint;
         RaycastHit2D hit = Physics2D.Linecast(lastPoint, newPoint, playerLayer);
         if (hit.collider != null)
         {
@@ -62,7 +65,7 @@ public class PlayerPlatform : MonoBehaviour
         cIScript.currentDrawInk += segmentLength; //Update the CombatInput script's current ink variable
         currentDrawLength += segmentLength;
         DrawnPoint newDrawnPoint = new DrawnPoint { position = newPoint, timeCreated = Time.time };
-        drawnPoints.Add(newDrawnPoint);
+        drawnPoints.Enqueue(newDrawnPoint);
         UpdateDrawnVisuals();
     }
 
@@ -70,20 +73,20 @@ public class PlayerPlatform : MonoBehaviour
     {
         //Update LineRenderer
         drawLineRender.positionCount = drawnPoints.Count;
-        for (int i = 0; i < drawnPoints.Count; i++)
+        drawnPointsLst.Clear();
+        int i = 0; 
+        foreach (DrawnPoint point in drawnPoints)
         {
-            drawLineRender.SetPosition(i, drawnPoints[i].position);
+            drawLineRender.SetPosition(i, new Vector3(point.position.x, point.position.y, 0));
+            drawnPointsLst.Add(point.position);
+            i++;
+
         }
         //Update EdgeCollider2D
-        if (drawnPoints.Count > 1)
+        if (i > 1)
         {
             lineCollider.enabled = true;
-            Vector2[] colliderPoints = new Vector2[drawnPoints.Count];
-            for (int i = 0; i < drawnPoints.Count; i++)
-            {
-                colliderPoints[i] = drawnPoints[i].position;
-            }
-            lineCollider.points = colliderPoints;
+            lineCollider.SetPoints(drawnPointsLst);
         }
         else lineCollider.enabled = false;
     }
@@ -97,9 +100,9 @@ public class PlayerPlatform : MonoBehaviour
             return;
         }
         bool pointsRemoved = false;
-        while (drawnPoints.Count > 0 && Time.time - drawnPoints[0].timeCreated >= inkLifeTime)
+        while (drawnPoints.Count > 0 && Time.time - drawnPoints.Peek().timeCreated >= inkLifeTime)
         {
-            drawnPoints.RemoveAt(0);
+            drawnPoints.Dequeue();
             pointsRemoved = true;
         }
         if (pointsRemoved) UpdateDrawnVisuals();
@@ -121,6 +124,12 @@ public class PlayerPlatform : MonoBehaviour
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
+    {
+        drawnPoints = new Queue<DrawnPoint>(pointCount);
+        drawnPointsLst = new List<Vector2>(pointCount);
+    }
+
+    void Start()
     {
         cIScript = GameObject.FindAnyObjectByType<CombatInput>();
 
