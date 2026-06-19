@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using System.Xml; 
 using System.Collections;
-using JetBrains.Annotations;
 
 public class CombatInput : MonoBehaviour
 {

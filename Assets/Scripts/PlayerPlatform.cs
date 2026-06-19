@@ -4,7 +4,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Rendering;
-using Unity.GraphToolkit.Editor;
 
 public class PlayerPlatform : MonoBehaviour
 {
@@ -48,6 +47,9 @@ public class PlayerPlatform : MonoBehaviour
 
     public void UpdateDraw(Vector2 newPoint)
     {
+        // Guard against accessing destroyed components (fade coroutine may have destroyed this GameObject)
+        if (drawLineRender == null || lineCollider == null) return;
+        
         if (!ableToDraw) return;
 
         if (currentDrawLength >= maxDrawLength) return; //Code to check drawn length
@@ -71,6 +73,9 @@ public class PlayerPlatform : MonoBehaviour
 
     private void UpdateDrawnVisuals()
     {
+        // Guard against destroyed components
+        if (drawLineRender == null || lineCollider == null) return;
+        
         //Update LineRenderer
         drawLineRender.positionCount = drawnPoints.Count;
         drawnPointsLst.Clear();
@@ -91,28 +96,30 @@ public class PlayerPlatform : MonoBehaviour
         else lineCollider.enabled = false;
     }
 
-    private void FadeOldPlatformInk()
+    private IEnumerator FadeOldPlatformInk()
     {
-        if (drawnPoints.Count == 0)
+        yield return new WaitForEndOfFrame();
+        while (drawnPoints.Count > 0)
         {
-            cIScript.StartCoroutine("returnInk", currentInkUsed);
-            Destroy(gameObject);
-            return;
-        }
-        bool pointsRemoved = false;
-        while (drawnPoints.Count > 0 && Time.time - drawnPoints.Peek().timeCreated >= inkLifeTime)
-        {
+            // Calculate how long until the oldest point expires
+            float timeUntilExpire = inkLifeTime - (Time.time - drawnPoints.Peek().timeCreated);
+            
+            if (timeUntilExpire > 0)
+            {
+                // Wait until that point expires (no per-frame overhead during this time)
+                yield return new WaitForSeconds(timeUntilExpire);
+            }
+            
+            // Remove the oldest point
             drawnPoints.Dequeue();
-            pointsRemoved = true;
+            UpdateDrawnVisuals();
         }
-        if (pointsRemoved) UpdateDrawnVisuals();
-        if( drawnPoints.Count == 0)
-        {
-            drawLineRender.enabled = false;
-            lineCollider.enabled = false;
-            cIScript.StartCoroutine("returnInk", currentInkUsed);
-            Destroy(gameObject);
-        }
+        
+        // All points faded, clean up
+        drawLineRender.enabled = false;
+        lineCollider.enabled = false;
+        cIScript.StartCoroutine("returnInk", currentInkUsed);
+        Destroy(gameObject);
     }
 
     //Function for resetting the draw, called by CombatInput when the player finishes drawing or runs out of ink/time
@@ -120,7 +127,6 @@ public class PlayerPlatform : MonoBehaviour
     {
 
     }
-
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
@@ -131,17 +137,10 @@ public class PlayerPlatform : MonoBehaviour
 
         if (cIScript == null)
         {
-            Debug.LogError("Platform could not find the CombatInput script in the scene!");
+            DebugUtils.LogError("Platform could not find the CombatInput script in the scene!");
         }
-    }
-
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        FadeOldPlatformInk();
+        
+        // Start the fade coroutine once during initialization
+        StartCoroutine(FadeOldPlatformInk());
     }
 }

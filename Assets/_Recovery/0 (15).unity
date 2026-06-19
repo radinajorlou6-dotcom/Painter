@@ -18054,65 +18054,9 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3089227504797308296, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: maxDrawInk
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 3089227504797308296, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: playerCombat
       value: 
       objectReference: {fileID: 1855131141}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.size
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_ActionId
-      value: 336bd47e-3454-41f0-968d-1c8d124b1703
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_ActionId
-      value: def4a5cf-3348-4d87-b703-aabeb7a48afd
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_ActionName
-      value: 'UI/Pause/Unpause[/Keyboard/p]'
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_ActionName
-      value: 'UI/InstaKill[/Keyboard/k]'
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 2116381078}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 2116381078}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      propertyPath: m_ActionEvents.Array.data[19].m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
     - target: {fileID: 6414296493766734255, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: healthBar
       value: 
@@ -18254,11 +18198,6 @@ PrefabInstance:
       addedObject: {fileID: 1807988613}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 97fe55ac1b4d99d428b4391a917e8b73, type: 3}
---- !u!1 &2116381078 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2141820239114053640, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-  m_PrefabInstance: {fileID: 2033819484}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1553903924624848992
 PrefabInstance:
   m_ObjectHideFlags: 0

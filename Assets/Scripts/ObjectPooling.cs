@@ -40,8 +40,8 @@ public class ObjectPooling : MonoBehaviour
 
     public GameObject SpawnFromPool(Vector3 position, Quaternion rotation)
     {
-
-        Debug.Log("Spawning object from pool. Pool size before spawn: " + objectPool.Count);
+        if (!currentlyPlaying) return null;
+        DebugUtils.Log("Spawning object from pool. Pool size before spawn: ");
         if (objectPool.Count == 0)
         {
             GameObject backupObj = Instantiate(prefab, transform);
@@ -51,7 +51,6 @@ public class ObjectPooling : MonoBehaviour
             {
                 poolableItem.AssignPool(this);
             }
-            objectPool.Enqueue(backupObj);
         }
 
         GameObject objectToSpawn = objectPool.Dequeue();
@@ -64,7 +63,7 @@ public class ObjectPooling : MonoBehaviour
 
     public void ReturnToPool(GameObject obj)
     {
-        Debug.Log("Returning object to pool. Pool size before return: " + objectPool.Count);
+        DebugUtils.Log("Returning object to pool. Pool size before return: " + objectPool.Count);
         obj.transform.SetParent(this.transform);
         obj.SetActive(false);
         objectPool.Enqueue(obj);
@@ -74,16 +73,5 @@ public class ObjectPooling : MonoBehaviour
     {
         yield return new WaitForSeconds(time);
         ReturnToPool(obj);
-    }
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (!currentlyPlaying) return;
     }
 }

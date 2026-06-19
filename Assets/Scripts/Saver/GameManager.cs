@@ -6,6 +6,11 @@ using UnityEngine.InputSystem;
 public class GameManager : MonoBehaviour
 {
 
+    InputActionMap movement;
+    InputActionMap combat;
+    InputActionMap ui;
+    PlayerInput playerInput;
+
     public enum GameState
     {
         Playing,
@@ -44,20 +49,18 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject); // Optional: Persist across scenes
+            playerInput = FindAnyObjectByType<PlayerInput>();
+            if (playerInput != null)
+            {
+                movement = playerInput.actions.FindActionMap("Player");
+                combat = playerInput.actions.FindActionMap("Combat");
+                ui = playerInput.actions.FindActionMap("UI");
+            }
         }
+
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        Instance = this;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     public bool IsBucketEmpty(string colour)
     {
@@ -112,7 +115,7 @@ public class GameManager : MonoBehaviour
                 HandleDied();
                 break;
             default:
-                Debug.Log("Wrong GameState name used");
+                DebugUtils.Log("Wrong GameState name used");
                 break;
         }
     }
@@ -120,12 +123,11 @@ public class GameManager : MonoBehaviour
     private void HandlePlaying()
     {
         Time.timeScale = 1f; //Resume everything normally
-        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        if (playerInput != null)
         {
-            playerInput.actions.FindActionMap("Player")?.Enable();
-            playerInput.actions.FindActionMap("Combat")?.Enable();
-            playerInput.actions.FindActionMap("UI")?.Disable();
-            Debug.Log("Input System: Player action map DISABLED.");
+            movement.Enable();
+            combat.Enable();
+            DebugUtils.Log("Input System: Player action map DISABLED.");
         }
         OnStateChanged?.Invoke(GameState.Playing);
     }
@@ -134,12 +136,12 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 0f; //Paused all physics and everything
         //TODO: DO EXTRA STUFF
-        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        if (playerInput != null)
         {
-            playerInput.actions.FindActionMap("Player")?.Disable();
-            playerInput.actions.FindActionMap("Combat")?.Disable();
-            playerInput.actions.FindActionMap("UI")?.Enable();
-            Debug.Log("Input System: Player action map DISABLED.");
+            movement.Disable();
+            combat.Disable();
+            ui.Enable();
+            DebugUtils.Log("Input System: Player action map DISABLED.");
         }
         OnStateChanged?.Invoke(GameState.Paused);
 
@@ -149,13 +151,13 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 0f;// Paused all physics and everything
         //TODO: DO EXTRA STUFF
-        if (FindAnyObjectByType<PlayerInput>() is PlayerInput playerInput)
+        if (playerInput != null)
         {
-            playerInput.actions.FindActionMap("Player")?.Disable();
-            playerInput.actions.FindActionMap("Combat")?.Disable();
-            playerInput.actions.FindActionMap("UI")?.Enable();
-            Debug.Log("Input System: Player action map DISABLED.");
+            movement.Disable();
+            combat.Disable();
+            ui.Enable();
         }
+        DebugUtils.Log("Input System: Player action map DISABLED.");
         OnStateChanged?.Invoke(GameState.Died);
     }
     #endregion

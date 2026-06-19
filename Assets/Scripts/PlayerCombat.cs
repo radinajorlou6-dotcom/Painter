@@ -94,7 +94,7 @@ public class PlayerCombat : MonoBehaviour
         if (outOfPaint) return;
         // Cancel any active self-destruct timers from a previous shield
         if (shieldTimerRoutine != null) StopCoroutine(shieldTimerRoutine);
-
+        currentHitsRemaining = maxShieldHits;
         shieldNodes.Clear();
         currentPaintUsed = shieldBeingReplenished;
         outOfPaint = false;

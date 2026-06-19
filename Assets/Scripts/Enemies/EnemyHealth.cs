@@ -37,12 +37,6 @@ public abstract class EnemyHealth : MonoBehaviour
         StartCoroutine(DetectionRoutine());
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    protected virtual void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     protected virtual void Update()
     {
@@ -67,7 +61,7 @@ public abstract class EnemyHealth : MonoBehaviour
         if (player == null) return;
         currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
         RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
-        Debug.Log("Here");
+        DebugUtils.Log("Here");
         if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
         {
             // Determine if the player is to the left or right of us
@@ -94,7 +88,7 @@ public abstract class EnemyHealth : MonoBehaviour
     public virtual void TakeDamage(float damage)
     {
         health -= damage;
-        Debug.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
+        DebugUtils.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
         if (health <= 0)
         {
             Die();
@@ -132,7 +126,7 @@ public abstract class EnemyHealth : MonoBehaviour
     public virtual void Die()
     {
         StopAllCoroutines();
-        Debug.Log(gameObject.name + " has died.");
+        DebugUtils.Log(gameObject.name + " has died.");
         Destroy(gameObject);
     }
 
@@ -140,7 +134,7 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
         {
-            Debug.Log("Grounded reached");
+            DebugUtils.Log("Grounded reached");
             isGrounded = true;
         }
         else
@@ -153,12 +147,12 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         if (Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer))
         {
-            Debug.Log(gameObject.name + " Colliding with " + collideCheck.name);
+            DebugUtils.Log(gameObject.name + " Colliding with " + collideCheck.name);
             isColliding = true;
         }
         else
         {
-            Debug.Log(gameObject.name + " Not Colliding");
+            DebugUtils.Log(gameObject.name + " Not Colliding");
             isColliding = false;
         }
     }

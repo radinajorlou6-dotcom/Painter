@@ -18,7 +18,7 @@ public class BaseEnemyAI : EnemyHealth
 
     private bool isJumping = false;
 
-    protected override void Start()
+    private void Start()
     {
         // Start the jumping loop
         StartCoroutine(JumpRoutine());
@@ -115,13 +115,13 @@ public class BaseEnemyAI : EnemyHealth
             if (ph != null)
             {
                 ph.TakeDamage(damage);
-                Debug.Log("BOOM! Enemy exploded on player!");
+                DebugUtils.Log("BOOM! Enemy exploded on player!");
             }
             // Suicide logic
             Die();
         }
 
-        Debug.Log("Enemy collided with: " + collision.gameObject.name);
+        DebugUtils.Log("Enemy collided with: " + collision.gameObject.name);
     }
 
 

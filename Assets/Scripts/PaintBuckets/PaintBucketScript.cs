@@ -9,7 +9,7 @@ public abstract class PaintBucketScript : MonoBehaviour, IInteractable
     {
         if (isEmpty) return; // Prevent interaction if the bucket is already empty
         SetBucketEmpty();
-        Debug.Log("Interacted with paint bucket!");
+        DebugUtils.Log("Interacted with paint bucket!");
         if (GameManager.Instance != null)
         {
             GameManager.Instance.SaveBucketState(bucketColour, true);
@@ -35,11 +35,6 @@ public abstract class PaintBucketScript : MonoBehaviour, IInteractable
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     protected void SetBucketEmpty()
     {

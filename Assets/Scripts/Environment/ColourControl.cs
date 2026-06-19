@@ -29,16 +29,6 @@ public abstract class ColourControl : MonoBehaviour
             UnlockColour();
         }
     }
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     protected virtual void UnlockColour()
     {

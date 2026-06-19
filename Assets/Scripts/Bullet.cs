@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour, IPoolable
@@ -23,7 +22,7 @@ public class Bullet : MonoBehaviour, IPoolable
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("Bullet collided with: " + collision.gameObject.name);
+        DebugUtils.Log("Bullet collided with: " + collision.gameObject.name);
         // Check if the bullet collides with an enemy
         if (collision.CompareTag("Player") || collision.CompareTag("Shield")) return;
         else if (collision.CompareTag("Enemy"))
@@ -56,11 +55,5 @@ public class Bullet : MonoBehaviour, IPoolable
             if (destructionTimer != null) StopCoroutine(destructionTimer);
             destructionTimer = StartCoroutine(pool.ReturnToPoolWithDelay(gameObject, timeTillDestroy)); // Destroy the bullet after 5 seconds if it doesn't hit anything
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

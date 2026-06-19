@@ -58,11 +58,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxFallSpeed = 18f;
     [SerializeField] private float fallMultiplier = 2f;
 
-    // Start is called; once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
     void Update()
@@ -210,7 +205,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 isGrounded = true;
                 isGroundedOn =  LayerMask.LayerToName(contacts[i].collider.gameObject.layer);
-                Debug.Log($"Grounded on: {isGroundedOn}");
+                DebugUtils.Log($"Grounded on: {isGroundedOn}");
                 isWallJumping = false;
                 wallJumpTimer = 0;
                 return;

@@ -36,13 +36,13 @@ public class SlingshotAbility : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         if (rb == null)
         {
-            Debug.LogError("SlingshotAbility requires a Rigidbody2D on the same GameObject.");
+            DebugUtils.LogError("SlingshotAbility requires a Rigidbody2D on the same GameObject.");
         }
 
         mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            Debug.LogError("SlingshotAbility could not find a Camera.main.");
+            DebugUtils.LogError("SlingshotAbility could not find a Camera.main.");
         }
 
         playerMovement = GetComponent<PlayerMovement>();
@@ -60,7 +60,7 @@ public class SlingshotAbility : MonoBehaviour
         slingshotsLeft = maxSlingshotUses;
         if (playerMovement == null)
         {
-            Debug.LogError("SlingshotAbility requires a PlayerMovement component on the same GameObject.");
+            DebugUtils.LogError("SlingshotAbility requires a PlayerMovement component on the same GameObject.");
         }
     }
 

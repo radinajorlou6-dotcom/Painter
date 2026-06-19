@@ -20,12 +20,6 @@ public class PlayerHealth : MonoBehaviour
         health = maxHealth;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Spikes"))
@@ -38,7 +32,7 @@ public class PlayerHealth : MonoBehaviour
     {
         anim.SetTrigger("gotHurt");
         health -= damage;
-        Debug.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
+        DebugUtils.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
         healthBar.UpdateHealthBar(health, maxHealth);
         if (health <= 0)
         {
