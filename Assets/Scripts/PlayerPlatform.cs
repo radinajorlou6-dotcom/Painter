@@ -127,16 +127,16 @@ public class PlayerPlatform : MonoBehaviour
     {
         drawnPoints = new Queue<DrawnPoint>(pointCount);
         drawnPointsLst = new List<Vector2>(pointCount);
-    }
-
-    void Start()
-    {
         cIScript = GameObject.FindAnyObjectByType<CombatInput>();
 
         if (cIScript == null)
         {
             Debug.LogError("Platform could not find the CombatInput script in the scene!");
         }
+    }
+
+    void Start()
+    {
     }
 
     // Update is called once per frame

@@ -200,11 +200,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPlatform
   maxInk: 100
-  maxDrawLength: 10
+  maxDrawLength: 100
   inkLifeTime: 7
   drawLineRender: {fileID: 4289354960816757399}
   lineCollider: {fileID: 1626507537240967046}
   playerLayer:
     serializedVersion: 2
     m_Bits: 256
+  pointCount: 10
   currentInkUsed: 0
