@@ -25,4 +25,9 @@ public class SaveSystem
         DebugUtils.Log("No save file found. Creating new game data.");
         return new GameData();
     }
+
+    public static bool SaveExists()
+    {
+        return File.Exists(savePath);
+    }
 }

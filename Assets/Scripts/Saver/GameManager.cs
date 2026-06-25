@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
     [Tooltip("Name of the main menu scene. Must be added to File > Build Settings.")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [Tooltip("Name of the first gameplay level. Must be added to File > Build Settings.")]
-    [SerializeField] private string firstLevelSceneName = "Level 1";
+    [SerializeField] private string firstLevelSceneName = "Tutorial";
 
     // --- Singleton + events ---
     public static GameManager Instance { get; private set; }
@@ -269,7 +269,7 @@ public class GameManager : MonoBehaviour
         {
             movementMap?.Enable();
             combatMap?.Enable();
-            uiMap?.Disable();
+//            uiMap?.Disable();
         }
         else
         {

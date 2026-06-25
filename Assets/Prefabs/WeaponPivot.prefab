@@ -469,6 +469,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7057802405019258815}
   - component: {fileID: 5971893531778872950}
+  - component: {fileID: 4044603103607340016}
   m_Layer: 0
   m_Name: WeaponPivot
   m_TagString: Player
@@ -507,6 +508,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   playerTransform: {fileID: 0}
+  xOffset: 0
+  yOffset: 0
+  bulletPool: {fileID: 4044603103607340016}
   projectilePrefab: {fileID: 1706238613815357001, guid: e5457b28d80aee74bb848b6da48721f5, type: 3}
   firePoint: {fileID: 8590099075298227862}
   projectileSpeed: 10
@@ -524,6 +528,7 @@ MonoBehaviour:
   enemyLayers:
     serializedVersion: 2
     m_Bits: 1024
+  maxEnemiesToSlash: 10
   stabThreshold: 0.5
   stabDuration: 1
   stabCooldown: 0
@@ -535,8 +540,24 @@ MonoBehaviour:
   minShieldRadius: 0.5
   minPointDistance: 0.2
   maxPaintAmount: 10
+  shieldReplenishTime: 0
+  shieldColliderPoints: 20
   shieldDuration: 1
   maxShieldHits: 1
   environment:
     serializedVersion: 2
     m_Bits: 200
+--- !u!114 &4044603103607340016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8881920421870834808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28cc47e20f95fd647b8d62de838e8e0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectPooling
+  prefab: {fileID: 1706238613815357001, guid: e5457b28d80aee74bb848b6da48721f5, type: 3}
+  poolSize: 10
