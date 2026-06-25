@@ -1,13 +1,16 @@
 using UnityEngine;
 using System.IO;
+using Newtonsoft.Json;
 
 public class SaveSystem
 {
     private static string savePath = Path.Combine(Application.persistentDataPath, "saveFile.json");
+    
     public static void SaveGame(GameData data)
     {
-        string json = JsonUtility.ToJson(data, true);
+        string json = JsonConvert.SerializeObject(data, Formatting.Indented);
         File.WriteAllText(savePath, json);
+        DebugUtils.Log("Game saved to: " + savePath);
     }
 
     public static GameData LoadGame()
@@ -15,9 +18,11 @@ public class SaveSystem
         if (File.Exists(savePath))
         {
             string json = File.ReadAllText(savePath);
-            GameData data = JsonUtility.FromJson<GameData>(json);
+            GameData data = JsonConvert.DeserializeObject<GameData>(json);
+            DebugUtils.Log("Game loaded from: " + savePath);
             return data;
         }
-        return new GameData(); // Return default data if no save file exists
+        DebugUtils.Log("No save file found. Creating new game data.");
+        return new GameData();
     }
 }

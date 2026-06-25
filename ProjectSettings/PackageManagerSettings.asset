@@ -17,7 +17,7 @@ MonoBehaviour:
   m_ScopedRegistriesSettingsExpanded: 1
   m_SeeAllPackageVersions: 0
   m_DismissPreviewPackagesInUse: 0
-  oneTimeWarningShown: 0
+  oneTimeWarningShown: 1
   oneTimePackageErrorsPopUpShown: 0
   m_Registries:
   - m_Id: main
@@ -33,10 +33,10 @@ MonoBehaviour:
   m_UserSelectedRegistryName: 
   m_UserAddingNewScopedRegistry: 0
   m_RegistryInfoDraft:
-    m_Modified: 0
+    m_Modified: 1
     m_ErrorMessage: 
     m_UserModificationsEntityId:
-      m_Data: -942
+      m_Data: -918
     m_OriginalEntityId:
-      m_Data: -944
+      m_Data: -920
   m_LoadAssets: 0
