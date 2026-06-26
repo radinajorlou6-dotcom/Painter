@@ -27,8 +27,11 @@ public class SlingshotAbility : MonoBehaviour
     private Vector2 dragCurrent;
     private bool isDragging;
     [SerializeField] private int maxSlingshotUses = 1;
+    [Tooltip("After a launch, grounded contact won't refill slingshots for this long. " +
+             "Stops the launch frame (where the player is still touching the ground) from instantly refilling mid-air.")]
+    [SerializeField] private float groundRefillDelay = 0.15f;
     private int slingshotsLeft;
-    private bool wasGroundedLastFrame = false;
+    private float refillBlockedUntil = 0f;
 
 
     private void Awake()
@@ -66,12 +69,14 @@ public class SlingshotAbility : MonoBehaviour
 
     private void Update()
     {
-        // Reset slingshot uses only once when landing (transition from not grounded to grounded)
-        if (playerMovement.isGrounded && !wasGroundedLastFrame && playerMovement.isGroundedOn != "Drawn Platforms")
+        // Refill while standing on real ground so the player can slingshot repeatedly from the
+        // ground. The brief post-launch delay stops the launch frame (where the player is still
+        // touching the ground) from refilling before they've actually lifted off.
+        bool onSolidGround = playerMovement.isGrounded && playerMovement.isGroundedOn != "Drawn Platforms";
+        if (onSolidGround && Time.time >= refillBlockedUntil)
         {
             slingshotsLeft = maxSlingshotUses;
         }
-        wasGroundedLastFrame = playerMovement.isGrounded;
         
         if (!isDragging) return;
 
@@ -100,6 +105,7 @@ public class SlingshotAbility : MonoBehaviour
         if (context.canceled && isDragging)
         {
             slingshotsLeft--;
+            refillBlockedUntil = Time.time + groundRefillDelay;
             dragCurrent = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             Vector2 launchVector = CalculateLaunchVector(dragStart, dragCurrent);
             Launch(launchVector);
@@ -120,6 +126,10 @@ public class SlingshotAbility : MonoBehaviour
         rb.linearVelocity = Vector2.zero;
         rb.AddForce(launchVector * launchPower, ForceMode2D.Impulse);
 
+        if (playerMovement != null)
+        {
+            playerMovement.BeginSlingshot();
+        }
     }
 
     private void StopDragging()

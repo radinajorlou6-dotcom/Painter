@@ -58,6 +58,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxFallSpeed = 18f;
     [SerializeField] private float fallMultiplier = 2f;
 
+    //Slingshot variables
+    [Header("Slingshot")]
+    [Tooltip("If ON, the player can steer left/right during a slingshot launch. " +
+             "If OFF, horizontal control is locked until landing so the launch momentum is fully preserved.")]
+    [SerializeField] private bool allowDirectionChangeWhileSlingshotting = false;
+    public bool isSlingshotting { get; private set;} = false;
+    private bool slingshotHasLeftGround = false;
+
 
     // Update is called once per frame
     void Update()
@@ -67,7 +75,7 @@ public class PlayerMovement : MonoBehaviour
         anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("yVelocity", rb.linearVelocity.y);
 
-        if (!isWallJumping) //Prevent horizontal movement control during wall jump
+        if (!isWallJumping && !(isSlingshotting && !allowDirectionChangeWhileSlingshotting)) //Prevent flipping during wall jump or a locked slingshot launch
         { 
             Flip(); //Flip player sprite based on movement direction
         }
@@ -78,6 +86,7 @@ public class PlayerMovement : MonoBehaviour
     {
         GroundCheck();
         WallCheck();
+        UpdateSlingshotState();
 
         if (!isWallJumping)
         {
@@ -85,26 +94,73 @@ public class PlayerMovement : MonoBehaviour
             {
                 rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
             }
+            else if (isSlingshotting)
+            {
+                ApplySlingshotMovement();
+            }
             else
             {
-                if (Mathf.Abs(horizontalMovement) > 0.01f)
-                {
-                    float desiredX = horizontalMovement * moveSpeed;
-                    float accel = isGrounded ? groundAcceleration : airDrag; 
-                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
-                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
-                }
-                else
-                {
-                    float drag = isGrounded ? groundFriction : airDrag;
-                    float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, drag * Time.fixedDeltaTime);
-                    rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
-                }
+                ApplyStandardMovement();
             }
         }
 
         Gravity();
         WallSlide();
+    }
+
+    // Normal grounded/air horizontal movement with acceleration and friction.
+    private void ApplyStandardMovement()
+    {
+        if (Mathf.Abs(horizontalMovement) > 0.01f)
+        {
+            float desiredX = horizontalMovement * moveSpeed;
+            float accel = groundAcceleration; //Same acceleration whether on ground or in air
+            float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
+            rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+        }
+        else
+        {
+            float drag = isGrounded ? groundFriction : airDrag;
+            float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, drag * Time.fixedDeltaTime);
+            rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+        }
+    }
+
+    // Horizontal movement while a slingshot launch is in flight.
+    private void ApplySlingshotMovement()
+    {
+        // Locked mode: ignore horizontal input entirely so the launch momentum is preserved.
+        if (!allowDirectionChangeWhileSlingshotting) return;
+
+        // Steer mode: let input nudge the trajectory without braking it toward moveSpeed.
+        // Pressing into the launch speeds it up; pressing against it bleeds speed off gradually.
+        if (Mathf.Abs(horizontalMovement) > 0.01f)
+        {
+            float steeredX = rb.linearVelocity.x + horizontalMovement * airDrag * Time.fixedDeltaTime;
+            rb.linearVelocity = new Vector2(steeredX, rb.linearVelocity.y);
+        }
+    }
+
+    // Slingshot momentum stays active until the player has taken off and then landed again.
+    private void UpdateSlingshotState()
+    {
+        if (!isSlingshotting) return;
+
+        if (!isGrounded)
+        {
+            slingshotHasLeftGround = true;
+        }
+        else
+        {
+            isSlingshotting = false;
+        }
+    }
+
+    // Called by SlingshotAbility the moment a launch impulse is applied.
+    public void BeginSlingshot()
+    {
+        isSlingshotting = true;
+        slingshotHasLeftGround = false;
     }
 
     //Different falling mechanics to make the game feel better. Increases fall speed the longer you fall, and caps it at a certain point.
