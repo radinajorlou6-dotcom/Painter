@@ -289,7 +289,7 @@ Transform:
   m_GameObject: {fileID: 324494630}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 49.006546, y: 9.185009, z: -10}
+  m_LocalPosition: {x: 12.846544, y: 9.185009, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -342,11 +342,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.5935
+      value: -24.29
       objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0689
+      value: -3.37
       objectReference: {fileID: 0}
     - target: {fileID: 8036102036007359520, guid: 6b3ea0984ea0e3f48b81013489317d04, type: 3}
       propertyPath: m_LocalPosition.z
@@ -521,7 +521,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 49.006546, y: 9.185009, z: -10}
+  m_LocalPosition: {x: 12.846544, y: 9.185009, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1254,14 +1254,24 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
+  - first: {x: 2, y: 0, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
   - serializedVersion: 2
     m_RefCount: 0
     m_Data: {fileID: 11400000, guid: 05cf60e5f4f45d946bd36ccfef53dbca, type: 2}
   - serializedVersion: 2
-    m_RefCount: 0
-    m_Data: {fileID: 11400000, guid: 1487dbb2564c78942a6fff76440c720d, type: 2}
+    m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 2209abab8bf83264db8d42a4281ebd62, type: 2}
   - serializedVersion: 2
     m_RefCount: 48
     m_Data: {fileID: 11400000, guid: 5a38f04bf43668745b20b6ce69da9183, type: 2}
@@ -1270,14 +1280,14 @@ Tilemap:
     m_RefCount: 0
     m_Data: {fileID: -1841046384, guid: de5a76094d3e2f04ebbcafd7761c8290, type: 3}
   - serializedVersion: 2
-    m_RefCount: 0
-    m_Data: {fileID: 806112396, guid: de5a76094d3e2f04ebbcafd7761c8290, type: 3}
+    m_RefCount: 1
+    m_Data: {fileID: 2119190494, guid: de5a76094d3e2f04ebbcafd7761c8290, type: 3}
   - serializedVersion: 2
     m_RefCount: 48
     m_Data: {fileID: 611509593, guid: de5a76094d3e2f04ebbcafd7761c8290, type: 3}
   m_TileMatrixArray:
   - serializedVersion: 2
-    m_RefCount: 48
+    m_RefCount: 49
     m_Data:
       e00: 1
       e01: 0
@@ -1297,7 +1307,7 @@ Tilemap:
       e33: 1
   m_TileColorArray:
   - serializedVersion: 2
-    m_RefCount: 48
+    m_RefCount: 49
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -20183,12 +20193,20 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 912592360}
     - target: {fileID: 1197977425077681092, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: airDrag
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1197977425077681092, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: maxSlopeAngle
       value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 1197977425077681092, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: groundCheckSize.y
       value: 0.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 1197977425077681092, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: allowDirectionChangeWhileSlingshotting
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2141820239114053640, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_Name
@@ -20344,7 +20362,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 40.56
+      value: 4.4
       objectReference: {fileID: 0}
     - target: {fileID: 8416976223761757145, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_LocalPosition.y

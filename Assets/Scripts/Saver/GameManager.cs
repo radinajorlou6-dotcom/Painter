@@ -85,6 +85,15 @@ public class GameManager : MonoBehaviour
     {
         ResolveInput();
         RefreshInputMapStates();
+
+        // Record the level the player is in using the actually-loaded scene's build index.
+        // This is reliable because the scene exists at this point; computing the index before
+        // load (e.g. GetSceneByName on a scene that isn't loaded yet) returns -1.
+        // Skip the main menu so it's never stored as the last level played.
+        if (scene.buildIndex > 0 && scene.name != mainMenuSceneName)
+        {
+            UpdateMaxLevelReached(scene.buildIndex);
+        }
     }
     #endregion
 

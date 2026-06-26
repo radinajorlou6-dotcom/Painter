@@ -30,7 +30,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float maxSlopeAngle;
+    private ContactFilter2D groundFilter;
+    private ContactPoint2D[] groundContact;
     public bool isGrounded {get; private set;} = true;
+    [SerializeField] private int maxPoints = 10;
+    public string isGroundedOn {get; private set;}
 
 
     //Wallcheck variables
@@ -39,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector2 wallCheckSize = new Vector2(0.5f, 0.05f);
     [SerializeField] private LayerMask wallLayer;
     public bool isWalled {get; private set;} = false;
-    public string isGroundedOn {get; private set;}
+    private Collider2D[] wallCheckArray;
 
     //Wall movement variables
     [Header("WallMovement")]
@@ -66,6 +70,17 @@ public class PlayerMovement : MonoBehaviour
     public bool isSlingshotting { get; private set;} = false;
     private bool slingshotHasLeftGround = false;
 
+    void Awake()
+    {
+        groundFilter = new ContactFilter2D();
+        groundContact = new ContactPoint2D[maxPoints];
+        groundFilter.SetLayerMask(groundLayer);
+        groundFilter.useLayerMask = true;
+        groundFilter.SetNormalAngle(90f - maxSlopeAngle, 90f + maxSlopeAngle);
+        groundFilter.useNormalAngle = true;
+
+        wallCheckArray = new Collider2D[maxPoints];
+    }
 
     // Update is called once per frame
     void Update()
@@ -149,8 +164,14 @@ public class PlayerMovement : MonoBehaviour
         if (!isGrounded)
         {
             slingshotHasLeftGround = true;
+            return;
         }
-        else
+
+        // Back on the ground: end the slingshot once we've either landed from a real launch,
+        // or the launch momentum has bled off to normal walking speed. The speed check covers
+        // shallow launches that never actually left the ground, so control is handed back
+        // instead of leaving the player frozen in the locked slingshot state.
+        if (slingshotHasLeftGround || Mathf.Abs(rb.linearVelocity.x) <= moveSpeed)
         {
             isSlingshotting = false;
         }
@@ -247,25 +268,15 @@ public class PlayerMovement : MonoBehaviour
 
     private void GroundCheck()
     {
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(groundLayer);
-        filter.useLayerMask = true;
-
-        ContactPoint2D[] contacts = new ContactPoint2D[10];
-        int count = rb.GetContacts(filter, contacts);
-
-        for (int i = 0; i < count; i++)
+        int count = rb.GetContacts(groundFilter, groundContact);
+        if (count > 0)
         {
-            float slopeAngle = Vector2.Angle(contacts[i].normal, Vector2.up);
-            if (slopeAngle <= maxSlopeAngle)
-            {
-                isGrounded = true;
-                isGroundedOn =  LayerMask.LayerToName(contacts[i].collider.gameObject.layer);
-                DebugUtils.Log($"Grounded on: {isGroundedOn}");
-                isWallJumping = false;
-                wallJumpTimer = 0;
-                return;
-            }
+            isGrounded = true;
+            isGroundedOn =  LayerMask.LayerToName(groundContact[0].collider.gameObject.layer);
+            DebugUtils.Log($"Grounded on: {isGroundedOn}");
+            isWallJumping = false;
+            wallJumpTimer = 0;
+            return;
         }
         isGrounded = false;
         isGroundedOn = string.Empty;
@@ -273,7 +284,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void WallCheck()
     {
-        if (Physics2D.OverlapBox(wallCheck.position, wallCheckSize, 0, wallLayer))
+        if (Physics2D.OverlapBoxNonAlloc(wallCheck.position, wallCheckSize, 0f, wallCheckArray, wallLayer) > 0)
         {
             isWalled = true;
         }
