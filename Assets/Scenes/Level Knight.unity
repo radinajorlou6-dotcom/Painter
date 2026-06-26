@@ -2365,25 +2365,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!114 &912592361
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 912592351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a24f5918d41cd0b4cb56d596b6d48a23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlingshotAbility
-  maxDragDistance: 3
-  launchPower: 10
-  arrowheadLength: 0.3
-  arrowheadAngle: 25
-  previewLine: {fileID: 912592360}
-  previewColor: {r: 0.2, g: 0.9, b: 1, a: 0.8}
-  previewWidth: 0.08
 --- !u!114 &912592370 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: -8986424987948369841, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
@@ -2406,6 +2387,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70fa6736e4fa28b4fafb4226f6db1015, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatInput
+--- !u!114 &912592373 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7301879322491017825, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+  m_PrefabInstance: {fileID: 2033819484}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912592351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e3d03cd6e37b694eb06db5474a8c490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestingStates
 --- !u!1 &917361065
 GameObject:
   m_ObjectHideFlags: 0
@@ -20216,7 +20208,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.size
-      value: 18
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_ActionId
@@ -20247,6 +20239,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[19].m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_Mode
       value: 1
       objectReference: {fileID: 0}
@@ -20259,6 +20255,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 912592370}
@@ -20266,6 +20266,10 @@ PrefabInstance:
       propertyPath: m_ActionEvents.Array.data[17].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 912592372}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 912592373}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_CallState
       value: 2
@@ -20287,6 +20291,10 @@ PrefabInstance:
       value: Interact
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Pause
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[15].m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
       value: CombatInput, Assembly-CSharp
       objectReference: {fileID: 0}
@@ -20299,11 +20307,19 @@ PrefabInstance:
       value: CombatInput, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TestingStates, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[16].m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       propertyPath: m_ActionEvents.Array.data[17].m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 3540910301456046840, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
+      propertyPath: m_ActionEvents.Array.data[18].m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 6414296493766734255, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
@@ -20370,9 +20386,6 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2141820239114053640, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 912592361}
     - targetCorrespondingSourceObject: {fileID: 2141820239114053640, guid: b4e2212300e74d74aabac86ffba5f3b8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 912592360}

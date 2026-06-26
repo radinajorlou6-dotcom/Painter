@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class GameData
 {
     public int highestLevelReached;
+    public int lastLevelPlayed;
     public List<string> unlockedColours;
     public Dictionary<string, bool> unlockedAbilities;
 

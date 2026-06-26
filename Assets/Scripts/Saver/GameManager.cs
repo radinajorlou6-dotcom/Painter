@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
 
     // --- Persistent progress ---
     public int maxLevelReached { get; private set; } = 1;
+    public int lastLevelPlayed { get; private set; } = 1;
 
     public Dictionary<string, bool> unlockedAbilities { get; private set; } = new Dictionary<string, bool>()
     {
@@ -118,6 +119,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateMaxLevelReached(int levelIndex)
     {
+        lastLevelPlayed = levelIndex;
         maxLevelReached = Mathf.Max(maxLevelReached, levelIndex);
     }
     #endregion
@@ -129,6 +131,7 @@ public class GameManager : MonoBehaviour
         return new GameData
         {
             highestLevelReached = maxLevelReached,
+            lastLevelPlayed = lastLevelPlayed,
             unlockedColours = new List<string>(unlockedColours),
             unlockedAbilities = new Dictionary<string, bool>(unlockedAbilities)
         };
@@ -140,6 +143,7 @@ public class GameManager : MonoBehaviour
         if (data == null) return;
 
         maxLevelReached = Mathf.Max(1, data.highestLevelReached);
+        lastLevelPlayed = Mathf.Max(1, data.lastLevelPlayed);
         unlockedColours = data.unlockedColours ?? new List<string>();
 
         if (data.unlockedAbilities != null)
@@ -196,7 +200,7 @@ public class GameManager : MonoBehaviour
 
         // highestLevelReached is stored as a build index. Clamp it so we never
         // accidentally load the menu (index 0) or an out-of-range scene.
-        int sceneIndex = Mathf.Clamp(data.highestLevelReached, 1, SceneManager.sceneCountInBuildSettings - 1);
+        int sceneIndex = Mathf.Clamp(data.lastLevelPlayed, 1, SceneManager.sceneCountInBuildSettings - 1);
         SceneManager.LoadScene(sceneIndex);
     }
 
