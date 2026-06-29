@@ -282,7 +282,7 @@ public class GameManager : MonoBehaviour
         {
             movementMap?.Enable();
             combatMap?.Enable();
-//            uiMap?.Disable();
+            uiMap?.Disable();
         }
         else
         {

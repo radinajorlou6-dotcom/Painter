@@ -232,7 +232,7 @@ public class CombatInput : MonoBehaviour
         }
     }
 
-    public IEnumerator returnInk(float inkToBeReturned)
+    public IEnumerator ReturnInk(float inkToBeReturned)
     {
         numOfLines--;
         yield return new WaitForSeconds(drawCooldown);

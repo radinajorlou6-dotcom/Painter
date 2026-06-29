@@ -266,6 +266,7 @@ public class PlayerCombat : MonoBehaviour
         Vector2 direction = (targetWorldPos - (Vector2)firePoint.position).normalized;
 
         GameObject bullet = bulletPool.SpawnFromPool(firePoint.position, Quaternion.identity);
+        if (bullet == null) return;
 
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
         if (rb != null)

@@ -75,6 +75,9 @@ public class PlayerHealth : MonoBehaviour
         anim.SetTrigger("Died");
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         GetComponent<PlayerMovement>().enabled = false;
+        GameManager.Instance?.UpdateGameState(GameManager.GameState.Died);
+    }
+    private void DieDestroy(){ //Will be called by animator after final frame has played
         this.enabled = false;
         Destroy(gameObject);
     }

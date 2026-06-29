@@ -7,11 +7,12 @@ public class FinishPoint : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.CompareTag("Player") || collision.gameObject.CompareTag("Player"))
+        if (collision.CompareTag("Player"))
         {
             //DO STUFF GIVE POWER GIVE COLOUR ETC
-            GameManager.Instance.UpdateMaxLevelReached(SceneManager.GetSceneByName(nextSceneName).buildIndex); // Update max level reached
-            DebugUtils.Log(nextSceneName + " is level " + SceneManager.GetSceneByName(nextSceneName).buildIndex);
+            // Level progress is recorded by GameManager.HandleSceneLoaded once the next scene
+            // actually loads, where the build index is reliable. Computing it here would use
+            // GetSceneByName on a scene that isn't loaded yet, which returns build index -1.
             LoadNextLevel();
         }
     }
