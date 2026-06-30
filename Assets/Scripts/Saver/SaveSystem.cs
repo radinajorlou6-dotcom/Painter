@@ -2,7 +2,7 @@ using UnityEngine;
 using System.IO;
 using Newtonsoft.Json;
 
-public class SaveSystem
+public class SaveSystem : ISerializer  
 {
     private static string savePath = Path.Combine(Application.persistentDataPath, "saveFile.json");
     

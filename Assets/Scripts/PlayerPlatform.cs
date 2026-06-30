@@ -118,7 +118,7 @@ public class PlayerPlatform : MonoBehaviour
         // All points faded, clean up
         drawLineRender.enabled = false;
         lineCollider.enabled = false;
-        cIScript.StartCoroutine(ReturnInk, currentInkUsed);
+        cIScript.ReturnInkAfterDelay(currentInkUsed);
         Destroy(gameObject);
     }
 

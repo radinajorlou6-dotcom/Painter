@@ -225,18 +225,39 @@ public class CombatInput : MonoBehaviour
             drawnLines.RemoveAll(drawnLine => drawnLine == null); // Remove any null entries from the list
             if(drawnLines.Count == 0)
             {
-                StopCoroutine("returnInk");
+                StopAllInkReturns();
                 currentDrawInk = 0;
             }
             yield return new WaitForSeconds(timer);
         }
     }
 
-    public IEnumerator ReturnInk(float inkToBeReturned)
+    // Tracks pending ink-return coroutines so they can all be cancelled when the ink fully resets.
+    private readonly List<Coroutine> activeInkReturns = new List<Coroutine>();
+
+    // Called by a platform when it fades out, to give its ink back after a cooldown.
+    public void ReturnInkAfterDelay(float inkToBeReturned)
+    {
+        Coroutine handle = null;
+        handle = StartCoroutine(ReturnInkRoutine(inkToBeReturned, () => activeInkReturns.Remove(handle)));
+        activeInkReturns.Add(handle);
+    }
+
+    private IEnumerator ReturnInkRoutine(float inkToBeReturned, System.Action onComplete)
     {
         numOfLines--;
         yield return new WaitForSeconds(drawCooldown);
         currentDrawInk -= inkToBeReturned;
+        onComplete?.Invoke(); // Remove our own handle from the tracking list once we finish naturally.
+    }
+
+    private void StopAllInkReturns()
+    {
+        foreach (Coroutine handle in activeInkReturns)
+        {
+            if (handle != null) StopCoroutine(handle);
+        }
+        activeInkReturns.Clear();
     }
 
     #region SlashPreview
