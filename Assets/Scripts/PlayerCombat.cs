@@ -1,6 +1,5 @@
 using System.Collections; // Required for Coroutines
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -79,6 +78,7 @@ public class PlayerCombat : MonoBehaviour
     // Public accessors for combat preview
     public float GetSlashRadius() => slashRadius;
     public LayerMask GetEnvironmentLayerMask() => environment;
+    public float GetMaxSweepAngle() => maxSweepAngle;
 
     private void Awake()
     {
@@ -285,50 +285,16 @@ public class PlayerCombat : MonoBehaviour
     {
         if (swipePath == null || swipePath.Count < 2) return;
 
-        // --- PHASE 1: ANGLE CALCULATION ---
-        Vector2 startDirection = swipePath[0] - (Vector2)transform.position;
-        float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
-
-        float previousAngle = startAngle;
-        float accumulatedAngle = 0f;
-        float swingSign = 0f;
-
-
-        foreach (Vector2 point in swipePath)
-        {
-            Vector2 direction = point - (Vector2)transform.position;
-            float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            float step = Mathf.DeltaAngle(previousAngle, currentAngle);
-
-
-            // Figure out swing direction
-            if (swingSign == 0f && Mathf.Abs(step) > 0.01f)
-            {
-                swingSign = Mathf.Sign(step);
-            }
-            // NO BACKTRACKING RULE
-            else if (swingSign != 0f && Mathf.Sign(step) != swingSign)
-            {
-                continue;
-            }
-
-            // CLAMP: Stop counting if we hit a half-circle
-            if (accumulatedAngle >= maxSweepAngle)
-            {
-                accumulatedAngle = maxSweepAngle;
-                break;
-            }
-            accumulatedAngle += Mathf.Abs(step);
-
-
-            previousAngle = currentAngle;
-        }
+        // --- PHASE 1: ANGLE CALCULATION (shared with the slash preview in CombatInput) ---
+        SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, transform.position, maxSweepAngle);
+        float startAngle = swing.startAngle;
+        float accumulatedAngle = swing.accumulatedAngle;
 
         // --- PHASE 2: SHAPE GENERATION ---
         List<Vector2> polygonPoints = new List<Vector2>();
 
-        // Calculate the exact final angle based on our running total
-        float finalAngle = startAngle + (accumulatedAngle * swingSign);
+        // Final blade angle after the (possibly clamped) swing.
+        float finalAngle = swing.finalAngle;
 
         // We need to track the physical WORLD position of the blade's edge as it swings
         float startAngleRad = startAngle * Mathf.Deg2Rad;
@@ -392,7 +358,8 @@ public class PlayerCombat : MonoBehaviour
 
         if (accumulatedAngle < stabThreshold)
         {
-            StartCoroutine(MeleeAttackRoutine(startDirection.normalized, stabDmgMult, stabKnockback, stabDuration));
+            Vector2 stabDir = (swipePath[0] - (Vector2)transform.position).normalized;
+            StartCoroutine(MeleeAttackRoutine(stabDir, stabDmgMult, stabKnockback, stabDuration));
             return;
         }
         Vector2 slashDir = (swipePath[swipePath.Count - 1] - swipePath[0]).normalized;
@@ -433,5 +400,73 @@ public class PlayerCombat : MonoBehaviour
 
         // Turn the hitbox back off
         hitBox.gameObject.SetActive(false);
+    }
+}
+
+/// <summary>Result of measuring a swipe's swing arc: where it starts, ends, and how far it swept.</summary>
+public struct SlashSwing
+{
+    public bool isValid;
+    public float startAngle;       // degrees
+    public float finalAngle;       // degrees
+    public float accumulatedAngle; // total degrees swept (absolute)
+}
+
+/// <summary>
+/// Shared slash maths used by both the real attack (PlayerCombat) and the on-screen preview
+/// (CombatInput). Previously this angle-accumulation logic was copy-pasted in both, which meant
+/// the preview and the actual hitbox could drift apart. Keeping it here makes them agree.
+/// </summary>
+public static class SlashGeometry
+{
+    /// <summary>
+    /// Walks a swipe path around an origin and measures how far the player swung, ignoring
+    /// backtracking and clamping to maxSweepAngle. Returns the start/final angles for the arc.
+    /// </summary>
+    public static SlashSwing MeasureSwing(List<Vector2> swipePath, Vector2 origin, float maxSweepAngle)
+    {
+        SlashSwing swing = new SlashSwing();
+        if (swipePath == null || swipePath.Count < 2) return swing;
+
+        Vector2 startDirection = swipePath[0] - origin;
+        float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
+
+        float previousAngle = startAngle;
+        float accumulated = 0f;
+        float swingSign = 0f;
+
+        foreach (Vector2 point in swipePath)
+        {
+            Vector2 direction = point - origin;
+            float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            float step = Mathf.DeltaAngle(previousAngle, currentAngle);
+
+            // Lock in the swing direction on the first meaningful movement.
+            if (swingSign == 0f && Mathf.Abs(step) > 0.01f)
+            {
+                swingSign = Mathf.Sign(step);
+            }
+            // Ignore movement that reverses the swing direction (no backtracking).
+            else if (swingSign != 0f && Mathf.Sign(step) != swingSign)
+            {
+                previousAngle = currentAngle;
+                continue;
+            }
+
+            // Stop counting once the swing reaches its maximum sweep.
+            if (accumulated >= maxSweepAngle)
+            {
+                accumulated = maxSweepAngle;
+                break;
+            }
+            accumulated += Mathf.Abs(step);
+            previousAngle = currentAngle;
+        }
+
+        swing.startAngle = startAngle;
+        swing.accumulatedAngle = accumulated;
+        swing.finalAngle = startAngle + (accumulated * swingSign);
+        swing.isValid = accumulated >= 0.01f;
+        return swing;
     }
 }

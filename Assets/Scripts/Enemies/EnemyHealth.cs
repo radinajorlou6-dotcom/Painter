@@ -50,7 +50,7 @@ public abstract class EnemyHealth : MonoBehaviour
         {
             CheckPlayerDetection();
             float interval = currDistanceFromPlayer / 100; //Run based on how far the player is
-            yield return new WaitForSeconds(interval);
+            yield return new WaitForSeconds(Mathf.Max(0.05f, interval));
         }
     }
 

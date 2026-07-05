@@ -52,14 +52,13 @@ public class MainMenuUI : MonoBehaviour
 
         if (saveStatusText != null)
         {
-            if (saveExists)
+            if (GameManager.Instance.TryGetSavedProgress(out GameData data))
             {
-                GameData data = SaveSystem.LoadGame();
                 saveStatusText.text = $"Save found - Level {data.highestLevelReached}";
             }
             else
             {
-                saveStatusText.text = "No save found";
+                saveStatusText.text = "Save found";
             }
         }
     }

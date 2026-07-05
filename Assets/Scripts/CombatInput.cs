@@ -185,7 +185,7 @@ public class CombatInput : MonoBehaviour
         if (context.started)
         {
             if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed || 
-                !GameManager.Instance.unlockedAbilities.ContainsKey("ShieldDraw") || !GameManager.Instance.unlockedAbilities["ShieldDraw"]) return; // Prevent shielding while drawing or slashing
+                !GameManager.Instance.IsAbilityUnlocked(AbilityType.ShieldDraw)) return; // Prevent shielding while drawing or slashing
 
             isShieldActive = true;
             playerCombat.StartNewShield();
@@ -200,7 +200,7 @@ public class CombatInput : MonoBehaviour
     {
         if (context.started)
         {
-            if (!GameManager.Instance.unlockedAbilities.ContainsKey("PlatformDraw") || !GameManager.Instance.unlockedAbilities["PlatformDraw"]) return;
+            if (!GameManager.Instance.IsAbilityUnlocked(AbilityType.PlatformDraw)) return;
             Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
             if (numOfLines >= maxLines) return;
@@ -317,46 +317,13 @@ public class CombatInput : MonoBehaviour
         float slashRadius = playerCombat.GetSlashRadius();
         LayerMask environment = playerCombat.GetEnvironmentLayerMask();
 
-        // --- PHASE 1: ANGLE CALCULATION ---
-        Vector2 startDirection = swipePath[0] - (Vector2)playerTransform.position;
-        float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
-
-        float previousAngle = startAngle;
-        float accumulatedAngle = 0f;
-        float swingSign = 0f;
-
-        foreach (Vector2 point in swipePath)
-        {
-            Vector2 direction = point - (Vector2)playerTransform.position;
-            float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            float step = Mathf.DeltaAngle(previousAngle, currentAngle);
-
-            // Figure out swing direction
-            if (swingSign == 0f && Mathf.Abs(step) > 0.01f)
-            {
-                swingSign = Mathf.Sign(step);
-            }
-            // NO BACKTRACKING RULE
-            else if (swingSign != 0f && Mathf.Sign(step) != swingSign)
-            {
-                previousAngle = currentAngle;
-                continue;
-            }
-
-            // CLAMP: Stop counting if we hit a half-circle (180 degrees)
-            if (accumulatedAngle >= 180f)
-            {
-                accumulatedAngle = 180f;
-                break;
-            }
-            accumulatedAngle += Mathf.Abs(step);
-            previousAngle = currentAngle;
-        }
-
-        if (accumulatedAngle < 0.01f) return polygonPoints; // No meaningful swing yet
+        // --- PHASE 1: ANGLE CALCULATION (shared with the real slash in PlayerCombat) ---
+        SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, playerTransform.position, playerCombat.GetMaxSweepAngle());
+        if (!swing.isValid) return polygonPoints; // No meaningful swing yet
 
         // --- PHASE 2: SHAPE GENERATION ---
-        float finalAngle = startAngle + (accumulatedAngle * swingSign);
+        float startAngle = swing.startAngle;
+        float finalAngle = swing.finalAngle;
         int arcResolution = 15;
 
         // Add the player center as the first point

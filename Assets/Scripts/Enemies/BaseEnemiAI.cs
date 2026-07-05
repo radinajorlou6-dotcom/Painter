@@ -30,7 +30,6 @@ public class BaseEnemyAI : EnemyHealth
         CollideCheck();
     }
 
-
     IEnumerator JumpRoutine()
     {
         while (true)

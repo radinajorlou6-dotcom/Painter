@@ -12,8 +12,13 @@ using UnityEngine.InputSystem;
 /// UI scripts never touch SaveSystem or SceneManager directly; they call into
 /// this class so all progression logic lives in one place.
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, ISaveable
 {
+    // --- Save system ---
+    private const string ProgressionSaveId = "progression";
+    private SaveService saveService;
+    private readonly List<ISaveable> saveables = new List<ISaveable>();
+
     // --- Input action maps (resolved per scene) ---
     private InputActionMap movementMap;
     private InputActionMap combatMap;
@@ -37,22 +42,28 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     public GameState CurrentState { get; private set; }
     public static event Action<GameState> OnStateChanged;
-    public static event Action<string> OnColourUnlocked;
+    public static event Action<PaintColour> OnColourUnlocked;
 
     // --- Persistent progress ---
     public int maxLevelReached { get; private set; } = 1;
     public int lastLevelPlayed { get; private set; } = 1;
 
-    public Dictionary<string, bool> unlockedAbilities { get; private set; } = new Dictionary<string, bool>()
+    public Dictionary<AbilityType, bool> unlockedAbilities { get; private set; } = DefaultAbilities();
+
+    public List<PaintColour> unlockedColours { get; private set; } = new List<PaintColour>();
+
+    private Dictionary<PaintColour, bool> bucketStates = new Dictionary<PaintColour, bool>();
+
+    /// <summary>The starting ability set, used both at boot and when starting a new game.</summary>
+    private static Dictionary<AbilityType, bool> DefaultAbilities()
     {
-        {"Slingshot", true},
-        {"PlatformDraw", true},
-        {"ShieldDraw", true}
-    };
-
-    public List<string> unlockedColours { get; private set; } = new List<string>();
-
-    private Dictionary<string, bool> bucketStates = new Dictionary<string, bool>();
+        return new Dictionary<AbilityType, bool>
+        {
+            { AbilityType.Slingshot, true },
+            { AbilityType.PlatformDraw, true },
+            { AbilityType.ShieldDraw, true }
+        };
+    }
 
     #region Unity Lifecycle
     private void Awake()
@@ -66,7 +77,19 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // Build the save system: JSON serializer + a file on disk. Injecting these here
+        // (rather than hardcoding them inside SaveService) is what keeps SaveService testable.
+        saveService = new SaveService(new JsonSaveSerializer(), new FileStorage("saveFile.json"));
+        RegisterSaveable(this); // progression saves itself; other systems can register too.
+
         ResolveInput();
+    }
+
+    /// <summary>Systems call this to take part in saving/loading.</summary>
+    public void RegisterSaveable(ISaveable saveable)
+    {
+        if (!saveables.Contains(saveable)) saveables.Add(saveable);
     }
 
     private void OnEnable()
@@ -98,31 +121,39 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region Progress Tracking
-    public bool IsBucketEmpty(string colour)
+    /// <summary>True if the given ability is unlocked. Safe even if the key is missing.</summary>
+    public bool IsAbilityUnlocked(AbilityType ability)
     {
-        return bucketStates.ContainsKey(colour) && bucketStates[colour];
+        return unlockedAbilities.TryGetValue(ability, out bool unlocked) && unlocked;
     }
 
-    public void SaveBucketState(string colour, bool isEmpty)
+    public bool IsColourUnlocked(PaintColour colour)
+    {
+        return unlockedColours.Contains(colour);
+    }
+
+    public bool IsBucketEmpty(PaintColour colour)
+    {
+        return bucketStates.TryGetValue(colour, out bool empty) && empty;
+    }
+
+    public void SaveBucketState(PaintColour colour, bool isEmpty)
     {
         bucketStates[colour] = isEmpty;
         OnColourUnlocked?.Invoke(colour);
     }
 
-    public void UnlockAbility(string abilityName)
+    public void UnlockAbility(AbilityType ability)
     {
-        if (unlockedAbilities.ContainsKey(abilityName) && !unlockedAbilities[abilityName])
-        {
-            unlockedAbilities[abilityName] = true;
-        }
+        unlockedAbilities[ability] = true;
     }
 
-    public void UnlockColour(string colourName)
+    public void UnlockColour(PaintColour colour)
     {
-        if (!unlockedColours.Contains(colourName))
+        if (!unlockedColours.Contains(colour))
         {
-            unlockedColours.Add(colourName);
-            OnColourUnlocked?.Invoke(colourName);
+            unlockedColours.Add(colour);
+            OnColourUnlocked?.Invoke(colour);
         }
     }
 
@@ -133,49 +164,62 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
-    #region Save / Load
-    /// <summary>Snapshots the current progress into a serializable GameData object.</summary>
-    public GameData CaptureState()
+    #region Save / Load (ISaveable)
+    /// <summary>Unique key this system's data is filed under in the save.</summary>
+    public string SaveId => ProgressionSaveId;
+
+    /// <summary>Snapshots the current progress into an independent, serializable object.</summary>
+    public object CaptureState()
     {
+        // Copy the collections so the snapshot can't be changed by later gameplay. This is
+        // what makes the design safe to move to background/autosave later on.
         return new GameData
         {
+            saveVersion = SaveService.CurrentVersion,
             highestLevelReached = maxLevelReached,
             lastLevelPlayed = lastLevelPlayed,
-            unlockedColours = new List<string>(unlockedColours),
-            unlockedAbilities = new Dictionary<string, bool>(unlockedAbilities)
+            unlockedColours = new List<PaintColour>(unlockedColours),
+            unlockedAbilities = new Dictionary<AbilityType, bool>(unlockedAbilities)
         };
     }
 
-    /// <summary>Overwrites current progress with the values from a loaded GameData object.</summary>
-    public void ApplyState(GameData data)
+    /// <summary>Overwrites current progress with the values from a loaded snapshot.</summary>
+    public void RestoreState(object state)
     {
+        GameData data = state as GameData;
         if (data == null) return;
 
         maxLevelReached = Mathf.Max(1, data.highestLevelReached);
         lastLevelPlayed = Mathf.Max(1, data.lastLevelPlayed);
-        unlockedColours = data.unlockedColours ?? new List<string>();
+        unlockedColours = data.unlockedColours ?? new List<PaintColour>();
 
         if (data.unlockedAbilities != null)
         {
-            unlockedAbilities = data.unlockedAbilities;
+            unlockedAbilities = new Dictionary<AbilityType, bool>(data.unlockedAbilities);
         }
 
         // Notify any listening environment objects that colours are unlocked
-        foreach (string colour in unlockedColours)
+        foreach (PaintColour colour in unlockedColours)
         {
             OnColourUnlocked?.Invoke(colour);
         }
     }
 
-    /// <summary>Writes the current progress to disk.</summary>
+    /// <summary>Writes the current progress (and every registered system) to disk.</summary>
     public void SaveGame()
     {
-        SaveSystem.SaveGame(CaptureState());
+        saveService.Save(saveables);
     }
 
     public bool HasSaveFile()
     {
-        return SaveSystem.SaveExists();
+        return saveService.SaveExists();
+    }
+
+    /// <summary>Reads saved progress for display without applying it (used by the menu).</summary>
+    public bool TryGetSavedProgress(out GameData data)
+    {
+        return saveService.TryLoadEntry(ProgressionSaveId, out data);
     }
     #endregion
 
@@ -184,14 +228,9 @@ public class GameManager : MonoBehaviour
     public void NewGame()
     {
         maxLevelReached = 1;
-        unlockedColours = new List<string>();
-        unlockedAbilities = new Dictionary<string, bool>()
-        {
-            {"Slingshot", true},
-            {"PlatformDraw", true},
-            {"ShieldDraw", true}
-        };
-        bucketStates = new Dictionary<string, bool>();
+        unlockedColours = new List<PaintColour>();
+        unlockedAbilities = DefaultAbilities();
+        bucketStates = new Dictionary<PaintColour, bool>();
 
         CurrentState = GameState.Playing;
         Time.timeScale = 1f;
@@ -201,15 +240,16 @@ public class GameManager : MonoBehaviour
     /// <summary>Loads saved progress from disk and jumps to the saved level.</summary>
     public void ContinueGame()
     {
-        GameData data = SaveSystem.LoadGame();
-        ApplyState(data);
+        // Restores progression (and any other registered system) into our live fields.
+        // If there's no save, this is a no-op and lastLevelPlayed keeps its default of 1.
+        saveService.Load(saveables);
 
         CurrentState = GameState.Playing;
         Time.timeScale = 1f;
 
-        // highestLevelReached is stored as a build index. Clamp it so we never
+        // lastLevelPlayed is stored as a build index. Clamp it so we never
         // accidentally load the menu (index 0) or an out-of-range scene.
-        int sceneIndex = Mathf.Clamp(data.lastLevelPlayed, 1, SceneManager.sceneCountInBuildSettings - 1);
+        int sceneIndex = Mathf.Clamp(lastLevelPlayed, 1, SceneManager.sceneCountInBuildSettings - 1);
         SceneManager.LoadScene(sceneIndex);
     }
 

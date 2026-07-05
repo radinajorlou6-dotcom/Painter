@@ -91,7 +91,7 @@ public class SlingshotAbility : MonoBehaviour
 
     public void OnSlingshotClick(InputAction.CallbackContext context)
     {
-        if (!GameManager.Instance.unlockedAbilities.ContainsKey("Slingshot") || !GameManager.Instance.unlockedAbilities["Slingshot"]) return;
+        if (!GameManager.Instance.IsAbilityUnlocked(AbilityType.Slingshot)) return;
         if (context.started)
         {
             if (!IsShiftHeld()) return;

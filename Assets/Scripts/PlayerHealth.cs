@@ -30,14 +30,15 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        anim.SetTrigger("gotHurt");
         health -= damage;
         DebugUtils.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
         healthBar.UpdateHealthBar(health, maxHealth);
         if (health <= 0)
         {
             Die();
+            return;
         }
+        anim.SetTrigger("gotHurt");
     }
 
     public IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)

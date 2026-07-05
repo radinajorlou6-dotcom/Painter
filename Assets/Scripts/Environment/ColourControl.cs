@@ -1,22 +1,27 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public abstract class ColourControl : MonoBehaviour
+/// <summary>
+/// A tilemap that is "greyed out" until its colour is unlocked. When the matching colour is
+/// unlocked (via a paint bucket), it recolours and its collider turns off so the player can
+/// pass through. Configure which colour this responds to via the Inspector dropdown.
+/// </summary>
+public class ColourControl : MonoBehaviour
 {
     protected Rigidbody2D rb;
     protected Tilemap tilemap;
     [SerializeField] protected Color unlockedColour; //The colour of the object after being unlocked
-    [SerializeField] protected string colour; //The name of the colour that will be used to check if the player has unlocked it
+    [SerializeField] protected PaintColour colour;   //Which colour unlock this object reacts to
     protected TilemapCollider2D tilemapCollider;
-    
+
     protected virtual void OnEnable()
     {
-        GameManager.OnColourUnlocked += UnlockColour;
+        GameManager.OnColourUnlocked += HandleColourUnlocked;
     }
 
     protected virtual void OnDisable()
     {
-        GameManager.OnColourUnlocked -= UnlockColour;
+        GameManager.OnColourUnlocked -= HandleColourUnlocked;
     }
 
     protected virtual void Awake()
@@ -26,21 +31,23 @@ public abstract class ColourControl : MonoBehaviour
         tilemapCollider = GetComponent<TilemapCollider2D>();
         if (GameManager.Instance != null && GameManager.Instance.IsBucketEmpty(colour))
         {
-            UnlockColour();
+            Unlock();
         }
     }
 
-    protected virtual void UnlockColour()
+    /// <summary>Applies the unlocked look and disables the blocking collider.</summary>
+    protected virtual void Unlock()
     {
         tilemapCollider.enabled = false;
         tilemap.color = unlockedColour;
     }
 
-    protected virtual void UnlockColour(string colourName)
+    /// <summary>Event handler: only reacts when the unlocked colour matches ours.</summary>
+    protected virtual void HandleColourUnlocked(PaintColour colourName)
     {
         if (colourName == colour)
         {
-            UnlockColour();
+            Unlock();
         }
     }
 }
