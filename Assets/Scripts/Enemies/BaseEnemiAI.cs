@@ -1,9 +1,5 @@
-using System.Collections.Generic;
 using System.Collections;
-using System.Collections.Specialized;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class BaseEnemyAI : EnemyHealth
 {
@@ -16,7 +12,7 @@ public class BaseEnemyAI : EnemyHealth
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
-    private bool isJumping = false;
+    public bool isJumping { get; private set; } = false;
 
     private void Start()
     {
@@ -119,8 +115,6 @@ public class BaseEnemyAI : EnemyHealth
             // Suicide logic
             Die();
         }
-
-        DebugUtils.Log("Enemy collided with: " + collision.gameObject.name);
     }
 
 

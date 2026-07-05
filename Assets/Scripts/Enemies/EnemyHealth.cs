@@ -30,6 +30,8 @@ public abstract class EnemyHealth : MonoBehaviour
     protected bool isGrounded = true;
     protected bool isColliding = false;
 
+    [SerializeField] protected Animator anim;
+
     protected virtual void Awake()
     {
         health = maxHealth; // Initialize health to maxHealth at the start
@@ -61,7 +63,6 @@ public abstract class EnemyHealth : MonoBehaviour
         if (player == null) return;
         currDistanceFromPlayer = Vector2.Distance(transform.position, player.position); //Check how far the player is
         RaycastHit2D seePlayer = Physics2D.Linecast(transform.position, player.position, environment); //Check if theres anything in the way
-        DebugUtils.Log("Here");
         if (currDistanceFromPlayer <= detectionRange && seePlayer.collider == null) //if player is within detection range and theres nothing in the way
         {
             // Determine if the player is to the left or right of us
@@ -125,8 +126,19 @@ public abstract class EnemyHealth : MonoBehaviour
 
     public virtual void Die()
     {
+        // Stop any active coroutines to prevent conflicting behavior
         StopAllCoroutines();
-        DebugUtils.Log(gameObject.name + " has died.");
+
+        // Freeze the rigidbody so gravity doesn't pull the enemy mid-animation
+        rb.linearVelocity = Vector2.zero;
+        rb.isKinematic = true;
+
+        // Trigger the death animation
+        anim.SetTrigger("Died");
+    }
+    public void DieDestroy()
+    {
+        this.enabled = false;
         Destroy(gameObject);
     }
 
@@ -134,7 +146,6 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
         {
-            DebugUtils.Log("Grounded reached");
             isGrounded = true;
         }
         else
@@ -147,12 +158,10 @@ public abstract class EnemyHealth : MonoBehaviour
     {
         if (Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer))
         {
-            DebugUtils.Log(gameObject.name + " Colliding with " + collideCheck.name);
             isColliding = true;
         }
         else
         {
-            DebugUtils.Log(gameObject.name + " Not Colliding");
             isColliding = false;
         }
     }
