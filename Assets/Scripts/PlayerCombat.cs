@@ -386,12 +386,15 @@ public class PlayerCombat : MonoBehaviour
 
         for (int i = 0; i < finalHitCount; i++)
         {
-            EnemyHealth enemyHealth = hitEnemies[i].GetComponent<EnemyHealth>();
-            if (enemyHealth != null)
+            Collider2D enemyCollider = hitEnemies[i];
+            IDamageable damageable = enemyCollider.GetComponent<IDamageable>();
+            if (damageable != null)
             {
                 hitEnemies[i] = null;
-                enemyHealth.TakeDamage(10f * dmg);
-                if (enemyHealth != null) StartCoroutine(enemyHealth.TakeKnockback(attackDir, knockback, knockbackDuration));
+                damageable.TakeDamage(10f * dmg);
+
+                IKnockbackable knockable = enemyCollider.GetComponent<IKnockbackable>();
+                if (knockable != null) StartCoroutine(knockable.TakeKnockback(attackDir, knockback, knockbackDuration));
             }
         }
 

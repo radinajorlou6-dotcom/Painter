@@ -1,8 +1,7 @@
     using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
 
-    public class KnightAI : EnemyHealth
+    public class KnightAI : EnemyBase
     {
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float chargeSpeed = 5f;
@@ -27,7 +26,15 @@
 
         private bool isAttacking = false;
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        protected override void Awake()
+        {
+            base.Awake();
+            // The knight is armoured: it shrugs off the player's attacks. We express
+            // this through the Health component instead of overriding TakeDamage to
+            // do nothing, so it still honours the IHealth/IDamageable contract.
+            // Hazards can still finish it off via Health.Kill().
+            health.Invulnerable = true;
+        }
 
         // Update is called once per frame
         protected override void Update()
@@ -145,13 +152,7 @@
                 //Debug.Log("WE GOT HIM " + (hit != null));
                 if (hit != null)
                 {
-                    PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
-                    if (playerHealth != null)
-                    {
-                        playerHealth.TakeDamage(chargeDmg);
-                        Vector2 knockbackDir = (player.position - transform.position).normalized;
-                        StartCoroutine(playerHealth.TakeKnockback(knockbackDir, chargeKnockback, knockbackDuration));
-                    }
+                    ApplyHit(hit, chargeDmg, chargeKnockback);
                     break; // Stop charging once we hit the player
                 }
                 yield return null;
@@ -184,13 +185,7 @@
             //Debug.Log("Bash hit: " + (hit != null));
             if (hit != null)
             {
-                PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(bashDmg);
-                    Vector2 knockbackDir = (player.position - transform.position).normalized;
-                    StartCoroutine(playerHealth.TakeKnockback(knockbackDir, bashKnockback, knockbackDuration));
-                }
+                ApplyHit(hit, bashDmg, bashKnockback);
             }
 
             yield return new WaitForSeconds(bashDuration);
@@ -203,17 +198,31 @@
             isAttacking = false;
         }
 
-        public override void TakeDamage(float damage)
+        /// <summary>
+        /// Applies damage and knockback to whatever was hit, using the health
+        /// interfaces so we never care about the concrete target type.
+        /// </summary>
+        private void ApplyHit(Collider2D hit, float damage, float knockbackForce)
         {
-            //This enemy does not take damage from player
-            //PLAY ANIMATION
+            IDamageable target = hit.GetComponent<IDamageable>();
+            if (target != null)
+            {
+                target.TakeDamage(damage);
+            }
+
+            IKnockbackable knockable = hit.GetComponent<IKnockbackable>();
+            if (knockable != null)
+            {
+                Vector2 knockbackDir = (player.position - transform.position).normalized;
+                StartCoroutine(knockable.TakeKnockback(knockbackDir, knockbackForce, knockbackDuration));
+            }
         }
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (collision.gameObject.CompareTag("Spikes"))
             {
-                Die();
+                health.Kill(); // hazards bypass invulnerability
             }
             else if ((collideWithLayer.value & (1 << collision.gameObject.layer)) != 0
                     && isColliding) //Check if the collision is something that should make the knight turn around

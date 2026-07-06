@@ -1,9 +1,16 @@
 using System.Collections;
 using UnityEngine;
 
-public abstract class EnemyHealth : MonoBehaviour
+/// <summary>
+/// Shared behaviour for every enemy: player detection, ground/wall checks,
+/// knockback reaction and death handling. Health is composed via a required
+/// <see cref="Health"/> component (IHealth) rather than inherited, so all
+/// damage logic lives in one reusable place and subclasses only add AI.
+/// </summary>
+[RequireComponent(typeof(Health))]
+[RequireComponent(typeof(Rigidbody2D))]
+public abstract class EnemyBase : MonoBehaviour, IKnockbackable
 {
-
     [Header("Detection")]
     [SerializeField] protected float detectionRange = 10f;
     [SerializeField] protected float attackRange = 4f;
@@ -11,8 +18,6 @@ public abstract class EnemyHealth : MonoBehaviour
     protected float currDistanceFromPlayer;
     protected bool canSeePlayer = false;
 
-    [SerializeField] protected float maxHealth = 100f;
-    protected float health;
     protected bool isBeingKnocked = false;
     protected Rigidbody2D rb;
     protected bool dirIsRight = true;
@@ -30,16 +35,28 @@ public abstract class EnemyHealth : MonoBehaviour
     protected bool isGrounded = true;
     protected bool isColliding = false;
 
+    [Header("Death")]
     [SerializeField] protected Animator anim;
+    [Tooltip("Seconds to wait for the death animation before the object is destroyed.")]
+    [SerializeField] protected float deathAnimationDuration = 0.8f;
+
+    /// <summary>The composed health component. Subclasses use it to deal/take damage and check death.</summary>
+    protected Health health;
 
     protected virtual void Awake()
     {
-        health = maxHealth; // Initialize health to maxHealth at the start
         rb = GetComponent<Rigidbody2D>();
+        health = GetComponent<Health>();
+        health.Died += HandleDeath;
         StartCoroutine(DetectionRoutine());
     }
 
-    // Update is called once per frame
+    protected virtual void OnDestroy()
+    {
+        // Always unsubscribe to avoid dangling handlers on destroyed objects.
+        if (health != null) health.Died -= HandleDeath;
+    }
+
     protected virtual void Update()
     {
         GroundCheck();
@@ -86,31 +103,22 @@ public abstract class EnemyHealth : MonoBehaviour
             canSeePlayer = false;
         }
     }
-    public virtual void TakeDamage(float damage)
-    {
-        health -= damage;
-        DebugUtils.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
-        if (health <= 0)
-        {
-            Die();
-        }
-    }
 
-    public virtual IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
+    public virtual IEnumerator TakeKnockback(Vector2 direction, float force, float duration)
     {
         if (rb == null) yield break;
         rb.linearVelocity = Vector2.zero;
 
         isBeingKnocked = true;
-        Vector2 initialVelocity = attackDir.normalized * knockbackMult;
+        Vector2 initialVelocity = direction.normalized * force;
         float elapsed = 0f;
 
-        while (elapsed < knockbackDur)
+        while (elapsed < duration)
         {
             if (this == null || rb == null) yield break;
 
             // t goes 0 -> 1 over the duration, velocity goes full -> zero
-            float t = elapsed / knockbackDur;
+            float t = elapsed / duration;
             float smoothT = t * t;
             rb.linearVelocity = Vector2.Lerp(initialVelocity, Vector2.zero, smoothT);
 
@@ -124,18 +132,27 @@ public abstract class EnemyHealth : MonoBehaviour
         isBeingKnocked = false;
     }
 
-    public virtual void Die()
+    /// <summary>
+    /// Runs when the Health component reports death. Stops AI, freezes physics
+    /// so gravity can't drag the body around mid-animation, plays the death
+    /// animation, then destroys the object once the animation has had time to finish.
+    /// </summary>
+    protected virtual void HandleDeath()
     {
-        // Stop any active coroutines to prevent conflicting behavior
         StopAllCoroutines();
-
-        // Freeze the rigidbody so gravity doesn't pull the enemy mid-animation
         rb.linearVelocity = Vector2.zero;
         rb.isKinematic = true;
 
-        // Trigger the death animation
-        anim.SetTrigger("Died");
+        if (anim != null) anim.SetTrigger("Died");
+
+        DebugUtils.Log(gameObject.name + " has died.");
+        Destroy(gameObject, deathAnimationDuration);
     }
+
+    /// <summary>
+    /// Optional animation-event hook: lets the death clip destroy the object on
+    /// its final frame instead of relying on the timed fallback in HandleDeath.
+    /// </summary>
     public void DieDestroy()
     {
         this.enabled = false;
@@ -144,31 +161,12 @@ public abstract class EnemyHealth : MonoBehaviour
 
     protected virtual void GroundCheck()
     {
-        if (Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer))
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
+        isGrounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
     }
 
     protected virtual void CollideCheck()
     {
-        if (Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer))
-        {
-            isColliding = true;
-        }
-        else
-        {
-            isColliding = false;
-        }
-    }
-
-    protected virtual void PlayerInSight()
-    {
-
+        isColliding = Physics2D.OverlapBox(collideCheck.position, collideCheckSize, 0, collideWithLayer);
     }
 
     protected virtual void Flip()
@@ -179,9 +177,15 @@ public abstract class EnemyHealth : MonoBehaviour
 
     protected virtual void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(collideCheck.position, collideCheckSize);
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
+        }
+        if (collideCheck != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireCube(collideCheck.position, collideCheckSize);
+        }
     }
 }

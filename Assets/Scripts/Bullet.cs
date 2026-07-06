@@ -27,11 +27,11 @@ public class Bullet : MonoBehaviour, IPoolable
         if (collision.CompareTag("Player") || collision.CompareTag("Shield")) return;
         else if (collision.CompareTag("Enemy"))
         {
-            // Apply damage to the enemy
-            EnemyHealth enemyHealth = collision.GetComponent<EnemyHealth>();
-            if (enemyHealth != null)
+            // Apply damage to anything damageable we hit
+            IDamageable target = collision.GetComponent<IDamageable>();
+            if (target != null)
             {
-                enemyHealth.TakeDamage(damage);
+                target.TakeDamage(damage);
             }
         }
         if (pool != null)

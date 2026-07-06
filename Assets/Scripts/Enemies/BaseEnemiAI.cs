@@ -1,7 +1,11 @@
 using System.Collections;
 using UnityEngine;
 
-public class BaseEnemyAI : EnemyHealth
+/// <summary>
+/// A "leaper" enemy: hops toward the player and explodes on impact. Health and
+/// death are handled by the composed Health component on the same GameObject.
+/// </summary>
+public class BaseEnemyAI : EnemyBase
 {
     [Header("Movement")]
     [SerializeField] private float hopForce = 5f;
@@ -12,18 +16,10 @@ public class BaseEnemyAI : EnemyHealth
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
-    public bool isJumping { get; private set; } = false;
-
     private void Start()
     {
         // Start the jumping loop
         StartCoroutine(JumpRoutine());
-    }
-
-    protected override void Update()
-    {
-        GroundCheck();
-        CollideCheck();
     }
 
     IEnumerator JumpRoutine()
@@ -31,13 +27,13 @@ public class BaseEnemyAI : EnemyHealth
         while (true)
         {
             yield return new WaitForSeconds(jumpInterval);
-            if (!isGrounded) continue;
+            if (!isGrounded) continue;      // never jump mid-air
             if (isBeingKnocked) continue;
             if (player == null) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);
 
-            if (distance <= detectionRange && !isJumping)
+            if (distance <= detectionRange)
             {
                 if (distance <= attackRange)
                 {
@@ -80,42 +76,36 @@ public class BaseEnemyAI : EnemyHealth
 
         //3. The equations
         float velocityX = deltaX / timeToTarget;
-        float velocityY = deltaY / timeToTarget  - 0.5f * gravity * timeToTarget;
+        float velocityY = deltaY / timeToTarget - 0.5f * gravity * timeToTarget;
 
         //4. Apply the calculated velocity to the Rigidbody2D
         rb.linearVelocity = new Vector2(velocityX, velocityY);
-
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Example inside an EnemyBullet.cs script
         if (collision.gameObject.CompareTag("Shield"))
         {
-            // Find the PlayerCombat script and tell it the shield took a hit
+            // Tell the PlayerCombat script the shield absorbed a hit, then detonate.
             PlayerCombat cS = collision.gameObject.GetComponentInParent<PlayerCombat>();
-            if(cS != null)
+            if (cS != null)
             {
                 cS.TakeShieldHit();
             }
 
-            Die();
-            
+            health.Kill();
         }
-
         else if (collision.gameObject.CompareTag("Player"))
         {
-            // Do Damage to Player (You'll need a PlayerHealth script!)
-            PlayerHealth ph = collision.gameObject.GetComponent<PlayerHealth>();
-            if (ph != null)
+            // Deal damage to whatever can be damaged on the player, then detonate.
+            IDamageable target = collision.gameObject.GetComponent<IDamageable>();
+            if (target != null)
             {
-                ph.TakeDamage(damage);
+                target.TakeDamage(damage);
                 DebugUtils.Log("BOOM! Enemy exploded on player!");
             }
-            // Suicide logic
-            Die();
+
+            health.Kill();
         }
     }
-
-
 }

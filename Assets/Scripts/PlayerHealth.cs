@@ -1,47 +1,70 @@
 using UnityEngine;
 using System.Collections;
 
-//FOR NOW EXACT SAME AS ENEMY HEALTH
-
-public class PlayerHealth : MonoBehaviour
+/// <summary>
+/// Player-specific reactions to the shared <see cref="Health"/> component.
+/// Health storage and the IHealth/IDamageable contract live on Health; this
+/// script just listens for its events (update the bar, run the death sequence)
+/// and provides the player's physics knockback.
+/// </summary>
+[RequireComponent(typeof(Health))]
+public class PlayerHealth : MonoBehaviour, IKnockbackable
 {
     [SerializeField] private HealthBar healthBar;
-    [SerializeField] private float maxHealth = 100f;
-    [SerializeField] private float health;
     [SerializeField] private Animator anim;
-    Rigidbody2D rb;
+
+    private Health health;
+    private Rigidbody2D rb;
     private PlayerMovement playerMovement;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Awake()
     {
+        health = GetComponent<Health>();
         rb = GetComponent<Rigidbody2D>();
         playerMovement = GetComponent<PlayerMovement>();
-        health = maxHealth;
+    }
+
+    private void OnEnable()
+    {
+        health.HealthChanged += HandleHealthChanged;
+        health.Died += HandleDeath;
+    }
+
+    private void OnDisable()
+    {
+        health.HealthChanged -= HandleHealthChanged;
+        health.Died -= HandleDeath;
+    }
+
+    private void Start()
+    {
+        // Sync the bar to the starting value (Health raises its first event in
+        // Awake, which may fire before we subscribed, so we prime it here).
+        HandleHealthChanged(health.CurrentHealth, health.MaxHealth);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Spikes"))
         {
-            TakeDamage(9999); //Instant death
+            health.Kill(); // instant death
         }
     }
 
-    public void TakeDamage(float damage)
+    private void HandleHealthChanged(float current, float max)
     {
-        health -= damage;
-        DebugUtils.Log(gameObject.name + " took " + damage + " damage. Remaining health: " + health);
-        healthBar.UpdateHealthBar(health, maxHealth);
-        if (health <= 0)
-        {
-            Die();
-            return;
-        }
-        anim.SetTrigger("gotHurt");
+        if (healthBar != null) healthBar.UpdateHealthBar(current, max);
     }
 
-    public IEnumerator TakeKnockback(Vector2 attackDir, float knockbackMult, float knockbackDur)
+    private void HandleDeath()
+    {
+        if (anim != null) anim.SetTrigger("Died");
+        if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        if (playerMovement != null) playerMovement.enabled = false;
+        GameManager.Instance?.UpdateGameState(GameManager.GameState.Died);
+    }
+
+    public IEnumerator TakeKnockback(Vector2 direction, float force, float duration)
     {
         if (rb == null) yield break;
 
@@ -50,14 +73,14 @@ public class PlayerHealth : MonoBehaviour
             playerMovement.enabled = false;
         }
 
-        Vector2 initialVelocity = attackDir.normalized * knockbackMult;
+        Vector2 initialVelocity = direction.normalized * force;
         float elapsed = 0f;
 
-        while (elapsed < knockbackDur)
+        while (elapsed < duration)
         {
             if (this == null || rb == null) yield break;
 
-            float t = elapsed / knockbackDur;
+            float t = elapsed / duration;
             rb.linearVelocity = Vector2.Lerp(initialVelocity, Vector2.zero, t * t);
             elapsed += Time.deltaTime;
             yield return null;
@@ -71,14 +94,8 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    private void Die()
+    private void DieDestroy() //Will be called by animator after final frame has played
     {
-        anim.SetTrigger("Died");
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        GetComponent<PlayerMovement>().enabled = false;
-        GameManager.Instance?.UpdateGameState(GameManager.GameState.Died);
-    }
-    private void DieDestroy(){ //Will be called by animator after final frame has played
         this.enabled = false;
         Destroy(gameObject);
     }
