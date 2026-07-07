@@ -29,8 +29,10 @@ public class AnimationEvents : MonoBehaviour
     //continoursly updated portion for jumpp
     private Animator _animator;
     private BaseEnemyAI _playerController;
+    private Rigidbody2D _playerRb;
 
-    private readonly int _isJumpingHash = Animator.StringToHash("isJumping");
+    private readonly int _isGroundedHash = Animator.StringToHash("isGrounded");
+    private readonly int _yVelocity = Animator.StringToHash("yVelocity");
 
     private void Awake()
     {
@@ -38,6 +40,7 @@ public class AnimationEvents : MonoBehaviour
         
         // Reach up to the parent to find the main movement script
         _playerController = GetComponentInParent<BaseEnemyAI>();
+        _playerRb = GetComponentInParent<Rigidbody2D>();
 
         if (_playerController == null)
             Debug.LogError("PlayerAnimator cannot find PlayerController on the parent!");
@@ -46,9 +49,11 @@ public class AnimationEvents : MonoBehaviour
     private void Update()
     {
         // 1. "Pull" the variable from the main script
-        bool jumpState = _playerController.isJumping;
+        bool groundState = _playerController.isGrounded;
+        float yVelocity = _playerRb.linearVelocity.y;
 
         // 2. Feed it to the Animator
-        _animator.SetBool(_isJumpingHash, jumpState);
+        _animator.SetBool(_isGroundedHash, groundState);
+        _animator.SetFloat(_yVelocity, yVelocity);
     }
 }

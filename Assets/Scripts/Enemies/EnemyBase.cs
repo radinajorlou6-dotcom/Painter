@@ -32,7 +32,7 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     [SerializeField] protected LayerMask collideWithLayer;
     [SerializeField] protected LayerMask environment;
     [SerializeField] protected LayerMask playerLayer;
-    protected bool isGrounded = true;
+    public bool isGrounded { get; private set; } = true;
     protected bool isColliding = false;
 
     [Header("Death")]

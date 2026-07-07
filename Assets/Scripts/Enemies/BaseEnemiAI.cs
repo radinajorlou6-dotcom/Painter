@@ -16,6 +16,20 @@ public class BaseEnemyAI : EnemyBase
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
+    [Header("Wall Sticking")]
+    [Tooltip("How horizontal a contact normal must be to count as a wall (1 = perfectly vertical wall, 0 = flat floor).")]
+    [SerializeField] private float wallNormalThreshold = 0.5f;
+
+    private bool isStuckToWall = false;
+    private float defaultGravityScale;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        // Remember the normal gravity so we can restore it after unsticking.
+        defaultGravityScale = rb.gravityScale;
+    }
+
     private void Start()
     {
         // Start the jumping loop
@@ -27,7 +41,8 @@ public class BaseEnemyAI : EnemyBase
         while (true)
         {
             yield return new WaitForSeconds(jumpInterval);
-            if (!isGrounded) continue;      // never jump mid-air
+            // Attack whenever we have a foothold: on the ground OR stuck to a wall.
+            if (!isGrounded && !isStuckToWall) continue;
             if (isBeingKnocked) continue;
             if (player == null) continue;
 
@@ -55,6 +70,8 @@ public class BaseEnemyAI : EnemyBase
 
     void SmallHop()
     {
+        Unstick(); // release from any wall before pushing off
+
         // Calculate direction only on X axis
         float direction = (player.position.x > transform.position.x) ? 1 : -1;
         rb.AddForce(new Vector2(direction * hopForce, hopForce), ForceMode2D.Impulse);
@@ -62,6 +79,8 @@ public class BaseEnemyAI : EnemyBase
 
     void LeapAttack()
     {
+        Unstick(); // release (and restore gravity) BEFORE the arc math reads gravityScale
+
         Vector2 startPos = transform.position; // Starting position of the leap
         Vector2 targetPos = player.position; // Target position of the leap
 
@@ -107,5 +126,41 @@ public class BaseEnemyAI : EnemyBase
 
             health.Kill();
         }
+        // If we hit a wall while airborne, cling to it and keep attacking from there.
+        else if (!isGrounded && IsWallContact(collision))
+        {
+            StickToWall();
+        }
+    }
+
+    /// <summary>
+    /// A contact counts as a wall if it's on the collide layer AND the surface
+    /// normal is roughly horizontal (so we ignore floors and ceilings).
+    /// </summary>
+    private bool IsWallContact(Collision2D collision)
+    {
+        if (((1 << collision.gameObject.layer) & collideWithLayer) == 0) return false;
+
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (Mathf.Abs(contact.normal.x) > wallNormalThreshold) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Freeze on the wall: kill motion and gravity so the enemy hangs in place.</summary>
+    private void StickToWall()
+    {
+        isStuckToWall = true;
+        rb.linearVelocity = Vector2.zero;
+        rb.gravityScale = 0f;
+    }
+
+    /// <summary>Release from the wall and let gravity take over again.</summary>
+    private void Unstick()
+    {
+        if (!isStuckToWall) return;
+        isStuckToWall = false;
+        rb.gravityScale = defaultGravityScale;
     }
 }
