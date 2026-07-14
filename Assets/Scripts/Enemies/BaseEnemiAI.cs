@@ -127,40 +127,53 @@ public class BaseEnemyAI : EnemyBase
             health.Kill();
         }
         // If we hit a wall while airborne, cling to it and keep attacking from there.
-        else if (!isGrounded && IsWallContact(collision))
+        else if (!isGrounded && IsWallContact(collision, out Vector2 wallNormal))
         {
-            StickToWall();
+            StickToWall(wallNormal);
         }
     }
 
     /// <summary>
     /// A contact counts as a wall if it's on the collide layer AND the surface
-    /// normal is roughly horizontal (so we ignore floors and ceilings).
+    /// normal is roughly horizontal (so we ignore floors and ceilings). Outputs
+    /// the wall's surface normal so we can orient the body against it.
     /// </summary>
-    private bool IsWallContact(Collision2D collision)
+    private bool IsWallContact(Collision2D collision, out Vector2 normal)
     {
+        normal = Vector2.up;
         if (((1 << collision.gameObject.layer) & collideWithLayer) == 0) return false;
 
         foreach (ContactPoint2D contact in collision.contacts)
         {
-            if (Mathf.Abs(contact.normal.x) > wallNormalThreshold) return true;
+            if (Mathf.Abs(contact.normal.x) > wallNormalThreshold)
+            {
+                normal = contact.normal;
+                return true;
+            }
         }
         return false;
     }
 
-    /// <summary>Freeze on the wall: kill motion and gravity so the enemy hangs in place.</summary>
-    private void StickToWall()
+    /// <summary>
+    /// Freeze on the wall: kill motion and gravity so the enemy hangs in place,
+    /// and rotate the body so its "feet" rest against the wall. Because the wall
+    /// normal points straight out of the surface, aligning local up with it makes
+    /// the blob look like it's sitting on the wall just as it sits on the ground.
+    /// </summary>
+    private void StickToWall(Vector2 wallNormal)
     {
         isStuckToWall = true;
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
+        transform.up = wallNormal;
     }
 
-    /// <summary>Release from the wall and let gravity take over again.</summary>
+    /// <summary>Release from the wall, restore gravity, and stand upright again.</summary>
     private void Unstick()
     {
         if (!isStuckToWall) return;
         isStuckToWall = false;
         rb.gravityScale = defaultGravityScale;
+        transform.up = Vector3.up;
     }
 }

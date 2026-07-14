@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 7869209055250755340}
   - component: {fileID: 52536151419053383}
   - component: {fileID: 3935321798259220931}
-  - component: {fileID: 1392267825567925189}
   - component: {fileID: 3026164935867350460}
+  - component: {fileID: 7721018263147953318}
   m_Layer: 10
   m_Name: BaseEnemy
   m_TagString: Enemy
@@ -158,21 +158,6 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!114 &1392267825567925189
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7159905540023114441}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a64fd8cff1865d44a9a3858af59947d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 100
-  health: 0
-  isBeingKnocked: 0
 --- !u!114 &3026164935867350460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,15 +171,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BaseEnemyAI
   detectionRange: 10
-  leapRange: 4
+  attackRange: 4
   player: {fileID: 0}
+  groundCheck: {fileID: 0}
+  collideCheck: {fileID: 0}
+  groundCheckSize: {x: 0.5, y: 0.05}
+  collideCheckSize: {x: 0.05, y: 0.5}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  collideWithLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  environment:
+    serializedVersion: 2
+    m_Bits: 0
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  anim: {fileID: 0}
+  deathAnimationDuration: 0.8
   hopForce: 4
   leapForce: 6
   jumpInterval: 2
   timeToTarget: 1
-  groundCheck: {fileID: 0}
-  groundCheckSize: {x: 0.5, y: 0.05}
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
   damage: 34
+  wallNormalThreshold: 0.5
+--- !u!114 &7721018263147953318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7159905540023114441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b636308d20765f94e904b6e4ce2413f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 100
+  invulnerable: 0
