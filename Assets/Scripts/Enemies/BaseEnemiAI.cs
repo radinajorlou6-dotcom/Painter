@@ -16,6 +16,13 @@ public class BaseEnemyAI : EnemyBase
     [Header("Attack")]
     [SerializeField] private float damage = 34;
 
+    [Header("Explosion Feedback")]
+    [Tooltip("Freeze-frame length when the enemy detonates on the player.")]
+    [SerializeField] private float explosionHitStop = 0.08f;
+    [Tooltip("Camera shake intensity/duration on detonation.")]
+    [SerializeField] private float explosionShake = 0.35f;
+    [SerializeField] private float explosionShakeDuration = 0.25f;
+
     [Header("Wall Sticking")]
     [Tooltip("How horizontal a contact normal must be to count as a wall (1 = perfectly vertical wall, 0 = flat floor).")]
     [SerializeField] private float wallNormalThreshold = 0.5f;
@@ -123,6 +130,10 @@ public class BaseEnemyAI : EnemyBase
                 target.TakeDamage(damage);
                 DebugUtils.Log("BOOM! Enemy exploded on player!");
             }
+
+            // Explosion emphasis: bigger than a normal hit, and Kill() itself is silent.
+            HitStop.Instance?.Freeze(explosionHitStop);
+            CameraShake.Instance?.Shake(explosionShake, explosionShakeDuration);
 
             health.Kill();
         }

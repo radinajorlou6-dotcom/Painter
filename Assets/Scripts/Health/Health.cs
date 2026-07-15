@@ -40,6 +40,25 @@ public class Health : MonoBehaviour, IHealth
         currentHealth = Mathf.Max(0f, currentHealth - amount);
         HealthChanged?.Invoke(currentHealth, maxHealth);
 
+        // Centralized camera shake based on damage done or suffered
+        if (CameraShake.Instance != null)
+        {
+            if (gameObject.CompareTag("Player"))
+            {
+                // Suffer damage: slightly stronger shake
+                float intensity = 0.15f + Mathf.Clamp(amount * 0.005f, 0f, 0.15f);
+                float duration = 0.15f + Mathf.Clamp(amount * 0.002f, 0f, 0.10f);
+                CameraShake.Instance.Shake(intensity, duration);
+            }
+            else
+            {
+                // Deal damage: satisfying feedback
+                float intensity = 0.10f + Mathf.Clamp(amount * 0.003f, 0f, 0.10f);
+                float duration = 0.10f + Mathf.Clamp(amount * 0.002f, 0f, 0.08f);
+                CameraShake.Instance.Shake(intensity, duration);
+            }
+        }
+
         if (IsDead)
         {
             Died?.Invoke();

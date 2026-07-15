@@ -13,9 +13,17 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
     [SerializeField] private HealthBar healthBar;
     [SerializeField] private Animator anim;
 
+    [Header("Impact Feedback")]
+    [Tooltip("Freeze-frame length when the player takes a non-fatal hit.")]
+    [SerializeField] private float hurtHitStop = 0.06f;
+    [Tooltip("Camera shake intensity/duration on death.")]
+    [SerializeField] private float deathShake = 0.5f;
+    [SerializeField] private float deathShakeDuration = 0.4f;
+
     private Health health;
     private Rigidbody2D rb;
     private PlayerMovement playerMovement;
+    private float lastHealth = -1f;
 
     private void Awake()
     {
@@ -54,10 +62,20 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
     private void HandleHealthChanged(float current, float max)
     {
         if (healthBar != null) healthBar.UpdateHealthBar(current, max);
+
+        // Freeze-frame when we actually lose health (ignore heals and the initial
+        // Start sync). Death is handled separately with a bigger shake below.
+        if (lastHealth >= 0f && current < lastHealth && current > 0f)
+        {
+            HitStop.Instance?.Freeze(hurtHitStop);
+        }
+        lastHealth = current;
     }
 
     private void HandleDeath()
     {
+        CameraShake.Instance?.Shake(deathShake, deathShakeDuration);
+
         if (anim != null) anim.SetTrigger("Died");
         if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         if (playerMovement != null) playerMovement.enabled = false;

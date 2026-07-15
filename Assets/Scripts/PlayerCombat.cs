@@ -8,6 +8,15 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform playerTransform;
     [SerializeField] private float xOffset = 0f;
     [SerializeField] private float yOffset = 0f;
+
+    [Header("Impact Feedback")]
+    [Tooltip("Freeze-frame length when a melee hit connects with an enemy.")]
+    [SerializeField] private float meleeHitStop = 0.05f;
+    [Tooltip("Freeze-frame length when the shield breaks.")]
+    [SerializeField] private float shieldBreakHitStop = 0.08f;
+    [Tooltip("Camera shake intensity/duration when the shield breaks.")]
+    [SerializeField] private float shieldBreakShake = 0.2f;
+    [SerializeField] private float shieldBreakShakeDuration = 0.2f;
     
 
     [Header("Ranged Attack")]
@@ -178,6 +187,10 @@ public class PlayerCombat : MonoBehaviour
         // Turn the visuals and physics off
         shieldLine.enabled = false;
         shieldCollider.enabled = false;
+
+        HitStop.Instance?.Freeze(shieldBreakHitStop);
+        CameraShake.Instance?.Shake(shieldBreakShake, shieldBreakShakeDuration);
+
         StartCoroutine(ReplenishShield(currentPaintUsed));
     }
 
@@ -384,6 +397,7 @@ public class PlayerCombat : MonoBehaviour
         // This ensures the actual polygon shape is used for the overlap test
         int finalHitCount = hitBox.Overlap(filter, hitEnemies);
 
+        bool hitLanded = false;
         for (int i = 0; i < finalHitCount; i++)
         {
             Collider2D enemyCollider = hitEnemies[i];
@@ -391,12 +405,17 @@ public class PlayerCombat : MonoBehaviour
             if (damageable != null)
             {
                 hitEnemies[i] = null;
+                hitLanded = true;
                 damageable.TakeDamage(10f * dmg);
 
                 IKnockbackable knockable = enemyCollider.GetComponent<IKnockbackable>();
                 if (knockable != null) StartCoroutine(knockable.TakeKnockback(attackDir, knockback, knockbackDuration));
             }
         }
+
+        // A single freeze-frame per swing that connects (the shake is already
+        // driven by each enemy's Health.TakeDamage).
+        if (hitLanded) HitStop.Instance?.Freeze(meleeHitStop);
 
         // Wait for a split second so the player can actually see the slash
         yield return new WaitForSeconds(attackDur);
