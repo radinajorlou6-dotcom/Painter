@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     //Movement variables
     [Header("Movement")]
     public float moveSpeed = 2f;
-    [SerializeField] private Animator anim;
+    [SerializeField] private AnimationController animController;
 
     //Jumping variables
     [Header("Jumping")]
@@ -72,6 +72,8 @@ public class PlayerMovement : MonoBehaviour
 
     void Awake()
     {
+        if (animController == null) animController = GetComponent<AnimationController>();
+
         groundFilter = new ContactFilter2D();
         groundContact = new ContactPoint2D[maxPoints];
         groundFilter.SetLayerMask(groundLayer);
@@ -86,15 +88,30 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         ProcessWallJump();
-        anim.SetFloat("Speed", Mathf.Abs(horizontalMovement));
-        anim.SetBool("isGrounded", isGrounded);
-        anim.SetFloat("yVelocity", rb.linearVelocity.y);
+        UpdateLocomotionAnimation();
 
         if (!isWallJumping && !(isSlingshotting && !allowDirectionChangeWhileSlingshotting)) //Prevent flipping during wall jump or a locked slingshot launch
         { 
             Flip(); //Flip player sprite based on movement direction
         }
             
+    }
+
+    // Picks the right locomotion animation from the current physics state each frame.
+    // Uninterruptible animations (hurt/death) are left alone until they finish.
+    private void UpdateLocomotionAnimation()
+    {
+        if (animController == null || animController.IsPlayingUninterruptible()) return;
+
+        if (!isGrounded)
+        {
+            // Rising = Jump, falling = Fall.
+            animController.PlayAnimation(rb.linearVelocity.y > 0.01f ? AnimationType.Jump : AnimationType.Fall);
+        }
+        else
+        {
+            animController.PlayAnimation(Mathf.Abs(horizontalMovement) > 0.01f ? AnimationType.Run : AnimationType.Idle);
+        }
     }
 
     private void FixedUpdate()
@@ -242,7 +259,6 @@ public class PlayerMovement : MonoBehaviour
     {
         if(context.performed && isWallSliding)
         {
-            anim.SetTrigger("Jump");
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
             wallJumpTimer = wallJumpTime; //Reset wall jump timer
@@ -255,7 +271,6 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (context.performed && isGrounded) //hold jump = full jump power
         {
-            anim.SetTrigger("Jump");
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
         }
         else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold

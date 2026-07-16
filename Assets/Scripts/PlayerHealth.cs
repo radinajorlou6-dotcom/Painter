@@ -11,7 +11,7 @@ using System.Collections;
 public class PlayerHealth : MonoBehaviour, IKnockbackable
 {
     [SerializeField] private HealthBar healthBar;
-    [SerializeField] private Animator anim;
+    [SerializeField] private AnimationController animController;
 
     [Header("Impact Feedback")]
     [Tooltip("Freeze-frame length when the player takes a non-fatal hit.")]
@@ -30,6 +30,7 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
         health = GetComponent<Health>();
         rb = GetComponent<Rigidbody2D>();
         playerMovement = GetComponent<PlayerMovement>();
+        if (animController == null) animController = GetComponent<AnimationController>();
     }
 
     private void OnEnable()
@@ -68,6 +69,7 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
         if (lastHealth >= 0f && current < lastHealth && current > 0f)
         {
             HitStop.Instance?.Freeze(hurtHitStop);
+            animController?.PlayAnimation(AnimationType.GotHurt);
         }
         lastHealth = current;
     }
@@ -76,7 +78,7 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
     {
         CameraShake.Instance?.Shake(deathShake, deathShakeDuration);
 
-        if (anim != null) anim.SetTrigger("Died");
+        animController?.PlayAnimation(AnimationType.Died);
         if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         if (playerMovement != null) playerMovement.enabled = false;
         GameManager.Instance?.UpdateGameState(GameManager.GameState.Died);

@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 public class PlayerCombat : MonoBehaviour
 {
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private AnimationController animController;
+    [SerializeField] private WeaponController weapon;
     [SerializeField] private float xOffset = 0f;
     [SerializeField] private float yOffset = 0f;
 
@@ -89,12 +91,30 @@ public class PlayerCombat : MonoBehaviour
     public LayerMask GetEnvironmentLayerMask() => environment;
     public float GetMaxSweepAngle() => maxSweepAngle;
 
+    // Exposed so CombatInput can drive the same animation hub for platform-draw visuals.
+    public AnimationController Animation => animController;
+
+    // Exposed so CombatInput can start/stop the weapon "hold" while a slash is being built.
+    public WeaponController Weapon => weapon;
+
     private void Awake()
     {
         hitEnemies = new Collider2D[maxEnemiesToSlash];
         shieldCollider.points = new Vector2[shieldColliderPoints];
         shieldNodes = new Queue<ShieldNode>(shieldColliderPoints);
         shieldNodesLst = new List<Vector2>(shieldColliderPoints);
+
+        // The combat pivot sits on a child object, so resolve the controller from the player root.
+        if (animController == null && playerTransform != null)
+        {
+            animController = playerTransform.GetComponent<AnimationController>();
+        }
+
+        // The weapon pivot lives under this combat pivot; grab it from there if unassigned.
+        if (weapon == null)
+        {
+            weapon = GetComponentInChildren<WeaponController>();
+        }
     }
 
     #region ShieldLogic
@@ -112,6 +132,8 @@ public class PlayerCombat : MonoBehaviour
 
         shieldLine.enabled = true;
         shieldCollider.enabled = true;
+
+        animController?.PlayShieldDraw();
     }
 
     public void AddShieldPoint(Vector2 worldPos)
@@ -296,7 +318,11 @@ public class PlayerCombat : MonoBehaviour
 
     public void ExecuteDynamicSlash(List<Vector2> swipePath)
     {
-        if (swipePath == null || swipePath.Count < 2) return;
+        if (swipePath == null || swipePath.Count < 2)
+        {
+            weapon?.ResumeAim(); // gesture fizzled: give aiming control back
+            return;
+        }
 
         // --- PHASE 1: ANGLE CALCULATION (shared with the slash preview in CombatInput) ---
         SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, transform.position, maxSweepAngle);
@@ -372,10 +398,14 @@ public class PlayerCombat : MonoBehaviour
         if (accumulatedAngle < stabThreshold)
         {
             Vector2 stabDir = (swipePath[0] - (Vector2)transform.position).normalized;
+            animController?.PlayStab();
+            //weapon?.PlaySlashFollow(startAngle, finalAngle, stabDuration); probably will have seperate stab anim
             StartCoroutine(MeleeAttackRoutine(stabDir, stabDmgMult, stabKnockback, stabDuration));
             return;
         }
         Vector2 slashDir = (swipePath[swipePath.Count - 1] - swipePath[0]).normalized;
+        animController?.PlaySlash();
+        weapon?.PlaySlashFollow(startAngle, finalAngle, meleeDuration);
         StartCoroutine(MeleeAttackRoutine(slashDir, dmgMult, slashKnockback, meleeDuration));
     }
 

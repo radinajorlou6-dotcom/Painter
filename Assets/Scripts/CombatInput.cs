@@ -60,6 +60,7 @@ public class CombatInput : MonoBehaviour
             isDragging = false;
             DestroySlashPreview();
             mousePath.Clear();
+            playerCombat.Weapon?.ResumeAim();
         }
 
         // 1. --- SLASH LOGIC ---
@@ -87,7 +88,12 @@ public class CombatInput : MonoBehaviour
                 float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
                 if (distanceTraveled >= dragThreshold)
                 {
-                    playerCombat.ExecuteDynamicSlash(mousePath);
+                    playerCombat.ExecuteDynamicSlash(mousePath); // triggers the weapon sweep
+                }
+                else
+                {
+                    //TODO: ADD STAB ANIMATION
+                    // held too short its a stab not a slash
                 }
 
                 // Destroy the slash preview on timeout
@@ -152,6 +158,9 @@ public class CombatInput : MonoBehaviour
             Vector2 worldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             mousePath.Add(worldPos);
 
+            // Freeze the weapon while the player builds the slash.
+            playerCombat.Weapon?.BeginHold();
+
             // Create the slash preview
             CreateSlashPreview();
         }
@@ -159,7 +168,11 @@ public class CombatInput : MonoBehaviour
         {
             isDragging = false;
 
-            if (mousePath.Count == 0) return;
+            if (mousePath.Count == 0)
+            {
+                playerCombat.Weapon?.ResumeAim();
+                return;
+            }
 
             Vector2 endWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             mousePath.Add(endWorldPos);
@@ -169,10 +182,12 @@ public class CombatInput : MonoBehaviour
             if (distance < dragThreshold)
             {
                 playerCombat.RangedAttack(mousePath[0]);
+                //TODO: ADD PROJECTILE ANIMATION
+                playerCombat.Weapon?.ResumeAim(); // not a slash, go back to aiming
             }
             else
             {
-                playerCombat.ExecuteDynamicSlash(mousePath);
+                playerCombat.ExecuteDynamicSlash(mousePath); // triggers the weapon sweep
             }
 
             // Destroy the slash preview
@@ -193,6 +208,7 @@ public class CombatInput : MonoBehaviour
         else if (context.canceled)
         {
             isShieldActive = false;
+            playerCombat.Animation?.StopShieldDraw();
         }
     }
 
@@ -210,12 +226,14 @@ public class CombatInput : MonoBehaviour
             isDrawActive = true;
             drawScript.StartDraw();
             numOfLines++;
+            playerCombat.Animation?.PlayPlatformDraw();
         }
         else if (context.canceled)
         {
             currentLineIndex++; // Move to the next line index
             drawnLines.Add(newLine); // Add the new line to the list of drawn lines
             isDrawActive = false;
+            playerCombat.Animation?.StopPlatformDraw();
         }
     }
 
