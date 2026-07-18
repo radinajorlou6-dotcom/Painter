@@ -372,11 +372,7 @@ public class CombatInput : MonoBehaviour
             if (first)
             {
                 RaycastHit2D firstHit = Physics2D.Linecast(playerTransform.position, curveWorldPoint, environment);
-                if (firstHit.collider != null)
-                {
-                    first = false;
-                    break; // Wall hit on first point, stop here
-                }
+                if (firstHit.collider != null) continue;
                 
                 if (bodyCollider != null)
                 {
