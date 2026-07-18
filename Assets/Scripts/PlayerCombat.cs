@@ -134,6 +134,7 @@ public class PlayerCombat : MonoBehaviour
         shieldCollider.enabled = true;
 
         animController?.PlayShieldDraw();
+        weapon?.BeginMouseFollow();
     }
 
     public void AddShieldPoint(Vector2 worldPos)
@@ -212,6 +213,7 @@ public class PlayerCombat : MonoBehaviour
 
         HitStop.Instance?.Freeze(shieldBreakHitStop);
         CameraShake.Instance?.Shake(shieldBreakShake, shieldBreakShakeDuration);
+        weapon?.ReturnToRest();
 
         StartCoroutine(ReplenishShield(currentPaintUsed));
     }
@@ -312,6 +314,9 @@ public class PlayerCombat : MonoBehaviour
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         bullet.transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
+        // Point the weapon at the shot for a beat, then it returns to rest on its own.
+        weapon?.PointOnce(targetWorldPos);
+
         // Set the clock for when we are allowed to fire next
         nextFireTime = Time.time + fireRate;
     }
@@ -320,7 +325,7 @@ public class PlayerCombat : MonoBehaviour
     {
         if (swipePath == null || swipePath.Count < 2)
         {
-            weapon?.ResumeAim(); // gesture fizzled: give aiming control back
+            weapon?.ReturnToRest(); // gesture fizzled: send the weapon home
             return;
         }
 

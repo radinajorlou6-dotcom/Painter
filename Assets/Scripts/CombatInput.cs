@@ -56,11 +56,13 @@ public class CombatInput : MonoBehaviour
     {
         if (isDrawActive && isDragging)
         {
-            // Cancel any active slash while drawing to keep preview and attack disabled
+            // Cancel any active slash while drawing to keep preview and attack disabled.
             isDragging = false;
             DestroySlashPreview();
             mousePath.Clear();
-            playerCombat.Weapon?.ResumeAim();
+            // A draw is active, so the weapon should follow the mouse for it — not return to
+            // rest. (Returning here was cancelling the draw's follow the instant it started.)
+            playerCombat.Weapon?.BeginMouseFollow();
         }
 
         // 1. --- SLASH LOGIC ---
@@ -94,6 +96,7 @@ public class CombatInput : MonoBehaviour
                 {
                     //TODO: ADD STAB ANIMATION
                     // held too short its a stab not a slash
+                    playerCombat.Weapon?.ReturnToRest();
                 }
 
                 // Destroy the slash preview on timeout
@@ -170,7 +173,7 @@ public class CombatInput : MonoBehaviour
 
             if (mousePath.Count == 0)
             {
-                playerCombat.Weapon?.ResumeAim();
+                playerCombat.Weapon?.ReturnToRest();
                 return;
             }
 
@@ -181,9 +184,7 @@ public class CombatInput : MonoBehaviour
 
             if (distance < dragThreshold)
             {
-                playerCombat.RangedAttack(mousePath[0]);
-                //TODO: ADD PROJECTILE ANIMATION
-                playerCombat.Weapon?.ResumeAim(); // not a slash, go back to aiming
+                playerCombat.RangedAttack(mousePath[0]); // RangedAttack points the weapon and returns it to rest
             }
             else
             {
@@ -209,6 +210,7 @@ public class CombatInput : MonoBehaviour
         {
             isShieldActive = false;
             playerCombat.Animation?.StopShieldDraw();
+            playerCombat.Weapon?.ReturnToRest();
         }
     }
 
@@ -227,6 +229,7 @@ public class CombatInput : MonoBehaviour
             drawScript.StartDraw();
             numOfLines++;
             playerCombat.Animation?.PlayPlatformDraw();
+            playerCombat.Weapon?.BeginMouseFollow();
         }
         else if (context.canceled)
         {
@@ -234,6 +237,7 @@ public class CombatInput : MonoBehaviour
             drawnLines.Add(newLine); // Add the new line to the list of drawn lines
             isDrawActive = false;
             playerCombat.Animation?.StopPlatformDraw();
+            playerCombat.Weapon?.ReturnToRest();
         }
     }
 
