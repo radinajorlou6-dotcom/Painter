@@ -179,7 +179,6 @@
         private IEnumerator BashAttack()
         {
             isAttacking = true;
-            animController?.PlayAnimation(AnimationType.Bash);
 
             // Turn the visual/physics shape on
             hitBox.gameObject.SetActive(true);
@@ -214,6 +213,7 @@
         /// </summary>
         private void ApplyHit(Collider2D hit, float damage, float knockbackForce)
         {
+            animController?.PlayAnimation(AnimationType.Bash);
             IDamageable target = hit.GetComponent<IDamageable>();
             if (target != null)
             {
