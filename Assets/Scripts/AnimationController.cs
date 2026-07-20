@@ -8,13 +8,17 @@ using UnityEngine;
 /// </summary>
 public enum AnimationType
 {
-    Idle,
-    Run,
-    Jump,
-    Fall,
-    Attack,
-    GotHurt,
-    Died
+
+    //Shared
+    Idle, GotHurt, Died,
+
+    //Player 
+    Run, Jump, Fall, Attack,
+
+    //KnightEnemy
+    Walk, Charge, Bash,
+
+    //TODO: BaseEnemy does not use this script yet might add later
 }
 
 /// <summary>

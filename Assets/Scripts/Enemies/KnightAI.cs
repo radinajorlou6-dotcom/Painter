@@ -5,6 +5,9 @@
     {
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float chargeSpeed = 5f;
+        
+        [Header("Animation")]
+        [SerializeField] private AnimationController animController;
 
         [Header("Edge Detection")]
         [SerializeField] private float edgeCheckDistance = 0.5f; // How far ahead to check for ground
@@ -34,6 +37,8 @@
             // do nothing, so it still honours the IHealth/IDamageable contract.
             // Hazards can still finish it off via Health.Kill().
             health.Invulnerable = true;
+            if (animController == null) animController = GetComponent<AnimationController>();
+
         }
 
         // Update is called once per frame
@@ -56,6 +61,8 @@
 
         private void Move()
         {
+
+            animController?.PlayAnimation(AnimationType.Walk);
             if (!isGrounded || isBeingKnocked) return; // Do not move if we're in the air or being knocked back
             
             // Check if there's ground ahead or a spike in front when patrolling
@@ -136,6 +143,7 @@
         protected override IEnumerator BaseAttack()
         {
             isAttacking = true;
+            animController?.PlayAnimation(AnimationType.Charge);
             hitBox.gameObject.SetActive(true); // Enable ONCE before the loop
         
             // Determine charge direction and set velocity ONCE
@@ -152,6 +160,7 @@
                 //Debug.Log("WE GOT HIM " + (hit != null));
                 if (hit != null)
                 {
+                    animController?.PlayAnimation(AnimationType.Bash);
                     ApplyHit(hit, chargeDmg, chargeKnockback);
                     break; // Stop charging once we hit the player
                 }
@@ -170,6 +179,7 @@
         private IEnumerator BashAttack()
         {
             isAttacking = true;
+            animController?.PlayAnimation(AnimationType.Bash);
 
             // Turn the visual/physics shape on
             hitBox.gameObject.SetActive(true);
