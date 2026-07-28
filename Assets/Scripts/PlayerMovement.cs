@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
@@ -11,6 +12,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement")]
     public float moveSpeed = 2f;
     [SerializeField] private AnimationController animController;
+    [SerializeField] private AudioController audioController;
+    private bool isWalking;
 
     //Jumping variables
     [Header("Jumping")]
@@ -61,6 +64,13 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float baseGravity = 2;
     [SerializeField] private float maxFallSpeed = 18f;
     [SerializeField] private float fallMultiplier = 2f;
+    [Tooltip("Fall volume/pitch are remapped from this speed range up to maxFallSpeed")]
+    [SerializeField] private float minFallSpeedForSound = 2f;
+    [SerializeField] private float minFallVolume = 0.2f;
+    [SerializeField] private float maxFallVolume = 1f;
+    [SerializeField] private float minFallPitch = 1f;
+    [SerializeField] private float maxFallPitch = 0.6f;
+    private bool isFalling;
 
     //Slingshot variables
     [Header("Slingshot")]
@@ -73,6 +83,7 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         if (animController == null) animController = GetComponent<AnimationController>();
+        if (audioController == null) audioController = GetComponent<AudioController>();
 
         groundFilter = new ContactFilter2D();
         groundContact = new ContactPoint2D[maxPoints];
@@ -145,6 +156,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Mathf.Abs(horizontalMovement) > 0.01f)
         {
+            if (!isWalking) {audioController.Play(AudioType.Move); isWalking = true;} //Remember to make audio loop
             float desiredX = horizontalMovement * moveSpeed;
             float accel = groundAcceleration; //Same acceleration whether on ground or in air
             float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
@@ -155,6 +167,7 @@ public class PlayerMovement : MonoBehaviour
             float drag = isGrounded ? groundFriction : airDrag;
             float newX = Mathf.MoveTowards(rb.linearVelocity.x, 0f, drag * Time.fixedDeltaTime);
             rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+            isWalking = false;
         }
     }
 
@@ -199,6 +212,7 @@ public class PlayerMovement : MonoBehaviour
     {
         isSlingshotting = true;
         slingshotHasLeftGround = false;
+        audioController.Play(AudioType.Slingshot);
     }
 
     //Different falling mechanics to make the game feel better. Increases fall speed the longer you fall, and caps it at a certain point.
@@ -208,10 +222,28 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.gravityScale = baseGravity * fallMultiplier; //Fall increasingly faster
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -maxFallSpeed)); //Cap fall speed
+
+            float fallSpeed = -rb.linearVelocity.y;
+            if (fallSpeed >= minFallSpeedForSound)
+            {
+                if (!isFalling)
+                {
+                    audioController.StartLoop(AudioType.Fall);
+                    isFalling = true;
+                }
+
+                float t = Mathf.InverseLerp(minFallSpeedForSound, maxFallSpeed, fallSpeed);
+                audioController.UpdateLoop(AudioType.Fall, Mathf.Lerp(minFallVolume, maxFallVolume, t), Mathf.Lerp(minFallPitch, maxFallPitch, t));
+            }
         }
         else
         {
             rb.gravityScale = baseGravity; //Reset gravity when not falling
+            if (isFalling)
+            {
+                audioController.StopLoop(AudioType.Fall);
+                isFalling = false;
+            }
         }
     }
 
@@ -221,6 +253,7 @@ public class PlayerMovement : MonoBehaviour
         {
             isWallSliding = true;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -wallSlideSpeed)); //Limit fall speed while wall sliding
+            //TODO: Play wallslide sound
         }
         else
         {
@@ -259,6 +292,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if(context.performed && isWallSliding)
         {
+            audioController.Play(AudioType.Jump);
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
             wallJumpTimer = wallJumpTime; //Reset wall jump timer
@@ -272,13 +306,14 @@ public class PlayerMovement : MonoBehaviour
         else if (context.performed && isGrounded) //hold jump = full jump power
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
+            audioController.Play(AudioType.Jump);
         }
         else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
         }   
 
-        //Wall jump mechanics
+        
     }
 
     private void GroundCheck()

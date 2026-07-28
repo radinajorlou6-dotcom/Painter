@@ -155,6 +155,7 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     /// </summary>
     public void DieDestroy()
     {
+        
         this.enabled = false;
         Destroy(gameObject);
     }

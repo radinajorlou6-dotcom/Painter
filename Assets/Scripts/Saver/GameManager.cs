@@ -48,6 +48,10 @@ public class GameManager : MonoBehaviour, ISaveable
     public int maxLevelReached { get; private set; } = 1;
     public int lastLevelPlayed { get; private set; } = 1;
 
+    // --- Checkpoint (in-level respawn point; reset each time a new level loads) ---
+    public Vector3 LastCheckpoint { get; private set; }
+    public bool HasCheckpoint { get; private set; }
+
     public Dictionary<AbilityType, bool> unlockedAbilities { get; private set; } = DefaultAbilities();
 
     public List<PaintColour> unlockedColours { get; private set; } = new List<PaintColour>();
@@ -116,7 +120,15 @@ public class GameManager : MonoBehaviour, ISaveable
         if (scene.buildIndex > 0 && scene.name != mainMenuSceneName)
         {
             UpdateMaxLevelReached(scene.buildIndex);
+            HasCheckpoint = false; // fresh level: respawn at the player's start until a checkpoint is hit
         }
+    }
+
+    /// <summary>Records the active respawn point. Called by Checkpoint triggers.</summary>
+    public void SetCheckpoint(Vector3 position)
+    {
+        LastCheckpoint = position;
+        HasCheckpoint = true;
     }
     #endregion
 

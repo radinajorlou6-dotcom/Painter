@@ -61,26 +61,20 @@
 
         private void Move()
         {
-
-            animController?.PlayAnimation(AnimationType.Walk);
             if (!isGrounded || isBeingKnocked) return; // Do not move if we're in the air or being knocked back
-            
-            // Check if there's ground ahead or a spike in front when patrolling
-            if (!IsGroundAhead() || IsSpikeAhead())
+
+            // Turn around at a ledge, spikes, or a wall ahead — instead of grinding in place.
+            if (!IsGroundAhead() || IsSpikeAhead() || isColliding)
             {
-                Flip(); // Turn around if walking off an edge or into spikes
+                Flip();
+                animController?.PlayAnimation(AnimationType.Idle); // not actually moving this frame
                 return;
             }
-            
-            if (dirIsRight)
-            {
-                // Do not use Time.deltaTime when setting linearVelocity directly
-                rb.linearVelocity = new Vector2(moveSpeed, rb.linearVelocity.y);
-            }
-            else
-            {
-                rb.linearVelocity = new Vector2(-moveSpeed, rb.linearVelocity.y);
-            }
+
+            float dir = dirIsRight ? 1f : -1f;
+            // Do not use Time.deltaTime when setting linearVelocity directly
+            rb.linearVelocity = new Vector2(dir * moveSpeed, rb.linearVelocity.y);
+            animController?.PlayAnimation(AnimationType.Walk);
         }
 
         private bool IsGroundAhead()
@@ -152,26 +146,30 @@
 
             yield return null;
 
-            while (!isColliding)
+            // Charge until we hit a wall, hit the player, OR the charge time runs out.
+            // The time cap is essential: without it, a charge into open space (or off a
+            // ledge) never sets isColliding, so the loop — and isAttacking — would hang forever.
+            float elapsed = 0f;
+            while (!isColliding && elapsed < chargeDuration)
             {
                 Vector2 hitCenter = hitBox.bounds.center;
                 float hitRadius = hitBox.bounds.extents.x;
                 Collider2D hit = Physics2D.OverlapCircle(hitCenter, hitRadius, playerLayer);
-                //Debug.Log("WE GOT HIM " + (hit != null));
                 if (hit != null)
                 {
                     animController?.PlayAnimation(AnimationType.Bash);
                     ApplyHit(hit, chargeDmg, chargeKnockback);
                     break; // Stop charging once we hit the player
                 }
+
+                elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            // Clean up after charge ends (hit wall or hit player)
+            // Clean up after charge ends (hit wall, hit player, or timed out)
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
             hitBox.gameObject.SetActive(false); // Disable ONCE after the loop
-        
-            yield return new WaitForSeconds(chargeDuration);
+
             yield return new WaitForSeconds(chargeCooldown);
             isAttacking = false;
         }
@@ -213,6 +211,7 @@
         /// </summary>
         private void ApplyHit(Collider2D hit, float damage, float knockbackForce)
         {
+
             animController?.PlayAnimation(AnimationType.Bash);
             IDamageable target = hit.GetComponent<IDamageable>();
             if (target != null)
