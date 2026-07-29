@@ -42,6 +42,7 @@ public class AudioController : MonoBehaviour
     private Dictionary<AudioType, AudioEntry> audioLookup;
     private List<AudioSource> sourcePool;
     private Dictionary<AudioType, AudioSource> activeLoops = new Dictionary<AudioType, AudioSource>();
+    private HashSet<AudioType> warnedTypes = new HashSet<AudioType>();
 
     private void Awake()
     {
@@ -81,13 +82,13 @@ public class AudioController : MonoBehaviour
     {
         if (!audioLookup.TryGetValue(type, out AudioEntry entry))
         {
-            Debug.LogWarning($"AudioController ({name}): no entry configured for {type}");
+            WarnOnce(type, $"AudioController ({name}): no entry configured for {type}");
             return;
         }
 
         if (entry.Clip == null)
         {
-            Debug.LogWarning($"AudioController ({name}): entry for {type} has no clip assigned");
+            WarnOnce(type, $"AudioController ({name}): entry for {type} has no clip assigned");
             return;
         }
 
@@ -138,7 +139,7 @@ public class AudioController : MonoBehaviour
 
         if (!audioLookup.TryGetValue(type, out AudioEntry entry) || entry.Clip == null)
         {
-            Debug.LogWarning($"AudioController ({name}): no valid entry for loop {type}");
+            WarnOnce(type, $"AudioController ({name}): no valid entry for loop {type}");
             return;
         }
 
@@ -171,6 +172,15 @@ public class AudioController : MonoBehaviour
         source.Stop();
         source.loop = false;
         activeLoops.Remove(type);
+    }
+
+    // Logs a misconfiguration warning only the first time it happens for a given type.
+    // Without this, a type called from FixedUpdate would log ~50 warnings a second and
+    // stall the editor long before you noticed the missing clip.
+    private void WarnOnce(AudioType type, string message)
+    {
+        if (!warnedTypes.Add(type)) return;
+        Debug.LogWarning(message);
     }
 
     private AudioSource GetFreeSource()

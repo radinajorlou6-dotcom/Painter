@@ -3,6 +3,7 @@ using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
+//[RequireComponent(typeof(AudioController))]
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
@@ -83,7 +84,7 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         if (animController == null) animController = GetComponent<AnimationController>();
-        if (audioController == null) audioController = GetComponent<AudioController>();
+       // if (audioController == null) audioController = GetComponent<AudioController>();
 
         groundFilter = new ContactFilter2D();
         groundContact = new ContactPoint2D[maxPoints];
@@ -156,7 +157,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Mathf.Abs(horizontalMovement) > 0.01f)
         {
-            if (!isWalking) {audioController.Play(AudioType.Move); isWalking = true;} //Remember to make audio loop
+            //Latch the flag first so a failed Play can't retrigger every FixedUpdate
+            //if (!isWalking) {isWalking = true; audioController.Play(AudioType.Move);} //Remember to make audio loop
             float desiredX = horizontalMovement * moveSpeed;
             float accel = groundAcceleration; //Same acceleration whether on ground or in air
             float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
@@ -212,7 +214,7 @@ public class PlayerMovement : MonoBehaviour
     {
         isSlingshotting = true;
         slingshotHasLeftGround = false;
-        audioController.Play(AudioType.Slingshot);
+       // audioController.Play(AudioType.Slingshot);
     }
 
     //Different falling mechanics to make the game feel better. Increases fall speed the longer you fall, and caps it at a certain point.
@@ -228,12 +230,12 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (!isFalling)
                 {
-                    audioController.StartLoop(AudioType.Fall);
                     isFalling = true;
+                    //audioController.StartLoop(AudioType.Fall);
                 }
 
                 float t = Mathf.InverseLerp(minFallSpeedForSound, maxFallSpeed, fallSpeed);
-                audioController.UpdateLoop(AudioType.Fall, Mathf.Lerp(minFallVolume, maxFallVolume, t), Mathf.Lerp(minFallPitch, maxFallPitch, t));
+                //audioController.UpdateLoop(AudioType.Fall, Mathf.Lerp(minFallVolume, maxFallVolume, t), Mathf.Lerp(minFallPitch, maxFallPitch, t));
             }
         }
         else
@@ -241,7 +243,7 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = baseGravity; //Reset gravity when not falling
             if (isFalling)
             {
-                audioController.StopLoop(AudioType.Fall);
+                //audioController.StopLoop(AudioType.Fall);
                 isFalling = false;
             }
         }
@@ -292,7 +294,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if(context.performed && isWallSliding)
         {
-            audioController.Play(AudioType.Jump);
+            //audioController.Play(AudioType.Jump);
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
             wallJumpTimer = wallJumpTime; //Reset wall jump timer
@@ -306,7 +308,7 @@ public class PlayerMovement : MonoBehaviour
         else if (context.performed && isGrounded) //hold jump = full jump power
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
-            audioController.Play(AudioType.Jump);
+            //audioController.Play(AudioType.Jump);
         }
         else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
         {
