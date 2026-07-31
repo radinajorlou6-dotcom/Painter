@@ -3,10 +3,13 @@ using UnityEngine;
 
 /// <summary>
 /// Reusable health component. Attach it to any entity that needs HP (player,
-/// enemies, destructible props). It owns only health state and broadcasts
-/// changes through events, keeping visuals, AI and game-state logic decoupled
+/// enemies, destructible props). It owns health state and broadcasts changes
+/// through events, keeping visuals, AI and game-state logic decoupled
 /// (single responsibility). Composition like this replaces the old habit of
 /// inheriting from a shared "Health" base class.
+///
+/// Optional destroyOnDeath handles the common case of a prop that just needs to
+/// disappear; anything with real death logic ignores it and listens to Died.
 /// </summary>
 public class Health : MonoBehaviour, IHealth
 {
@@ -15,6 +18,15 @@ public class Health : MonoBehaviour, IHealth
     [Tooltip("When true the entity ignores all incoming TakeDamage calls " +
              "(e.g. armoured enemies). Kill() still works so hazards can force death.")]
     [SerializeField] private bool invulnerable = false;
+
+    [Header("Death")]
+    [Tooltip("Remove this object from the scene once health hits zero. Leave off for " +
+             "entities that clean themselves up (the player, enemies via EnemyBase); " +
+             "turn it on for props like destructible walls that need no death logic.")]
+    [SerializeField] private bool destroyOnDeath = false;
+
+    [Tooltip("Seconds to wait before destroying, so a death animation or effect can play.")]
+    [SerializeField] private float destroyDelay = 0f;
 
     private float currentHealth;
 
@@ -61,7 +73,7 @@ public class Health : MonoBehaviour, IHealth
 
         if (IsDead)
         {
-            Died?.Invoke();
+            RaiseDeath();
         }
     }
 
@@ -79,12 +91,38 @@ public class Health : MonoBehaviour, IHealth
 
         currentHealth = 0f;
         HealthChanged?.Invoke(currentHealth, maxHealth);
-        Died?.Invoke();
+        RaiseDeath();
     }
 
     public void ResetHealth()
     {
         currentHealth = maxHealth;
         HealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    /// <summary>
+    /// Single exit point for death. Listeners (EnemyBase, PlayerHealth, UI) always run
+    /// first so they can play animations or update state, then the object cleans itself
+    /// up if it was told to.
+    /// </summary>
+    private void RaiseDeath()
+    {
+        Died?.Invoke();
+
+        if (destroyOnDeath) DestroySelf();
+    }
+
+    /// <summary>
+    /// Remove this object from the scene. Called automatically on death when
+    /// destroyOnDeath is ticked, and public so a death animation event or another
+    /// script can trigger the cleanup at exactly the right moment instead.
+    /// </summary>
+    public void DestroySelf()
+    {
+        // Stop the corpse blocking or damaging anything while a delayed animation plays.
+        foreach (Collider2D col in GetComponents<Collider2D>()) col.enabled = false;
+
+        DebugUtils.Log(gameObject.name + " destroyed by Health.");
+        Destroy(gameObject, destroyDelay);
     }
 }

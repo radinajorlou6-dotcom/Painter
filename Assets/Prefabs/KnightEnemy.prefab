@@ -153,6 +153,10 @@ GameObject:
   - component: {fileID: 4320255230765498484}
   - component: {fileID: 4357709001839216379}
   - component: {fileID: 6901118475536943004}
+  - component: {fileID: 2634786066298291286}
+  - component: {fileID: 310156630503971331}
+  - component: {fileID: 5871939627151949560}
+  - component: {fileID: 6463350651153802945}
   m_Layer: 10
   m_Name: KnightEnemy
   m_TagString: Enemy
@@ -279,7 +283,6 @@ MonoBehaviour:
   detectionRange: 10
   attackRange: 4
   player: {fileID: 0}
-  maxHealth: 100
   groundCheck: {fileID: 8674277712901375882}
   collideCheck: {fileID: 7278062850029292418}
   groundCheckSize: {x: 0.5, y: 0.05}
@@ -296,21 +299,24 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 256
+  anim: {fileID: 0}
+  deathAnimationDuration: 0.8
   moveSpeed: 5
   chargeSpeed: 15
+  animController: {fileID: 0}
   edgeCheckDistance: 1
   knockbackDuration: 0.2
   weaponPoint: {fileID: 3144247016150098345}
   hitBox: {fileID: 1521220330626458133}
   bashDuration: 0.2
-  bashCooldown: 0
+  bashCooldown: 1
   bashRange: 5
   bashDmg: 5
   bashKnockback: 30
   chargeDmg: 20
   chargeKnockback: 15
   chargeDuration: 1
-  chargeCooldown: 0
+  chargeCooldown: 1
 --- !u!61 &6901118475536943004
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -357,3 +363,97 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &2634786066298291286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200419059240323294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e4928b16e2a9dd4c82876a83adad1cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationController
+  animations:
+  - type: 0
+    stateName: Knight_Idle
+    uninterruptible: 0
+  - type: 1
+    stateName: Knight_Stun
+    uninterruptible: 1
+  - type: 7
+    stateName: Knight_Walk
+    uninterruptible: 0
+  - type: 8
+    stateName: Knight_Run
+    uninterruptible: 0
+  - type: 9
+    stateName: Knight_Push
+    uninterruptible: 0
+  layer: 0
+--- !u!114 &310156630503971331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200419059240323294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e4928b16e2a9dd4c82876a83adad1cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationController
+  animations:
+  - type: 0
+    stateName: Knight_Idle
+    uninterruptible: 0
+  - type: 1
+    stateName: Knight_Stun
+    uninterruptible: 1
+  - type: 7
+    stateName: Knight_Walk
+    uninterruptible: 0
+  - type: 8
+    stateName: Knight_Run
+    uninterruptible: 0
+  - type: 9
+    stateName: Knight_Push
+    uninterruptible: 0
+  layer: 0
+--- !u!114 &5871939627151949560
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200419059240323294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b636308d20765f94e904b6e4ce2413f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 100
+  invulnerable: 0
+--- !u!95 &6463350651153802945
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200419059240323294}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b2b0a8f17aa02c94c97b190afb040567, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

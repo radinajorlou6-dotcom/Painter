@@ -86,6 +86,10 @@ public class CombatInput : MonoBehaviour
                 isDragging = false;
                 slashTimer = 0f;
 
+                // Down before the attack runs — if the slash throws on a degenerate
+                // swipe, the preview must not be left behind with no reference to it.
+                DestroySlashPreview();
+
                 // Safety check: Don't execute a slash if they barely moved before the timeout
                 float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
                 if (distanceTraveled >= dragThreshold)
@@ -98,9 +102,6 @@ public class CombatInput : MonoBehaviour
                     // held too short its a stab not a slash
                     playerCombat.Weapon?.ReturnToRest();
                 }
-
-                // Destroy the slash preview on timeout
-                DestroySlashPreview();
 
                 mousePath.Clear();
             }
@@ -151,9 +152,10 @@ public class CombatInput : MonoBehaviour
 
     public void OnPrimaryAttack(InputAction.CallbackContext context)
     {
-        if (isDrawActive || isShieldActive) return; // Prevent attacking while drawing or shielding
         if (context.started) // When the player presses down
         {
+            if (isDrawActive || isShieldActive) return; // Prevent attacking while drawing or shielding
+
             isDragging = true;
             slashTimer = 0f; // Reset the timer on every new click!
             mousePath.Clear();
@@ -167,9 +169,20 @@ public class CombatInput : MonoBehaviour
             // Create the slash preview
             CreateSlashPreview();
         }
-        else if (context.canceled) // When player lets go 
+        else if (context.canceled) // When player lets go
         {
             isDragging = false;
+
+            // Tear the preview down before anything that can return early or throw.
+            // Every release must reach this, including one that arrives after a draw
+            // or shield started mid-drag.
+            DestroySlashPreview();
+
+            if (isDrawActive || isShieldActive)
+            {
+                mousePath.Clear();
+                return;
+            }
 
             if (mousePath.Count == 0)
             {
@@ -190,10 +203,15 @@ public class CombatInput : MonoBehaviour
             {
                 playerCombat.ExecuteDynamicSlash(mousePath); // triggers the weapon sweep
             }
-
-            // Destroy the slash preview
-            DestroySlashPreview();
         }
+    }
+
+    // The preview is created from code, so it has to be cleaned up on teardown too:
+    // being disabled mid-drag (death, scene change, pause) means the release callback
+    // and the Update timeout may never arrive to do it.
+    private void OnDisable()
+    {
+        DestroySlashPreview();
     }
 
     public void ShieldDefend(InputAction.CallbackContext context)
@@ -285,13 +303,24 @@ public class CombatInput : MonoBehaviour
     #region SlashPreview
     private void CreateSlashPreview()
     {
+        // Clear any preview that is somehow still alive first. slashPreviewObject is the
+        // only reference to that object, so overwriting it without destroying strands it
+        // in the scene with nothing left able to reach it.
+        DestroySlashPreview();
+
         // Create a new GameObject to hold the LineRenderer
         slashPreviewObject = new GameObject("SlashPreview");
-        
+
+        // Parent to the player so anything that tears the player down takes the
+        // preview with it, instead of leaving an orphan at the scene root.
+        slashPreviewObject.transform.SetParent(transform, false);
+
         // Add LineRenderer component
         slashPreviewRenderer = slashPreviewObject.AddComponent<LineRenderer>();
         
         // Configure the LineRenderer
+        // Points are fed in as world positions, so keep this independent of the parent.
+        slashPreviewRenderer.useWorldSpace = true;
         slashPreviewRenderer.startWidth = 0.1f;
         slashPreviewRenderer.endWidth = 0.1f;
         

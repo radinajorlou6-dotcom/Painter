@@ -441,7 +441,7 @@ public class PlayerCombat : MonoBehaviour
             {
                 hitEnemies[i] = null;
                 hitLanded = true;
-                damageable.TakeDamage(10f * dmg);
+                damageable.TakeDamage(dmg);
 
                 IKnockbackable knockable = enemyCollider.GetComponent<IKnockbackable>();
                 if (knockable != null) StartCoroutine(knockable.TakeKnockback(attackDir, knockback, knockbackDuration));
