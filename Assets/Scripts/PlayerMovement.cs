@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
@@ -81,6 +80,18 @@ public class PlayerMovement : MonoBehaviour
     public bool isSlingshotting { get; private set;} = false;
     private bool slingshotHasLeftGround = false;
 
+
+    [Header("Swimming")]
+    [SerializeField] float swimSpeed = 5;
+    [SerializeField] float gravityUnderWater = -2f;
+    [SerializeField] float underWaterDrag = 0f;
+    [Tooltip("Upward speed given the moment the player leaves the water, so surfacing launches " +
+             "them clear instead of stalling at the boundary. 0 disables the boost.")]
+    [SerializeField] private float waterExitBoost = 8f;
+    private float verticalMovement = 0f;
+    public bool isSwimming { get; private set; }
+    public bool IsSwimming() => isSwimming;
+
     void Awake()
     {
         if (animController == null) animController = GetComponent<AnimationController>();
@@ -94,6 +105,56 @@ public class PlayerMovement : MonoBehaviour
         groundFilter.useNormalAngle = true;
 
         wallCheckArray = new Collider2D[maxPoints];
+    }
+
+    private void OnEnable()
+    {
+        WaterZone.PlayerSwimStateChanged += HandleSwimStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        WaterZone.PlayerSwimStateChanged -= HandleSwimStateChanged;
+    }
+
+    // The water event is global, so ignore any raised for a different player.
+    private void HandleSwimStateChanged(PlayerMovement player, bool swimming)
+    {
+        if (player != this) return;
+
+        SetSwimming(swimming);
+    }
+
+    private void SetSwimming(bool swimming)
+    {
+        if (isSwimming == swimming) return;
+        isSwimming = swimming;
+
+        if (swimming)
+        {
+            // Hitting the water cancels every land-only movement state, otherwise a launch or
+            // wall jump that carried us in would keep suppressing input under the surface.
+            isSlingshotting = false;
+            isWallJumping = false;
+            isWallSliding = false;
+            isWalled = false;
+            isGrounded = false;
+            wallJumpTimer = 0f;
+        }
+        else
+        {
+            // Back on land: drop the swim input so we don't keep pushing against gravity.
+            verticalMovement = 0f;
+            rb.gravityScale = baseGravity;
+
+            // Pop clear of the surface. Only an upward exit is boosted, so dropping out of the
+            // bottom of a water volume keeps its downward momentum instead of firing upward.
+            // Mathf.Max means a fast ascent is never slowed down to the boost value.
+            if (waterExitBoost > 0f && rb.linearVelocity.y > 0f)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, waterExitBoost));
+            }
+        }
     }
 
     // Update is called once per frame
@@ -115,6 +176,15 @@ public class PlayerMovement : MonoBehaviour
     {
         if (animController == null || animController.IsPlayingUninterruptible()) return;
 
+        if (isSwimming)
+        {
+            // No dedicated swim clip yet, so reuse Run while paddling and Idle while drifting.
+            // The ground/wall checks don't run underwater, so their flags can't be trusted here.
+            bool isPaddling = Mathf.Abs(horizontalMovement) > 0.01f || Mathf.Abs(verticalMovement) > 0.01f;
+            animController.PlayAnimation(isPaddling ? AnimationType.Run : AnimationType.Idle);
+            return;
+        }
+
         if (!isGrounded)
         {
             // Rising = Jump, falling = Fall.
@@ -128,28 +198,36 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        GroundCheck();
-        WallCheck();
-        UpdateSlingshotState();
-
-        if (!isWallJumping)
+        if (isSwimming)
         {
-            if (isWalled)
-            {
-                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            }
-            else if (isSlingshotting)
-            {
-                ApplySlingshotMovement();
-            }
-            else
-            {
-                ApplyStandardMovement();
-            }
+            ApplyUnderWaterMovement();
+            Gravity();
         }
+        else
+        {
+            GroundCheck();
+            WallCheck();
+            UpdateSlingshotState();
 
-        Gravity();
-        WallSlide();
+            if (!isWallJumping)
+            {
+                if (isWalled)
+                {
+                    rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+                }
+                else if (isSlingshotting)
+                {
+                    ApplySlingshotMovement();
+                }
+                else
+                {
+                    ApplyStandardMovement();
+                }
+            }
+
+            Gravity();
+            WallSlide();
+        }
     }
 
     // Normal grounded/air horizontal movement with acceleration and friction.
@@ -171,6 +249,28 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
             isWalking = false;
         }
+    }
+
+    // Swimming steers on both axes at once, so each axis is solved separately and written
+    // in a single assignment at the end. Input is signed, so it carries the swim direction.
+    private void ApplyUnderWaterMovement()
+    {
+        float newX = Mathf.Abs(horizontalMovement) > 0.01f
+            ? horizontalMovement * swimSpeed
+            : Mathf.MoveTowards(rb.linearVelocity.x, 0f, underWaterDrag * Time.fixedDeltaTime);
+
+        float newY = Mathf.Abs(verticalMovement) > 0.01f
+            ? verticalMovement * swimSpeed
+            : Mathf.MoveTowards(rb.linearVelocity.y, 0f, underWaterDrag * Time.fixedDeltaTime);
+
+        // With no input on an axis the speed above is whatever physics left there, and nothing
+        // else caps it underwater: buoyancy (a negative gravityUnderWater) accelerates upward
+        // every frame, and momentum carried in from a slingshot or a fall never bleeds off when
+        // underWaterDrag is 0. Either one would fire the player straight back out of the water,
+        // so hold both axes to swim speed.
+        rb.linearVelocity = new Vector2(
+            Mathf.Clamp(newX, -swimSpeed, swimSpeed),
+            Mathf.Clamp(newY, -swimSpeed, swimSpeed));
     }
 
     // Horizontal movement while a slingshot launch is in flight.
@@ -220,6 +320,19 @@ public class PlayerMovement : MonoBehaviour
     //Different falling mechanics to make the game feel better. Increases fall speed the longer you fall, and caps it at a certain point.
     private void Gravity()
     {
+      if (isSwimming)
+        {
+            // Water has one constant gravity (negative = buoyant). No fall acceleration, no
+            // fall cap and no fall sound down here — ApplyUnderWaterMovement owns vertical speed.
+            rb.gravityScale = gravityUnderWater;
+            if (isFalling)
+            {
+                //audioController.StopLoop(AudioType.Fall);
+                isFalling = false;
+            }
+            return;
+        }
+
       if (rb.linearVelocity.y < 0)
         {
             rb.gravityScale = baseGravity * fallMultiplier; //Fall increasingly faster
@@ -282,16 +395,23 @@ public class PlayerMovement : MonoBehaviour
         if (context.canceled)
          {
             horizontalMovement = 0;
+            verticalMovement = 0;
          }
          else
          {
             // Directly set horizontal input each frame to feed acceleration logic
-            horizontalMovement = context.ReadValue<Vector2>().x;
+            Vector2 input = context.ReadValue<Vector2>();
+            horizontalMovement = input.x;
+            // Always cache vertical too — only swimming reads it, but caching it here means
+            // entering the water with a direction already held starts paddling immediately.
+            verticalMovement = input.y;
          }
     }
 
     public void Jump(InputAction.CallbackContext context)
     {
+
+        //TODO: Remove w from jump keys
         if(context.performed && isWallSliding)
         {
             //audioController.Play(AudioType.Jump);
@@ -305,12 +425,12 @@ public class PlayerMovement : MonoBehaviour
                 FlipMain();
             }
         }
-        else if (context.performed && isGrounded) //hold jump = full jump power
+        else if (context.performed && (isGrounded || isSwimming)) //hold jump = full jump power
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
             //audioController.Play(AudioType.Jump);
         }
-        else if (context.canceled && rb.linearVelocity.y >= 0) //if player taps rather than hold
+        else if (context.canceled && rb.linearVelocity.y >= 0 && !isSwimming) //if player taps rather than hold
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
         }   
