@@ -38,6 +38,19 @@ public class GameManager : MonoBehaviour, ISaveable
     [Tooltip("Name of the first gameplay level. Must be added to File > Build Settings.")]
     [SerializeField] private string firstLevelSceneName = "Tutorial";
 
+    [Header("Starting Unlocks")]
+    [Tooltip("Abilities the player begins a new game with. Anything not listed stays locked until a paint bucket grants it.")]
+    [SerializeField]
+    private List<AbilityType> startingAbilities = new List<AbilityType>
+    {
+        AbilityType.Slingshot,
+        AbilityType.PlatformDraw,
+        AbilityType.ShieldDraw
+    };
+
+    [Tooltip("Colours the world begins a new game with. These count as already restored, so their tilemaps are coloured in and passable from the start.")]
+    [SerializeField] private List<PaintColour> startingColours = new List<PaintColour>();
+
     // --- Singleton + events ---
     public static GameManager Instance { get; private set; }
     public GameState CurrentState { get; private set; }
@@ -52,21 +65,43 @@ public class GameManager : MonoBehaviour, ISaveable
     public Vector3 LastCheckpoint { get; private set; }
     public bool HasCheckpoint { get; private set; }
 
-    public Dictionary<AbilityType, bool> unlockedAbilities { get; private set; } = DefaultAbilities();
+    public Dictionary<AbilityType, bool> unlockedAbilities { get; private set; } = new Dictionary<AbilityType, bool>();
 
     public List<PaintColour> unlockedColours { get; private set; } = new List<PaintColour>();
 
     private Dictionary<PaintColour, bool> bucketStates = new Dictionary<PaintColour, bool>();
 
-    /// <summary>The starting ability set, used both at boot and when starting a new game.</summary>
-    private static Dictionary<AbilityType, bool> DefaultAbilities()
+    /// <summary>
+    /// Wipes live progress back to the starting set configured in the Inspector. Used at boot and
+    /// when a new game begins, so those two lists are the single source of truth for what the
+    /// player owns before any bucket is emptied.
+    /// </summary>
+    private void ApplyStartingUnlocks()
     {
-        return new Dictionary<AbilityType, bool>
+        unlockedAbilities = new Dictionary<AbilityType, bool>();
+        unlockedColours = new List<PaintColour>();
+        bucketStates = new Dictionary<PaintColour, bool>();
+
+        GrantStartingUnlocks();
+    }
+
+    /// <summary>
+    /// Adds the Inspector's starting unlocks on top of whatever is already unlocked, never removing
+    /// anything. Safe to call after loading a save, so an ability or colour you add to the starting
+    /// lists later still reaches players who already have a save file.
+    /// </summary>
+    private void GrantStartingUnlocks()
+    {
+        foreach (AbilityType ability in startingAbilities)
         {
-            { AbilityType.Slingshot, true },
-            { AbilityType.PlatformDraw, true },
-            { AbilityType.ShieldDraw, true }
-        };
+            unlockedAbilities[ability] = true;
+        }
+
+        foreach (PaintColour colour in startingColours)
+        {
+            if (!unlockedColours.Contains(colour)) unlockedColours.Add(colour);
+            bucketStates[colour] = true; // ColourControl/PaintBucketScript read this to see the colour is restored
+        }
     }
 
     #region Unity Lifecycle
@@ -81,6 +116,10 @@ public class GameManager : MonoBehaviour, ISaveable
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // Seed progress from the Inspector lists. This can't be a field initializer, because
+        // Unity fills [SerializeField] fields after those run - the lists would still be empty.
+        ApplyStartingUnlocks();
 
         // Build the save system: JSON serializer + a file on disk. Injecting these here
         // (rather than hardcoding them inside SaveService) is what keeps SaveService testable.
@@ -152,6 +191,11 @@ public class GameManager : MonoBehaviour, ISaveable
     public void SaveBucketState(PaintColour colour, bool isEmpty)
     {
         bucketStates[colour] = isEmpty;
+        if (!isEmpty) return;
+
+        // Emptying a bucket IS the colour being restored, so keep the unlocked list in step with
+        // the bucket state. Both are saved, so neither can quietly disagree after a load.
+        if (!unlockedColours.Contains(colour)) unlockedColours.Add(colour);
         OnColourUnlocked?.Invoke(colour);
     }
 
@@ -191,7 +235,8 @@ public class GameManager : MonoBehaviour, ISaveable
             highestLevelReached = maxLevelReached,
             lastLevelPlayed = lastLevelPlayed,
             unlockedColours = new List<PaintColour>(unlockedColours),
-            unlockedAbilities = new Dictionary<AbilityType, bool>(unlockedAbilities)
+            unlockedAbilities = new Dictionary<AbilityType, bool>(unlockedAbilities),
+            emptiedBuckets = new Dictionary<PaintColour, bool>(bucketStates)
         };
     }
 
@@ -209,6 +254,14 @@ public class GameManager : MonoBehaviour, ISaveable
         {
             unlockedAbilities = new Dictionary<AbilityType, bool>(data.unlockedAbilities);
         }
+
+        // Older saves predate this field, so fall back to an empty set rather than crashing.
+        bucketStates = data.emptiedBuckets != null
+            ? new Dictionary<PaintColour, bool>(data.emptiedBuckets)
+            : new Dictionary<PaintColour, bool>();
+
+        // Applied last so the Inspector's starting unlocks survive an older save file.
+        GrantStartingUnlocks();
 
         // Notify any listening environment objects that colours are unlocked
         foreach (PaintColour colour in unlockedColours)
@@ -240,9 +293,7 @@ public class GameManager : MonoBehaviour, ISaveable
     public void NewGame()
     {
         maxLevelReached = 1;
-        unlockedColours = new List<PaintColour>();
-        unlockedAbilities = DefaultAbilities();
-        bucketStates = new Dictionary<PaintColour, bool>();
+        ApplyStartingUnlocks();
 
         CurrentState = GameState.Playing;
         Time.timeScale = 1f;

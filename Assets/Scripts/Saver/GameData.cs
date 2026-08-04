@@ -31,6 +31,9 @@ public class GameData
     public int lastLevelPlayed;
     public List<PaintColour> unlockedColours;
     public Dictionary<AbilityType, bool> unlockedAbilities;
+    /// <summary>Which paint buckets have already been emptied. Without this the world would
+    /// re-grey every colour on load, even though the player had already restored it.</summary>
+    public Dictionary<PaintColour, bool> emptiedBuckets;
 
     public GameData()
     {
@@ -39,5 +42,6 @@ public class GameData
         lastLevelPlayed = 0;
         unlockedColours = new List<PaintColour>();
         unlockedAbilities = new Dictionary<AbilityType, bool>();
+        emptiedBuckets = new Dictionary<PaintColour, bool>();
     }
 }

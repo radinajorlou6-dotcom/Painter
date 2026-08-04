@@ -32,8 +32,26 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     [SerializeField] protected LayerMask collideWithLayer;
     [SerializeField] protected LayerMask environment;
     [SerializeField] protected LayerMask playerLayer;
+    [Tooltip("Grace period after the ground check fails before the enemy counts as airborne. Absorbs the one-frame flickers you get on slopes, tile seams and landings.")]
+    [SerializeField] protected float groundedGrace = 0.15f;
     public bool isGrounded { get; private set; } = true;
     protected bool isColliding = false;
+
+    /// <summary>Time.time of the last frame the ground check succeeded.</summary>
+    private float lastGroundedTime = float.NegativeInfinity;
+
+    /// <summary>
+    /// Grounded, or grounded recently enough that a single flickered frame shouldn't change
+    /// behaviour. Steering logic should use this rather than isGrounded, so a momentary blip
+    /// can't skip a ledge check.
+    /// </summary>
+    protected bool HasFooting => isGrounded || Time.time - lastGroundedTime <= groundedGrace;
+
+    [Header("Ledge Detection")]
+    [Tooltip("How far ahead of the body to look for floor before taking a step.")]
+    [SerializeField] protected float edgeCheckDistance = 0.5f;
+    [Tooltip("How far below the feet that look reaches. Deeper than any step the enemy may walk down, shallower than a drop it should refuse.")]
+    [SerializeField] protected float edgeCheckDepth = 0.75f;
 
     [Header("Death")]
     [SerializeField] protected Animator anim;
@@ -163,6 +181,20 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     protected virtual void GroundCheck()
     {
         isGrounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
+        if (isGrounded) lastGroundedTime = Time.time;
+    }
+
+    /// <summary>
+    /// True if there is floor ahead to step onto. Casts DOWN from a point in front of the feet
+    /// rather than testing a box at exactly foot height: groundCheckSize is only a few centimetres
+    /// tall, so a box there reported "no ground" on any slope, step or landing bounce.
+    /// </summary>
+    protected bool IsGroundAhead()
+    {
+        Vector2 origin = new Vector2(
+            transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance),
+            groundCheck.position.y);
+        return Physics2D.Raycast(origin, Vector2.down, edgeCheckDepth, groundLayer);
     }
 
     protected virtual void CollideCheck()
@@ -187,6 +219,16 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireCube(collideCheck.position, collideCheckSize);
+        }
+        if (groundCheck != null)
+        {
+            // The ledge probe, so edgeCheckDistance/Depth can be tuned by eye.
+            Gizmos.color = Color.yellow;
+            Vector3 origin = new Vector3(
+                transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance),
+                groundCheck.position.y,
+                transform.position.z);
+            Gizmos.DrawLine(origin, origin + Vector3.down * edgeCheckDepth);
         }
     }
 }

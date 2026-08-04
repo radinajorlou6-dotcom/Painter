@@ -13,8 +13,6 @@ public class ChaserAI : EnemyBase
     [SerializeField] private float moveSpeed = 2f;
     [Tooltip("Speed while chasing the player. Usually a little faster than the patrol speed.")]
     [SerializeField] private float chaseSpeed = 3.5f;
-    [Tooltip("How far ahead to look for a ledge or wall before committing to a step.")]
-    [SerializeField] private float edgeCheckDistance = 0.5f;
     [Tooltip("Patrol back and forth when idle. Turn off for an enemy that guards one spot.")]
     [SerializeField] private bool patrolWhenIdle = true;
 
@@ -66,7 +64,7 @@ public class ChaserAI : EnemyBase
             return;
         }
 
-        if (!isGrounded || !IsGroundAhead() || isColliding)
+        if (!HasFooting || !IsGroundAhead() || isColliding)
         {
             // Cornered or out of floor: hold position and wait for the player to come closer.
             Stop();
@@ -79,7 +77,7 @@ public class ChaserAI : EnemyBase
     /// <summary>Pace back and forth, turning around at ledges and walls.</summary>
     private void Patrol()
     {
-        if (!patrolWhenIdle || !isGrounded)
+        if (!patrolWhenIdle || !HasFooting)
         {
             Stop();
             return;
@@ -109,13 +107,7 @@ public class ChaserAI : EnemyBase
         animController?.PlayAnimation(AnimationType.Idle);
     }
 
-    private bool IsGroundAhead()
-    {
-        Vector2 checkPos = new Vector2(
-            transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance),
-            groundCheck.position.y);
-        return Physics2D.OverlapBox(checkPos, groundCheckSize, 0f, groundLayer);
-    }
+    // IsGroundAhead lives on EnemyBase now — same probe for every walking enemy.
 
     /// <summary>
     /// Wind up, check what's in the strike zone on the active frame, then recover.
@@ -161,10 +153,7 @@ public class ChaserAI : EnemyBase
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Spikes")) health.Kill();
-    }
+    // Spike death is handled by the Health component for every entity that has one.
 
     protected override void OnDrawGizmosSelected()
     {

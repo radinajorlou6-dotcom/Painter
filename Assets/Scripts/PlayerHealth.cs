@@ -65,13 +65,8 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
         HandleHealthChanged(health.CurrentHealth, health.MaxHealth);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Spikes"))
-        {
-            health.Kill(); // instant death
-        }
-    }
+    // Spike death lives on the Health component now, so it applies to every entity with health
+    // instead of only the ones that remembered to write this handler.
 
     private void HandleHealthChanged(float current, float max)
     {

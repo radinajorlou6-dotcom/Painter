@@ -9,9 +9,6 @@
         [Header("Animation")]
         [SerializeField] private AnimationController animController;
 
-        [Header("Edge Detection")]
-        [SerializeField] private float edgeCheckDistance = 0.5f; // How far ahead to check for ground
-
         [Header("Melee Attack")]
         [SerializeField] protected float knockbackDuration = 0.2f;
         [SerializeField] protected Transform weaponPoint;
@@ -61,11 +58,24 @@
 
         private void Move()
         {
-            if (!isGrounded || isBeingKnocked) return; // Do not move if we're in the air or being knocked back
+            if (isBeingKnocked) return; // Do not steer while being knocked back
+
+            // A genuine fall: stop steering, but stop drifting too. This used to test isGrounded
+            // and return with last frame's velocity untouched, so the moment the ground check
+            // flickered — a tile seam, a slope, the bounce after a landing — the knight kept its
+            // full walking speed with no ledge check running. One flickered frame beside a drop
+            // was all it took to coast straight over the edge.
+            if (!HasFooting)
+            {
+                Halt();
+                animController?.PlayAnimation(AnimationType.Idle);
+                return;
+            }
 
             // Turn around at a ledge, spikes, or a wall ahead — instead of grinding in place.
             if (!IsGroundAhead() || IsSpikeAhead() || isColliding)
             {
+                Halt(); // kill momentum before turning, or we slide over the ledge we just spotted
                 Flip();
                 animController?.PlayAnimation(AnimationType.Idle); // not actually moving this frame
                 return;
@@ -77,11 +87,10 @@
             animController?.PlayAnimation(AnimationType.Walk);
         }
 
-        private bool IsGroundAhead()
+        /// <summary>Cancel horizontal drift while leaving gravity's pull intact.</summary>
+        private void Halt()
         {
-            // Check in front of the knight at ground level
-            Vector2 checkPos = new Vector2(transform.position.x + (dirIsRight ? edgeCheckDistance : -edgeCheckDistance), groundCheck.position.y);
-            return Physics2D.OverlapBox(checkPos, groundCheckSize, 0, groundLayer);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         }
 
         private bool IsSpikeAhead()
@@ -92,7 +101,7 @@
             Collider2D[] hits = Physics2D.OverlapBoxAll(checkPos, spikeCheckSize, 0f);
             foreach (Collider2D hit in hits)
             {
-                if (hit != null && hit.CompareTag("Spikes"))
+                if (hit != null && hit.CompareTag(Health.HazardTag))
                 {
                     return true;
                 }
@@ -227,16 +236,8 @@
             }
         }
 
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (collision.gameObject.CompareTag("Spikes"))
-            {
-                health.Kill(); // hazards bypass invulnerability
-            }
-            else if ((collideWithLayer.value & (1 << collision.gameObject.layer)) != 0
-                    && isColliding) //Check if the collision is something that should make the knight turn around
-            {
-                Flip();
-            }
-        }
+        // No OnCollisionEnter2D here any more. Spikes are handled by Health for every entity that
+        // has one, and the wall turn was a duplicate: it only fired when isColliding was already
+        // true, which is exactly when Move() flips anyway. Two flips in one frame turned the
+        // knight back into the ledge it had just refused, and it flipped mid-charge as well.
     }

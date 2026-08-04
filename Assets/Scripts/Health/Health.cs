@@ -13,11 +13,22 @@ using UnityEngine;
 /// </summary>
 public class Health : MonoBehaviour, IHealth
 {
+    /// <summary>
+    /// Tag worn by instant-death hazards. Shared from here so hazard-avoidance AI
+    /// (KnightAI's spike check) and the damage itself can never disagree on the name.
+    /// </summary>
+    public const string HazardTag = "Spikes";
+
     [SerializeField] private float maxHealth = 100f;
 
     [Tooltip("When true the entity ignores all incoming TakeDamage calls " +
              "(e.g. armoured enemies). Kill() still works so hazards can force death.")]
     [SerializeField] private bool invulnerable = false;
+
+    [Header("Hazards")]
+    [Tooltip("Die on contact with anything tagged Spikes. On by default so every entity with " +
+             "health reacts to hazards; untick for something that should walk over them safely.")]
+    [SerializeField] private bool killedByHazards = true;
 
     [Header("Death")]
     [Tooltip("Remove this object from the scene once health hits zero. Leave off for " +
@@ -75,6 +86,21 @@ public class Health : MonoBehaviour, IHealth
         {
             RaiseDeath();
         }
+    }
+
+    // Hazard contact is caught here rather than in each AI script, so it applies to everything
+    // that owns a Health: player, knight, chaser, hoppers, and any future entity or prop. The
+    // hoppers took no spike damage purely because BaseEnemyAI never wrote its own handler.
+    // Both message types are covered, so solid spikes and trigger spikes behave the same.
+    private void OnCollisionEnter2D(Collision2D collision) => TryHazardKill(collision.gameObject);
+    private void OnTriggerEnter2D(Collider2D other) => TryHazardKill(other.gameObject);
+
+    private void TryHazardKill(GameObject other)
+    {
+        if (!killedByHazards || IsDead) return;
+        if (!other.CompareTag(HazardTag)) return;
+
+        Kill(); // Kill() ignores invulnerability, so even the armoured knight dies on spikes
     }
 
     public void Heal(float amount)
