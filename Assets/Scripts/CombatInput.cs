@@ -364,13 +364,17 @@ public class CombatInput : MonoBehaviour
         Transform playerTransform = playerCombat.GetComponent<Transform>();
         if (playerTransform == null) return polygonPoints;
 
-        // Get the actual slash radius and environment layer from PlayerCombat
-        float slashRadius = playerCombat.GetSlashRadius();
+        // Get the environment layer from PlayerCombat
         LayerMask environment = playerCombat.GetEnvironmentLayerMask();
 
         // --- PHASE 1: ANGLE CALCULATION (shared with the real slash in PlayerCombat) ---
         SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, playerTransform.position, playerCombat.GetMaxSweepAngle());
         if (!swing.isValid) return polygonPoints; // No meaningful swing yet
+
+        // Mirror PlayerCombat: a stab reaches further than a slash, so the preview must too.
+        float attackRadius = swing.accumulatedAngle < playerCombat.GetStabThreshold()
+            ? playerCombat.GetStabRadius()
+            : playerCombat.GetSlashRadius();
 
         // --- PHASE 2: SHAPE GENERATION ---
         float startAngle = swing.startAngle;
@@ -394,7 +398,7 @@ public class CombatInput : MonoBehaviour
             float angleRad = angleDeg * Mathf.Deg2Rad;
 
             // Calculate exactly where this chunk of the blade is
-            Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
+            Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * attackRadius;
             Vector2 curveWorldPoint = (Vector2)playerTransform.position + curveLocalPoint;
 
             // --- WALL COLLISION DETECTION (Same as in PlayerCombat) ---

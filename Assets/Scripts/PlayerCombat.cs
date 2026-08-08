@@ -46,6 +46,8 @@ public class PlayerCombat : MonoBehaviour
 
     [Header("Stab Attack")]
     [SerializeField] private float stabThreshold = 0.5f;
+    [Tooltip("Reach of a stab. Usually longer than slashRadius since a poke commits forward.")]
+    [SerializeField] private float stabRadius = 4f;
     [SerializeField] private float stabDuration = 1f;
     [SerializeField] private float stabCooldown = 0f; //INCASE WE WANT STAB COOLDOWN TO BE DIFFERENT FROM STAB ANIMATION LENGTH
     [SerializeField] private float stabDmgMult = 2f;
@@ -88,6 +90,8 @@ public class PlayerCombat : MonoBehaviour
     
     // Public accessors for combat preview
     public float GetSlashRadius() => slashRadius;
+    public float GetStabRadius() => stabRadius;
+    public float GetStabThreshold() => stabThreshold;
     public LayerMask GetEnvironmentLayerMask() => environment;
     public float GetMaxSweepAngle() => maxSweepAngle;
 
@@ -334,6 +338,10 @@ public class PlayerCombat : MonoBehaviour
         float startAngle = swing.startAngle;
         float accumulatedAngle = swing.accumulatedAngle;
 
+        // Decide stab vs slash up front: the hitbox shape below needs to know which reach to use.
+        bool isStab = accumulatedAngle < stabThreshold;
+        float attackRadius = isStab ? stabRadius : slashRadius;
+
         // --- PHASE 2: SHAPE GENERATION ---
         List<Vector2> polygonPoints = new List<Vector2>();
 
@@ -342,7 +350,7 @@ public class PlayerCombat : MonoBehaviour
 
         // We need to track the physical WORLD position of the blade's edge as it swings
         float startAngleRad = startAngle * Mathf.Deg2Rad;
-        Vector2 prevCurveLocal = new Vector2(Mathf.Cos(startAngleRad), Mathf.Sin(startAngleRad)) * slashRadius;
+        Vector2 prevCurveLocal = new Vector2(Mathf.Cos(startAngleRad), Mathf.Sin(startAngleRad)) * attackRadius;
         Vector2 prevCurveWorld = (Vector2)transform.position + prevCurveLocal;
         bool first = true;
 
@@ -355,7 +363,7 @@ public class PlayerCombat : MonoBehaviour
             float angleRad = angleDeg * Mathf.Deg2Rad;
 
             // Calculate exactly where this chunk of the blade is
-            Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * slashRadius;
+            Vector2 curveLocalPoint = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * attackRadius;
             Vector2 curveWorldPoint = (Vector2)transform.position + curveLocalPoint;
 
             //Debug.DrawLine(transform.position, curveWorldPoint, Color.green, 1.0f);
@@ -400,7 +408,7 @@ public class PlayerCombat : MonoBehaviour
         // Apply the perfect shape and start the attack!
         hitBox.SetPath(0, polygonPoints.ToArray());
 
-        if (accumulatedAngle < stabThreshold)
+        if (isStab)
         {
             Vector2 stabDir = (swipePath[0] - (Vector2)transform.position).normalized;
             animController?.PlayStab();

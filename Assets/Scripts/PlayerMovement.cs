@@ -39,6 +39,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private int maxPoints = 10;
     public string isGroundedOn {get; private set;}
 
+    // Unfiltered by normal: groundFilter discards steep contacts by design, so seeing them at all
+    // needs a second pass.
+    private ContactFilter2D surfaceFilter;
+    private ContactPoint2D[] surfaceContact;
+    private bool onSteepSlope;
+    private Vector2 steepSlopeNormal;
+    [Tooltip("Downhill acceleration applied on a slope too steep to stand on (units/s^2).")]
+    [SerializeField] private float steepSlideAcceleration = 25f;
+    [Tooltip("Fastest the player slides down a too-steep slope (units/s).")]
+    [SerializeField] private float steepSlideSpeed = 6f;
+
 
     //Wallcheck variables
     [Header("WallCheck")]
@@ -47,6 +58,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask wallLayer;
     public bool isWalled {get; private set;} = false;
     private Collider2D[] wallCheckArray;
+    private ContactFilter2D wallFilter;
 
     //Wall movement variables
     [Header("WallMovement")]
@@ -104,7 +116,19 @@ public class PlayerMovement : MonoBehaviour
         groundFilter.SetNormalAngle(90f - maxSlopeAngle, 90f + maxSlopeAngle);
         groundFilter.useNormalAngle = true;
 
+        // Same layers as the ground check but deliberately no normal filter, so this one can see
+        // the steep contacts groundFilter throws away.
+        surfaceFilter = new ContactFilter2D();
+        surfaceFilter.SetLayerMask(groundLayer);
+        surfaceFilter.useLayerMask = true;
+        surfaceContact = new ContactPoint2D[maxPoints];
+
         wallCheckArray = new Collider2D[maxPoints];
+
+        wallFilter = new ContactFilter2D();
+        wallFilter.SetLayerMask(wallLayer);
+        wallFilter.useLayerMask = true;
+        wallFilter.useTriggers = true;
     }
 
     private void OnEnable()
@@ -206,6 +230,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             GroundCheck();
+            SteepSlopeCheck();
             WallCheck();
             UpdateSlingshotState();
 
@@ -225,6 +250,10 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
 
+            // Outside the branch above on purpose: the slide still has to run when the isWalled
+            // case takes over and zeroes horizontal speed.
+            ApplySteepSlopeSlide();
+
             Gravity();
             WallSlide();
         }
@@ -233,11 +262,24 @@ public class PlayerMovement : MonoBehaviour
     // Normal grounded/air horizontal movement with acceleration and friction.
     private void ApplyStandardMovement()
     {
-        if (Mathf.Abs(horizontalMovement) > 0.01f)
+        // Work off a copy: horizontalMovement is still read by Flip, WallSlide and the animation
+        // code, which should keep seeing what the player is actually pressing.
+        float input = horizontalMovement;
+
+        // On a slope too steep to stand on, drop input that pushes uphill. Without this the solver
+        // turns the horizontal push into motion along the surface and the player walks up a wall.
+        // steepSlopeNormal.x points downhill, so -sign(normal.x) is the uphill direction.
+        if (onSteepSlope && Mathf.Abs(input) > 0.01f &&
+            Mathf.Sign(input) == -Mathf.Sign(steepSlopeNormal.x))
+        {
+            input = 0f;
+        }
+
+        if (Mathf.Abs(input) > 0.01f)
         {
             //Latch the flag first so a failed Play can't retrigger every FixedUpdate
             //if (!isWalking) {isWalking = true; audioController.Play(AudioType.Move);} //Remember to make audio loop
-            float desiredX = horizontalMovement * moveSpeed;
+            float desiredX = input * moveSpeed;
             float accel = groundAcceleration; //Same acceleration whether on ground or in air
             float newX = Mathf.MoveTowards(rb.linearVelocity.x, desiredX, accel * Time.fixedDeltaTime);
             rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
@@ -364,7 +406,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void WallSlide()
     {
-        if (isWalled && horizontalMovement != 0)
+        // Skip while sliding off a too-steep slope: the -wallSlideSpeed clamp below would stall it.
+        if (isWalled && !onSteepSlope && horizontalMovement != 0)
         {
             isWallSliding = true;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -wallSlideSpeed)); //Limit fall speed while wall sliding
@@ -454,9 +497,51 @@ public class PlayerMovement : MonoBehaviour
         isGroundedOn = string.Empty;
     }
 
+    /// <summary>
+    /// Looks for a contact too steep to stand on. groundFilter throws these away by design, so
+    /// nothing downstream knew they existed — which is why the player could drive velocity.x into
+    /// a steep drawn platform and let the solver slide them up it.
+    /// </summary>
+    private void SteepSlopeCheck()
+    {
+        onSteepSlope = false;
+        if (isGrounded) return; // a walkable contact wins; never fight real ground
+
+        int count = rb.GetContacts(surfaceFilter, surfaceContact);
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 normal = surfaceContact[i].normal;
+            float angle = Vector2.Angle(normal, Vector2.up);
+
+            // 90 and above is a wall or a ceiling, which is the wall check's job. Only real slopes here.
+            if (angle > maxSlopeAngle && angle < 90f)
+            {
+                onSteepSlope = true;
+                steepSlopeNormal = normal;
+                return;
+            }
+        }
+    }
+
+    // Slide down a slope too steep to stand on instead of sticking to it under friction.
+    private void ApplySteepSlopeSlide()
+    {
+        if (!onSteepSlope) return;
+
+        // Descending tangent: rotate the normal 90 degrees, then pick whichever option points down.
+        Vector2 downhill = new Vector2(steepSlopeNormal.y, -steepSlopeNormal.x);
+        if (downhill.y > 0f) downhill = -downhill;
+
+        // Accelerate along the surface up to steepSlideSpeed; Gravity() still caps outright fall speed.
+        if (Vector2.Dot(rb.linearVelocity, downhill) < steepSlideSpeed)
+        {
+            rb.linearVelocity += downhill * steepSlideAcceleration * Time.fixedDeltaTime;
+        }
+    }
+
     private void WallCheck()
     {
-        if (Physics2D.OverlapBoxNonAlloc(wallCheck.position, wallCheckSize, 0f, wallCheckArray, wallLayer) > 0)
+        if (Physics2D.OverlapBox(wallCheck.position, wallCheckSize, 0f, wallFilter, wallCheckArray) > 0)
         {
             isWalled = true;
         }

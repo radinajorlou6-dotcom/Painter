@@ -54,6 +54,12 @@
             {
                 Move();
             }
+
+            if (!HasFooting)
+            {
+                animController?.PlayAnimation(AnimationType.Idle);
+                rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // Stop horizontal movement when falling
+            }
         }
 
         private void Move()

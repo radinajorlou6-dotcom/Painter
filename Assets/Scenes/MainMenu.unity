@@ -308,6 +308,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6366770568103737902, guid: 9dd2f2b73cd288647b9e92afefba679f, type: 3}
+      propertyPath: firstLevelSceneName
+      value: Tutorial 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366770568103737902, guid: 9dd2f2b73cd288647b9e92afefba679f, type: 3}
+      propertyPath: startingAbilities.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366770568103737902, guid: 9dd2f2b73cd288647b9e92afefba679f, type: 3}
+      propertyPath: 'startingAbilities.Array.data[0]'
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366770568103737902, guid: 9dd2f2b73cd288647b9e92afefba679f, type: 3}
+      propertyPath: 'startingAbilities.Array.data[1]'
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 5139202914018936071, guid: 9dd2f2b73cd288647b9e92afefba679f, type: 3}
