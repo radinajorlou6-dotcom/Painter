@@ -13,7 +13,7 @@ public enum AnimationType
     Idle, GotHurt, Died,
 
     //Player 
-    Run, Jump, Fall, Attack,
+    Run, Jump, Fall, Attack, Land,
 
     //KnightEnemy
     Walk, Charge, Bash,

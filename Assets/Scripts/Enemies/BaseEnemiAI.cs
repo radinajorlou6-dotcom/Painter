@@ -110,6 +110,11 @@ public class BaseEnemyAI : EnemyBase
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        // A dead hopper has already detonated. Without this it can still damage the player on the
+        // way out — a contact resolved in the same physics step as the killing blow lands here
+        // after Health has already raised Died.
+        if (health.IsDead) return;
+
         if (collision.gameObject.CompareTag("Shield"))
         {
             // Tell the PlayerCombat script the shield absorbed a hit, then detonate.

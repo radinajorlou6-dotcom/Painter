@@ -161,10 +161,30 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
         rb.linearVelocity = Vector2.zero;
         rb.isKinematic = true;
 
+        // The body stays on screen for the death animation, but it must stop being *there*
+        // the instant it dies: a solid corpse blocks the player, shoves them around and can
+        // still fire contact-damage callbacks for the whole deathAnimationDuration.
+        RemovePhysicalPresence();
+
         if (anim != null) anim.SetTrigger("Died");
 
         DebugUtils.Log(gameObject.name + " has died.");
-        Destroy(gameObject, deathAnimationDuration);
+        DieDestroy();
+    }
+
+    /// <summary>
+    /// Take the corpse out of the physics world while leaving it visible. Children are included
+    /// because hitboxes and feet colliders usually live on child objects, and simulated = false
+    /// covers anything that gets re-enabled behind our back.
+    /// </summary>
+    protected void RemovePhysicalPresence()
+    {
+        foreach (Collider2D col in GetComponentsInChildren<Collider2D>(true))
+        {
+            col.enabled = false;
+        }
+
+        if (rb != null) rb.simulated = false;
     }
 
     /// <summary>
@@ -173,9 +193,12 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     /// </summary>
     public void DieDestroy()
     {
-        
+        // Safe to call from an animation event on its own: if the clip fires this without
+        // HandleDeath having run, the corpse still stops interacting with the world.
+        RemovePhysicalPresence();
+
         this.enabled = false;
-        Destroy(gameObject);
+        Destroy(gameObject, deathAnimationDuration);
     }
 
     protected virtual void GroundCheck()

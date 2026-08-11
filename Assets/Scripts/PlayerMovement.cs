@@ -84,6 +84,28 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxFallPitch = 0.6f;
     private bool isFalling;
 
+    //Fall animation buffer variables
+    [Header("Fall Animation Buffer")]
+    [Tooltip("How long the player must keep falling before the Fall animation is allowed to play. " +
+             "Steps and tiny drops are over before this elapses, so they never trigger it.")]
+    [SerializeField] private float fallAnimationDelay = 0.12f;
+    [Tooltip("Falling faster than this plays the Fall animation right away, however briefly we've " +
+             "been airborne (a real drop shouldn't wait out the buffer). 0 disables the shortcut.")]
+    [SerializeField] private float fallAnimationSpeedThreshold = 8f;
+    private float fallAnimTimer;    //Seconds spent descending in the air
+    private bool fallAnimPlayed;    //True once Fall actually started — gates the Land animation
+
+    //Jump animation buffer variables
+    [Header("Jump Animation Buffer")]
+    [Tooltip("How long the player must keep rising before the Jump animation is allowed to play. " +
+             "Slope bumps and small shoves are over before this elapses, so they never trigger it.")]
+    [SerializeField] private float jumpAnimationDelay = 0.08f;
+    [Tooltip("Rising faster than this plays the Jump animation right away. A real jump launches at " +
+             "jump_height, so keep this under half of it and taps still register instantly. " +
+             "0 disables the shortcut.")]
+    [SerializeField] private float jumpAnimationSpeedThreshold = 4f;
+    private float jumpAnimTimer;    //Seconds spent rising in the air
+
     //Slingshot variables
     [Header("Slingshot")]
     [Tooltip("If ON, the player can steer left/right during a slingshot launch. " +
@@ -206,13 +228,67 @@ public class PlayerMovement : MonoBehaviour
             // The ground/wall checks don't run underwater, so their flags can't be trusted here.
             bool isPaddling = Mathf.Abs(horizontalMovement) > 0.01f || Mathf.Abs(verticalMovement) > 0.01f;
             animController.PlayAnimation(isPaddling ? AnimationType.Run : AnimationType.Idle);
+
+            // Sinking through water isn't falling, rising through it isn't jumping, and surfacing
+            // shouldn't count as a landing.
+            fallAnimTimer = 0f;
+            jumpAnimTimer = 0f;
+            fallAnimPlayed = false;
             return;
         }
 
         if (!isGrounded)
         {
-            // Rising = Jump, falling = Fall.
-            animController.PlayAnimation(rb.linearVelocity.y > 0.01f ? AnimationType.Jump : AnimationType.Fall);
+            if (rb.linearVelocity.y > 0.01f)
+            {
+                // Still rising, so this isn't a fall yet — the buffer only counts descent time.
+                fallAnimTimer = 0f;
+                jumpAnimTimer += Time.deltaTime;
+
+                bool risingLongEnough = jumpAnimTimer >= jumpAnimationDelay;
+                bool risingFastEnough = jumpAnimationSpeedThreshold > 0f &&
+                                        rb.linearVelocity.y >= jumpAnimationSpeedThreshold;
+
+                if (risingLongEnough || risingFastEnough)
+                {
+                    animController.PlayAnimation(AnimationType.Jump);
+                }
+
+                // Same as the fall buffer: request nothing inside the window and the current
+                // animation keeps running, so a bump up a slope doesn't blink into Jump.
+                return;
+            }
+
+            jumpAnimTimer = 0f;
+            fallAnimTimer += Time.deltaTime;
+
+            bool fallingLongEnough = fallAnimTimer >= fallAnimationDelay;
+            bool fallingFastEnough = fallAnimationSpeedThreshold > 0f &&
+                                     -rb.linearVelocity.y >= fallAnimationSpeedThreshold;
+
+            if (fallingLongEnough || fallingFastEnough)
+            {
+                // Requesting the same type every frame is a no-op, so Fall keeps looping for the
+                // rest of the descent instead of restarting.
+                animController.PlayAnimation(AnimationType.Fall);
+                fallAnimPlayed = true;
+            }
+
+            // Inside the buffer window nothing is requested, so whatever was already playing keeps
+            // running (Jump after a hop, Run/Idle after walking off a small step). That's the whole
+            // point: a few airborne frames no longer flicker through Fall and Land.
+            return;
+        }
+
+        fallAnimTimer = 0f;
+        jumpAnimTimer = 0f;
+
+        if (fallAnimPlayed)
+        {
+            // Landed after a fall long/fast enough to animate — small drops skip this too.
+            animController.PlayAnimation(AnimationType.Land);
+            fallAnimPlayed = false;
+            DebugUtils.Log("Landed, playing landing animation");
         }
         else
         {
