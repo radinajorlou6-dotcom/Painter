@@ -22,10 +22,23 @@ public class CombatInput : MonoBehaviour
     [Tooltip("How far the mouse must move to drop a new breadcrumb (World Units)")]
     [SerializeField] private float minDragDistance = 0.1f;
 
-    // Mouse tracker variables
-    private List<Vector2> mousePath = new List<Vector2>();
+    // Mouse tracker variables. These are PLAYER-RELATIVE offsets, not world points: each sample
+    // is taken against the combat pivot at the instant it was captured, so running mid-swipe
+    // can't rotate the gesture. Measuring stored world points against the player's position at
+    // execution time was the old bug — a still mouse swept a wide phantom arc while moving.
+    private List<Vector2> swipeOffsets = new List<Vector2>();
     private bool isDragging = false;
     private Camera mainCam;
+
+    /// <summary>
+    /// World position -> offset from the combat pivot. Translation only, deliberately not
+    /// InverseTransformPoint: the player flips localScale.x when turning around, and a full
+    /// local-space conversion would mirror the gesture halfway through a swipe. Cancelling
+    /// position alone keeps the resulting angles in world orientation, which is what
+    /// WeaponController and the arc maths expect.
+    /// </summary>
+    private Vector2 ToPlayerSpace(Vector2 worldPos)
+        => worldPos - (Vector2)playerCombat.transform.position;
 
     // Slash preview visualization
     private GameObject slashPreviewObject;
@@ -59,7 +72,7 @@ public class CombatInput : MonoBehaviour
             // Cancel any active slash while drawing to keep preview and attack disabled.
             isDragging = false;
             DestroySlashPreview();
-            mousePath.Clear();
+            swipeOffsets.Clear();
             // A draw is active, so the weapon should follow the mouse for it — not return to
             // rest. (Returning here was cancelling the draw's follow the instant it started.)
             playerCombat.Weapon?.BeginMouseFollow();
@@ -69,11 +82,14 @@ public class CombatInput : MonoBehaviour
         if (isDragging)
         {
             Vector2 currentWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector2 lastPoint = mousePath[mousePath.Count - 1];
+            Vector2 currentOffset = ToPlayerSpace(currentWorldPos);
+            Vector2 lastPoint = swipeOffsets[swipeOffsets.Count - 1];
 
-            if (Vector2.Distance(lastPoint, currentWorldPos) > minDragDistance)
+            // Offset vs offset: standing still with the mouse still now measures zero movement
+            // no matter how fast the player is running.
+            if (Vector2.Distance(lastPoint, currentOffset) > minDragDistance)
             {
-                mousePath.Add(currentWorldPos);
+                swipeOffsets.Add(currentOffset);
             }
 
             // Update the slash preview visualization
@@ -90,11 +106,12 @@ public class CombatInput : MonoBehaviour
                 // swipe, the preview must not be left behind with no reference to it.
                 DestroySlashPreview();
 
-                // Safety check: Don't execute a slash if they barely moved before the timeout
-                float distanceTraveled = Vector2.Distance(mousePath[0], currentWorldPos);
+                // Safety check: Don't execute a slash if they barely moved before the timeout.
+                // Measured in player space, so running no longer counts as swiping.
+                float distanceTraveled = Vector2.Distance(swipeOffsets[0], currentOffset);
                 if (distanceTraveled >= dragThreshold)
                 {
-                    playerCombat.ExecuteDynamicSlash(mousePath); // triggers the weapon sweep
+                    playerCombat.ExecuteDynamicSlash(swipeOffsets); // triggers the weapon sweep
                 }
                 else
                 {
@@ -103,7 +120,7 @@ public class CombatInput : MonoBehaviour
                     playerCombat.Weapon?.ReturnToRest();
                 }
 
-                mousePath.Clear();
+                swipeOffsets.Clear();
             }
         }
 
@@ -158,10 +175,10 @@ public class CombatInput : MonoBehaviour
 
             isDragging = true;
             slashTimer = 0f; // Reset the timer on every new click!
-            mousePath.Clear();
+            swipeOffsets.Clear();
 
             Vector2 worldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            mousePath.Add(worldPos);
+            swipeOffsets.Add(ToPlayerSpace(worldPos));
 
             // Freeze the weapon while the player builds the slash.
             playerCombat.Weapon?.BeginHold();
@@ -180,28 +197,32 @@ public class CombatInput : MonoBehaviour
 
             if (isDrawActive || isShieldActive)
             {
-                mousePath.Clear();
+                swipeOffsets.Clear();
                 return;
             }
 
-            if (mousePath.Count == 0)
+            if (swipeOffsets.Count == 0)
             {
                 playerCombat.Weapon?.ReturnToRest();
                 return;
             }
 
             Vector2 endWorldPos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            mousePath.Add(endWorldPos);
+            Vector2 endOffset = ToPlayerSpace(endWorldPos);
+            swipeOffsets.Add(endOffset);
 
-            float distance = Vector2.Distance(mousePath[0], endWorldPos);
+            float distance = Vector2.Distance(swipeOffsets[0], endOffset);
 
             if (distance < dragThreshold)
             {
-                playerCombat.RangedAttack(mousePath[0]); // RangedAttack points the weapon and returns it to rest
+                // Ranged stays world-space, and aims where the cursor is on RELEASE. The camera
+                // follows the player, so a cursor that never moved on screen is over a different
+                // world point by now — the press point would shoot behind the crosshair.
+                playerCombat.RangedAttack(endWorldPos); // RangedAttack points the weapon and returns it to rest
             }
             else
             {
-                playerCombat.ExecuteDynamicSlash(mousePath); // triggers the weapon sweep
+                playerCombat.ExecuteDynamicSlash(swipeOffsets); // triggers the weapon sweep
             }
         }
     }
@@ -334,10 +355,10 @@ public class CombatInput : MonoBehaviour
 
     private void UpdateSlashPreview()
     {
-        if (slashPreviewRenderer == null || mousePath.Count < 2) return;
+        if (slashPreviewRenderer == null || swipeOffsets.Count < 2) return;
 
         // Generate the hitbox polygon points
-        List<Vector2> polygonPoints = GenerateSlashPolygon(mousePath);
+        List<Vector2> polygonPoints = GenerateSlashPolygon(swipeOffsets);
         
         // Draw the polygon using the LineRenderer
         if (polygonPoints.Count > 0)
@@ -354,11 +375,14 @@ public class CombatInput : MonoBehaviour
         }
     }
 
-    private List<Vector2> GenerateSlashPolygon(List<Vector2> swipePath)
+    // swipeOffsets are player-relative, exactly as ExecuteDynamicSlash receives them. The arc is
+    // then rebuilt around the pivot's CURRENT position, so the preview tracks the player as they
+    // move without the motion distorting the measured angles.
+    private List<Vector2> GenerateSlashPolygon(List<Vector2> swipeOffsets)
     {
         List<Vector2> polygonPoints = new List<Vector2>();
-        
-        if (swipePath == null || swipePath.Count < 2) return polygonPoints;
+
+        if (swipeOffsets == null || swipeOffsets.Count < 2) return polygonPoints;
 
         // Get player transform from PlayerCombat
         Transform playerTransform = playerCombat.GetComponent<Transform>();
@@ -368,7 +392,7 @@ public class CombatInput : MonoBehaviour
         LayerMask environment = playerCombat.GetEnvironmentLayerMask();
 
         // --- PHASE 1: ANGLE CALCULATION (shared with the real slash in PlayerCombat) ---
-        SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, playerTransform.position, playerCombat.GetMaxSweepAngle());
+        SlashSwing swing = SlashGeometry.MeasureSwing(swipeOffsets, playerCombat.GetMaxSweepAngle());
         if (!swing.isValid) return polygonPoints; // No meaningful swing yet
 
         // Mirror PlayerCombat: a stab reaches further than a slash, so the preview must too.

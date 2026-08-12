@@ -325,16 +325,22 @@ public class PlayerCombat : MonoBehaviour
         nextFireTime = Time.time + fireRate;
     }
 
-    public void ExecuteDynamicSlash(List<Vector2> swipePath)
+    /// <summary>
+    /// Run a swipe gesture as a stab or a slash. <paramref name="swipeOffsets"/> holds
+    /// player-relative offsets (not world points), each captured against the combat pivot at
+    /// the instant it was sampled, so the player's own movement during the swipe never leaks
+    /// into the measured arc.
+    /// </summary>
+    public void ExecuteDynamicSlash(List<Vector2> swipeOffsets)
     {
-        if (swipePath == null || swipePath.Count < 2)
+        if (swipeOffsets == null || swipeOffsets.Count < 2)
         {
             weapon?.ReturnToRest(); // gesture fizzled: send the weapon home
             return;
         }
 
         // --- PHASE 1: ANGLE CALCULATION (shared with the slash preview in CombatInput) ---
-        SlashSwing swing = SlashGeometry.MeasureSwing(swipePath, transform.position, maxSweepAngle);
+        SlashSwing swing = SlashGeometry.MeasureSwing(swipeOffsets, maxSweepAngle);
         float startAngle = swing.startAngle;
         float accumulatedAngle = swing.accumulatedAngle;
 
@@ -410,13 +416,18 @@ public class PlayerCombat : MonoBehaviour
 
         if (isStab)
         {
-            Vector2 stabDir = (swipePath[0] - (Vector2)transform.position).normalized;
+            // Already player-relative, so this is the direction the player pointed — no need to
+            // subtract the pivot, and no contamination from running while stabbing.
+            Vector2 stabDir = swipeOffsets[0].normalized;
             animController?.PlayStab();
             //weapon?.PlaySlashFollow(startAngle, finalAngle, stabDuration); probably will have seperate stab anim
             StartCoroutine(MeleeAttackRoutine(stabDir, stabDmgMult, stabKnockback, stabDuration));
             return;
         }
-        Vector2 slashDir = (swipePath[swipePath.Count - 1] - swipePath[0]).normalized;
+
+        // Difference of two offsets, so the player's own travel between the two samples cancels
+        // out and what's left is the direction the mouse actually swept.
+        Vector2 slashDir = (swipeOffsets[swipeOffsets.Count - 1] - swipeOffsets[0]).normalized;
         animController?.PlaySlash();
         weapon?.PlaySlashFollow(startAngle, finalAngle, meleeDuration);
         StartCoroutine(MeleeAttackRoutine(slashDir, dmgMult, slashKnockback, meleeDuration));
@@ -485,24 +496,28 @@ public struct SlashSwing
 public static class SlashGeometry
 {
     /// <summary>
-    /// Walks a swipe path around an origin and measures how far the player swung, ignoring
-    /// backtracking and clamping to maxSweepAngle. Returns the start/final angles for the arc.
+    /// Walks a swipe and measures how far the player swung, ignoring backtracking and clamping
+    /// to maxSweepAngle. Returns the start/final angles for the arc.
+    ///
+    /// Points must already be PLAYER-RELATIVE offsets, captured against the combat pivot at the
+    /// moment each sample was taken (see CombatInput.ToPlayerSpace). There is deliberately no
+    /// origin parameter: measuring world points against a single origin was the old bug — the
+    /// player's own movement during the swipe got baked into the swing.
     /// </summary>
-    public static SlashSwing MeasureSwing(List<Vector2> swipePath, Vector2 origin, float maxSweepAngle)
+    public static SlashSwing MeasureSwing(List<Vector2> swipeOffsets, float maxSweepAngle)
     {
         SlashSwing swing = new SlashSwing();
-        if (swipePath == null || swipePath.Count < 2) return swing;
+        if (swipeOffsets == null || swipeOffsets.Count < 2) return swing;
 
-        Vector2 startDirection = swipePath[0] - origin;
+        Vector2 startDirection = swipeOffsets[0];
         float startAngle = Mathf.Atan2(startDirection.y, startDirection.x) * Mathf.Rad2Deg;
 
         float previousAngle = startAngle;
         float accumulated = 0f;
         float swingSign = 0f;
 
-        foreach (Vector2 point in swipePath)
+        foreach (Vector2 direction in swipeOffsets)
         {
-            Vector2 direction = point - origin;
             float currentAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             float step = Mathf.DeltaAngle(previousAngle, currentAngle);
 

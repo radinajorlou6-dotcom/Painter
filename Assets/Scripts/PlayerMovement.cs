@@ -19,6 +19,17 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jumping")]
     public float jump_height = 2f;
     float horizontalMovement;
+
+    //Coyote time and jump buffer variables
+    [Header("Coyote Time & Jump Buffer")]
+    [Tooltip("How long after leaving the ground the player can still jump. Covers a press that " +
+             "lands just after walking off a ledge.")]
+    [SerializeField] private float coyoteTime = 0.12f;
+    [Tooltip("How long a jump press is remembered while airborne. If the player touches ground " +
+             "within this window the jump fires on landing instead of being dropped.")]
+    [SerializeField] private float jumpBufferTime = 0.12f;
+    private float coyoteCounter;      //Seconds of ledge forgiveness left
+    private float jumpBufferCounter;  //Seconds a pending jump press stays valid
     [Header("Physics")]
     [Tooltip("How quickly the player accelerates toward target ground speed (units/s^2)")]
     [SerializeField] private float groundAcceleration = 80f;
@@ -186,6 +197,9 @@ public class PlayerMovement : MonoBehaviour
             isWalled = false;
             isGrounded = false;
             wallJumpTimer = 0f;
+
+            // Ledge forgiveness earned before the splash must not survive underwater.
+            coyoteCounter = 0f;
         }
         else
         {
@@ -207,6 +221,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         ProcessWallJump();
+        ProcessJumpTimers();
         UpdateLocomotionAnimation();
 
         if (!isWallJumping && !(isSlingshotting && !allowDirectionChangeWhileSlingshotting)) //Prevent flipping during wall jump or a locked slingshot launch
@@ -544,17 +559,51 @@ public class PlayerMovement : MonoBehaviour
                 FlipMain();
             }
         }
-        else if (context.performed && (isGrounded || isSwimming)) //hold jump = full jump power
+        else if (context.performed)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
-            //audioController.Play(AudioType.Jump);
+            // Not a wall jump: only remember the press. ProcessJumpTimers fires it once the
+            // player has footing, which may be a few frames from now (buffer) or a few frames
+            // after leaving the ledge (coyote).
+            jumpBufferCounter = jumpBufferTime;
         }
         else if (context.canceled && rb.linearVelocity.y >= 0 && !isSwimming) //if player taps rather than hold
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
-        }   
+        }
 
-        
+
+    }
+
+    /// <summary>
+    /// Runs the coyote and jump-buffer clocks and fires a remembered jump the moment the player
+    /// has footing. Both windows exist so a press that's slightly early or slightly late still
+    /// produces the jump the player expected instead of being silently dropped.
+    /// </summary>
+    private void ProcessJumpTimers()
+    {
+        // Refill only while actually resting on the ground. The velocity gate matters: for a
+        // frame or two after a jump the feet are still touching, and an unconditional refill
+        // there would hand back a full coyote window mid-launch — a free double jump.
+        if (isGrounded && rb.linearVelocity.y <= 0.01f) coyoteCounter = coyoteTime;
+        else coyoteCounter -= Time.deltaTime;
+
+        if (jumpBufferCounter > 0f) jumpBufferCounter -= Time.deltaTime;
+
+        // Swimming keeps its existing always-allowed upward burst.
+        if (jumpBufferCounter > 0f && (coyoteCounter > 0f || isSwimming))
+        {
+            PerformGroundJump();
+        }
+    }
+
+    private void PerformGroundJump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
+
+        // Spend both timers so a single press can never produce two jumps.
+        jumpBufferCounter = 0f;
+        coyoteCounter = 0f;
+        //audioController.Play(AudioType.Jump);
     }
 
     private void GroundCheck()
