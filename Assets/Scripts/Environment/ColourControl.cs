@@ -35,11 +35,15 @@ public class ColourControl : MonoBehaviour
         }
     }
 
-    /// <summary>Applies the unlocked look and disables the blocking collider.</summary>
+    /// <summary>
+    /// Disables the blocking collider. Tinting is deliberately not done here — <see cref="ColourReveal"/>
+    /// owns how a locked thing looks, so that the drained state, the fade and the restored colour
+    /// are the same code for a tilemap, a background and an enemy. Two components writing the same
+    /// tint would only fight.
+    /// </summary>
     protected virtual void Unlock()
     {
         tilemapCollider.enabled = false;
-        tilemap.color = unlockedColour;
     }
 
     /// <summary>Event handler: only reacts when the unlocked colour matches ours.</summary>

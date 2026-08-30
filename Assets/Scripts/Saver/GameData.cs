@@ -8,7 +8,11 @@ public enum AbilityType
 {
     Slingshot,
     PlatformDraw,
-    ShieldDraw
+    ShieldDraw,
+    // Append only, never insert. Saves store these by name, but the Inspector lists in
+    // GameManager.startingAbilities and PaintBucketScript.abilityToUnlock store them by index —
+    // inserting would silently repoint every one of those to a different ability.
+    Curse
 }
 
 /// <summary>

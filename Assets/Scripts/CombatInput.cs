@@ -153,6 +153,7 @@ public class CombatInput : MonoBehaviour
             if (hit.TryGetComponent(out IInteractable interactable))
             {
                 interactable.Interact(); // Pass the baton! The chest script takes over execution here.
+                TutorialManager.Report(TutorialSignal.Interacted);
             }
         }
     }
@@ -244,6 +245,7 @@ public class CombatInput : MonoBehaviour
 
             isShieldActive = true;
             playerCombat.StartNewShield();
+            TutorialManager.Report(TutorialSignal.ShieldRaised);
         }
         else if (context.canceled)
         {
@@ -269,6 +271,7 @@ public class CombatInput : MonoBehaviour
             numOfLines++;
             playerCombat.Animation?.PlayPlatformDraw();
             playerCombat.Weapon?.BeginMouseFollow();
+            TutorialManager.Report(TutorialSignal.PlatformDrawn);
         }
         else if (context.canceled)
         {
@@ -399,6 +402,13 @@ public class CombatInput : MonoBehaviour
         float attackRadius = swing.accumulatedAngle < playerCombat.GetStabThreshold()
             ? playerCombat.GetStabRadius()
             : playerCombat.GetSlashRadius();
+
+        Color lineColor = swing.accumulatedAngle < playerCombat.GetStabThreshold()
+            ? new Color(1, 0, 0, 0.6f) // Red for stab
+            : new Color(0, 1, 1, 0.6f); // Cyan for slash
+
+        slashPreviewRenderer.startColor = lineColor;
+        slashPreviewRenderer.endColor = lineColor;
 
         // --- PHASE 2: SHAPE GENERATION ---
         float startAngle = swing.startAngle;

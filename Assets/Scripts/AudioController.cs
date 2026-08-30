@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 using System.Collections.Generic;
 
 public enum AudioType
@@ -39,6 +40,11 @@ public class AudioController : MonoBehaviour
     [Header("Source Pool")]
     [SerializeField] private int poolSize = 4;
 
+    [Header("Mixer")]
+    [Tooltip("Group this pool routes through. Leave it empty and the sounds still play, but the " +
+             "mixer's exposed volume parameters won't affect them.")]
+    [SerializeField] private AudioMixerGroup outputGroup;
+
     private Dictionary<AudioType, AudioEntry> audioLookup;
     private List<AudioSource> sourcePool;
     private Dictionary<AudioType, AudioSource> activeLoops = new Dictionary<AudioType, AudioSource>();
@@ -55,8 +61,15 @@ public class AudioController : MonoBehaviour
         sourcePool = new List<AudioSource>(poolSize);
         for (int i = 0; i < poolSize; i++)
         {
-            AudioSource source = gameObject.AddComponent<AudioSource>();
+            // Each source gets its own child object. They used to be added straight onto this
+            // GameObject, which shares our transform — so Play(type, worldPosition) moved the
+            // entity itself rather than the sound.
+            GameObject host = new GameObject($"AudioSource_{i}");
+            host.transform.SetParent(transform, false);
+
+            AudioSource source = host.AddComponent<AudioSource>();
             source.playOnAwake = false;
+            source.outputAudioMixerGroup = outputGroup;
             sourcePool.Add(source);
         }
     }

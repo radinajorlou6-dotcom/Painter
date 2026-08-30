@@ -33,6 +33,7 @@ public class ChaserAI : EnemyBase
     [SerializeField] private float attackCooldown = 0.5f;
 
     private bool isAttacking = false;
+    private Coroutine attackRoutine;
 
     protected override void Awake()
     {
@@ -44,8 +45,8 @@ public class ChaserAI : EnemyBase
     {
         base.Update(); // ground + wall checks
 
-        // Committed to a swing, or reeling from a hit: no steering this frame.
-        if (isAttacking || isBeingKnocked) return;
+        // Committed to a swing, reeling from a hit, or cursed: no steering this frame.
+        if (IsStunned || isAttacking || isBeingKnocked) return;
 
         if (canSeePlayer) Chase();
         else Patrol();
@@ -60,7 +61,7 @@ public class ChaserAI : EnemyBase
         if (currDistanceFromPlayer <= attackRange)
         {
             Stop();
-            StartCoroutine(BaseAttack());
+            attackRoutine = StartCoroutine(BaseAttack());
             return;
         }
 
@@ -114,6 +115,21 @@ public class ChaserAI : EnemyBase
     /// The damage check happens after the windup rather than when the swing starts,
     /// so a player who dodges in time doesn't get hit.
     /// </summary>
+    /// <summary>
+    /// Cutting the swing short is what makes a curse land as an interrupt: without it a windup
+    /// already in flight would still resolve its damage check on a frozen enemy.
+    /// </summary>
+    protected override void CancelActions()
+    {
+        if (attackRoutine != null)
+        {
+            StopCoroutine(attackRoutine);
+            attackRoutine = null;
+        }
+
+        isAttacking = false;
+    }
+
     protected override IEnumerator BaseAttack()
     {
         isAttacking = true;

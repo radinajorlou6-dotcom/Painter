@@ -25,6 +25,7 @@
 
 
         private bool isAttacking = false;
+        private Coroutine attackRoutine;
 
         protected override void Awake()
         {
@@ -43,6 +44,7 @@
         {
             base.Update();
             //Debug.Log("Is attacking: " + isAttacking);
+            if (IsStunned) return;   // Cursed: held in place, and no new attacks
             if (isAttacking) return; // Prevent moving or starting new attacks while already attacking
 
             if (canSeePlayer)
@@ -120,13 +122,31 @@
             if (isAttacking) return;
             else if (currDistanceFromPlayer <= bashRange)
             {
-                StartCoroutine(BashAttack());
+                attackRoutine = StartCoroutine(BashAttack());
             }
             else
             {
-                StartCoroutine(BaseAttack());
+                attackRoutine = StartCoroutine(BaseAttack());
             }
-            
+
+        }
+
+        /// <summary>
+        /// A curse lands mid-charge often, so cutting the attack off matters twice over: the
+        /// coroutine would otherwise keep driving velocity against the freeze, and the charge
+        /// hitbox it switched on would stay live, leaving a frozen knight that still deals damage
+        /// to anyone who walks into it.
+        /// </summary>
+        protected override void CancelActions()
+        {
+            if (attackRoutine != null)
+            {
+                StopCoroutine(attackRoutine);
+                attackRoutine = null;
+            }
+
+            isAttacking = false;
+            if (hitBox != null) hitBox.gameObject.SetActive(false);
         }
 
         protected override void CheckPlayerDetection()

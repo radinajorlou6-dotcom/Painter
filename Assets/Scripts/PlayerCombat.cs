@@ -437,6 +437,7 @@ public class PlayerCombat : MonoBehaviour
     {
         // Turn the visual/physics shape on
         hitBox.gameObject.SetActive(true);
+        TutorialManager.Report(TutorialSignal.Attacked);
 
         // Wait one frame so the physics engine has a chance to register the enabled collider
         // This makes overlap queries more reliable immediately after enabling a collider

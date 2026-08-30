@@ -51,7 +51,6 @@ public class WaterZone : ColourControl
     /// </summary>
     protected override void Unlock()
     {
-        tilemap.color = unlockedColour;
         SetTrigger(true);
         isWater = true;
     }

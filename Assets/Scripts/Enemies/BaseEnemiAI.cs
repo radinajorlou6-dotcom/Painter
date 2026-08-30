@@ -51,6 +51,10 @@ public class BaseEnemyAI : EnemyBase
             // Attack whenever we have a foothold: on the ground OR stuck to a wall.
             if (!isGrounded && !isStuckToWall) continue;
             if (isBeingKnocked) continue;
+            // Cursed: skip this beat rather than being guarded at the top, because this enemy is
+            // driven by the coroutine rather than Update. Wall-stick state is left alone — the
+            // stun freezes position anyway, so gravityScale stays whatever Unstick will restore.
+            if (IsStunned) continue;
             if (player == null) continue;
 
             float distance = Vector2.Distance(transform.position, player.position);

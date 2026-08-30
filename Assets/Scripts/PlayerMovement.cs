@@ -137,10 +137,31 @@ public class PlayerMovement : MonoBehaviour
     public bool isSwimming { get; private set; }
     public bool IsSwimming() => isSwimming;
 
+    [Header("Climbing")]
+    [Tooltip("How fast the player moves up and down a vine (units/s).")]
+    [SerializeField] private float climbSpeed = 4f;
+    [Tooltip("How long left or right has to be held before the player lets go of a vine. Covers " +
+             "a stray tap, or a diagonal held on the way up, which would otherwise drop them off.")]
+    [SerializeField] private float vineDismountHoldTime = 0.25f;
+    [Tooltip("Sideways speed given when the player lets go by holding a direction, so they clear " +
+             "the vine instead of dropping straight back into it.")]
+    [SerializeField] private float vineDismountPush = 4f;
+    [Tooltip("How far off the centre line of a vine the player can be and still take hold of it " +
+             "(world units). Small values mean they have to line up with the vine properly " +
+             "instead of catching its edge; too small and a vine is hard to grab in mid-air.")]
+    [SerializeField] private float vineGrabTolerance = 0.25f;
+    private VineZone currentVine;       //Unlocked vines we're overlapping — able to climb, not necessarily climbing
+    private float vineColumnX;          //Centre line of the column being climbed; the player is held on it
+    private bool vineDismounted;        //Let go on purpose: blocks re-grabbing until grounded or clear of the vine
+    private float vineDismountCounter;  //Seconds a direction has been held while climbing
+    private float vineDismountSign;     //Which side is being held, so switching sides restarts the hold
+    public bool isClimbing { get; private set; }
+    public bool IsClimbing() => isClimbing;
+
     void Awake()
     {
         if (animController == null) animController = GetComponent<AnimationController>();
-       // if (audioController == null) audioController = GetComponent<AudioController>();
+        if (audioController == null) audioController = GetComponent<AudioController>();
 
         groundFilter = new ContactFilter2D();
         groundContact = new ContactPoint2D[maxPoints];
@@ -167,11 +188,13 @@ public class PlayerMovement : MonoBehaviour
     private void OnEnable()
     {
         WaterZone.PlayerSwimStateChanged += HandleSwimStateChanged;
+        VineZone.PlayerVineStateChanged += HandleVineStateChanged;
     }
 
     private void OnDisable()
     {
         WaterZone.PlayerSwimStateChanged -= HandleSwimStateChanged;
+        VineZone.PlayerVineStateChanged -= HandleVineStateChanged;
     }
 
     // The water event is global, so ignore any raised for a different player.
@@ -191,6 +214,7 @@ public class PlayerMovement : MonoBehaviour
         {
             // Hitting the water cancels every land-only movement state, otherwise a launch or
             // wall jump that carried us in would keep suppressing input under the surface.
+            SetClimbing(false);
             isSlingshotting = false;
             isWallJumping = false;
             isWallSliding = false;
@@ -217,18 +241,151 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // The vine event is global, so ignore any raised for a different player.
+    private void HandleVineStateChanged(PlayerMovement player, VineZone vine, bool onVine)
+    {
+        if (player != this) return;
+
+        if (onVine)
+        {
+            currentVine = vine;
+            return;
+        }
+
+        // Overlapping two patches at once, and the other one reported the exit: leave the one
+        // we're actually on alone.
+        if (currentVine != vine) return;
+
+        currentVine = null;
+
+        // Climbed off the end of the vine, or pushed clear of it. Vertical speed is left alone on
+        // purpose, so climbing off the top carries the player over the lip instead of stalling
+        // there and dropping straight back in.
+        SetClimbing(false);
+
+        // Being clear of the vine settles any deliberate let-go, so the next one can be grabbed
+        // immediately.
+        vineDismounted = false;
+    }
+
+    private void SetClimbing(bool climbing)
+    {
+        if (isClimbing == climbing) return;
+        isClimbing = climbing;
+
+        vineDismountCounter = 0f;
+        vineDismountSign = 0f;
+
+        if (climbing)
+        {
+            // Grabbing a vine cancels every land-only movement state, otherwise a launch or wall
+            // jump that carried us into it would keep suppressing input all the way up.
+            isSlingshotting = false;
+            isWallJumping = false;
+            isWallSliding = false;
+            isWalled = false;
+            isGrounded = false;
+            wallJumpTimer = 0f;
+
+            // Ledge forgiveness earned before the grab must not survive it. The jump buffer goes
+            // too: a press made just before catching the vine would otherwise fire as a dismount
+            // the very frame we arrive, which reads as the vine refusing to be grabbed.
+            coyoteCounter = 0f;
+            jumpBufferCounter = 0f;
+        }
+        else
+        {
+            rb.gravityScale = baseGravity;
+        }
+    }
+
+    /// <summary>
+    /// Deliberately lets go — a jump, or a direction held past the buffer. The vine can't be
+    /// re-grabbed until the player either lands or moves clear of it, which is what stops a
+    /// dismount inside a tall vine from being undone a few frames later by the auto-grab.
+    /// </summary>
+    private void ReleaseVine()
+    {
+        SetClimbing(false);
+        vineDismounted = true;
+    }
+
+    /// <summary>
+    /// Decides when the player takes hold of a vine and when they let go. Grabbing is automatic in
+    /// the air, so jumping or falling into vines catches them; on the ground it waits for up or
+    /// down, otherwise walking through the foot of a vine would snag the player every time.
+    /// </summary>
+    private void ProcessVineClimb()
+    {
+        // Landing settles a deliberate let-go even without leaving the vine, so a player standing
+        // at the foot of one can climb it again instead of being locked out on the spot.
+        if (isGrounded) vineDismounted = false;
+
+        if (isClimbing)
+        {
+            ProcessVineDismount();
+            return;
+        }
+
+        if (currentVine == null || vineDismounted || isSwimming) return;
+        if (isGrounded && Mathf.Abs(verticalMovement) <= 0.01f) return;
+
+        // Take hold only near the middle of a vine column. Touching the trigger is a much looser
+        // test than it looks — it covers every vine on the tilemap at once, so without this the
+        // player grabs on first contact and hangs off whichever edge they walked into.
+        if (!currentVine.TryGetColumnCentre(rb.position, out float centreX)) return;
+        if (Mathf.Abs(rb.position.x - centreX) > vineGrabTolerance) return;
+
+        vineColumnX = centreX;
+        SetClimbing(true);
+        DebugUtils.Log($"Grabbed a vine at x {centreX}");
+    }
+
+    /// <summary>
+    /// Runs the hold clock that drops the player off a vine. A direction has to be held for
+    /// <see cref="vineDismountHoldTime"/> before it counts, so an accidental tap — or a diagonal
+    /// held while climbing upward — doesn't shake them off.
+    /// </summary>
+    private void ProcessVineDismount()
+    {
+        float sign = Mathf.Abs(horizontalMovement) > 0.01f ? Mathf.Sign(horizontalMovement) : 0f;
+
+        // Letting go of the key, or switching to the other side, restarts the hold from zero:
+        // half a hold each way should never add up to a dismount.
+        if (sign == 0f || sign != vineDismountSign)
+        {
+            vineDismountSign = sign;
+            vineDismountCounter = 0f;
+            return;
+        }
+
+        vineDismountCounter += Time.deltaTime;
+        if (vineDismountCounter < vineDismountHoldTime) return;
+
+        ReleaseVine();
+
+        // Push off in the held direction. Without it the player accelerates out of a standstill
+        // and is still inside the vine's trigger when the lockout ends, so they'd be caught again
+        // before they ever got clear of it.
+        rb.linearVelocity = new Vector2(sign * vineDismountPush, rb.linearVelocity.y);
+        DebugUtils.Log("Let go of the vine");
+    }
+
     // Update is called once per frame
     void Update()
     {
+        // Before the jump timers: grabbing a vine spends the jump buffer, so a press that arrived
+        // on the way in can't fire as a dismount on the frame the player takes hold.
+        ProcessVineClimb();
         ProcessWallJump();
         ProcessJumpTimers();
         UpdateLocomotionAnimation();
 
-        if (!isWallJumping && !(isSlingshotting && !allowDirectionChangeWhileSlingshotting)) //Prevent flipping during wall jump or a locked slingshot launch
-        { 
+        if (!isWallJumping && !isClimbing && !(isSlingshotting && !allowDirectionChangeWhileSlingshotting)) //Prevent flipping during wall jump, a climb, or a locked slingshot launch
+        {
             Flip(); //Flip player sprite based on movement direction
         }
-            
+
     }
 
     // Picks the right locomotion animation from the current physics state each frame.
@@ -245,6 +402,21 @@ public class PlayerMovement : MonoBehaviour
             animController.PlayAnimation(isPaddling ? AnimationType.Run : AnimationType.Idle);
 
             // Sinking through water isn't falling, rising through it isn't jumping, and surfacing
+            // shouldn't count as a landing.
+            fallAnimTimer = 0f;
+            jumpAnimTimer = 0f;
+            fallAnimPlayed = false;
+            return;
+        }
+
+        if (isClimbing)
+        {
+            // No dedicated climb clip yet, so reuse Run while moving along the vine and Idle while
+            // hanging still. The ground and wall checks don't run while climbing, so their flags
+            // can't be trusted here.
+            animController.PlayAnimation(Mathf.Abs(verticalMovement) > 0.01f ? AnimationType.Run : AnimationType.Idle);
+
+            // Riding a vine down isn't falling, riding it up isn't jumping, and letting go of one
             // shouldn't count as a landing.
             fallAnimTimer = 0f;
             jumpAnimTimer = 0f;
@@ -303,6 +475,7 @@ public class PlayerMovement : MonoBehaviour
             // Landed after a fall long/fast enough to animate — small drops skip this too.
             animController.PlayAnimation(AnimationType.Land);
             fallAnimPlayed = false;
+            TutorialManager.Report(TutorialSignal.Landed);
             DebugUtils.Log("Landed, playing landing animation");
         }
         else
@@ -316,6 +489,11 @@ public class PlayerMovement : MonoBehaviour
         if (isSwimming)
         {
             ApplyUnderWaterMovement();
+            Gravity();
+        }
+        else if (isClimbing)
+        {
+            ApplyClimbMovement();
             Gravity();
         }
         else
@@ -406,6 +584,20 @@ public class PlayerMovement : MonoBehaviour
             Mathf.Clamp(newY, -swimSpeed, swimSpeed));
     }
 
+    // Vertical speed comes straight from input, and the player is pinned horizontally: sideways
+    // input on a vine is a dismount request, not movement, so it must not slide them off the vine
+    // while the hold clock is still running.
+    private void ApplyClimbMovement()
+    {
+        float newY = Mathf.Abs(verticalMovement) > 0.01f ? verticalMovement * climbSpeed : 0f;
+        rb.linearVelocity = new Vector2(0f, newY);
+
+        // Held on the column's centre line rather than merely stopped: the grab is allowed from
+        // anywhere inside vineGrabTolerance, so this is what actually centres the player on the
+        // vine, and it keeps them there if anything shoves them sideways afterwards.
+        rb.position = new Vector2(vineColumnX, rb.position.y);
+    }
+
     // Horizontal movement while a slingshot launch is in flight.
     private void ApplySlingshotMovement()
     {
@@ -447,6 +639,7 @@ public class PlayerMovement : MonoBehaviour
     {
         isSlingshotting = true;
         slingshotHasLeftGround = false;
+        TutorialManager.Report(TutorialSignal.Slingshotted);
        // audioController.Play(AudioType.Slingshot);
     }
 
@@ -460,7 +653,20 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = gravityUnderWater;
             if (isFalling)
             {
-                //audioController.StopLoop(AudioType.Fall);
+                audioController.StopLoop(AudioType.Fall);
+                isFalling = false;
+            }
+            return;
+        }
+
+      if (isClimbing)
+        {
+            // Hanging on a vine: ApplyClimbMovement owns vertical speed, so gravity has to be off
+            // entirely rather than fought frame by frame. Nothing on a vine counts as falling.
+            rb.gravityScale = 0f;
+            if (isFalling)
+            {
+                audioController.StopLoop(AudioType.Fall);
                 isFalling = false;
             }
             return;
@@ -477,11 +683,11 @@ public class PlayerMovement : MonoBehaviour
                 if (!isFalling)
                 {
                     isFalling = true;
-                    //audioController.StartLoop(AudioType.Fall);
+                    audioController.StartLoop(AudioType.Fall);
                 }
 
                 float t = Mathf.InverseLerp(minFallSpeedForSound, maxFallSpeed, fallSpeed);
-                //audioController.UpdateLoop(AudioType.Fall, Mathf.Lerp(minFallVolume, maxFallVolume, t), Mathf.Lerp(minFallPitch, maxFallPitch, t));
+                audioController.UpdateLoop(AudioType.Fall, Mathf.Lerp(minFallVolume, maxFallVolume, t), Mathf.Lerp(minFallPitch, maxFallPitch, t));
             }
         }
         else
@@ -489,7 +695,7 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = baseGravity; //Reset gravity when not falling
             if (isFalling)
             {
-                //audioController.StopLoop(AudioType.Fall);
+                audioController.StopLoop(AudioType.Fall);
                 isFalling = false;
             }
         }
@@ -548,7 +754,7 @@ public class PlayerMovement : MonoBehaviour
         //TODO: Remove w from jump keys
         if(context.performed && isWallSliding)
         {
-            //audioController.Play(AudioType.Jump);
+            audioController.Play(AudioType.Jump);
             isWallJumping = true;
             rb.linearVelocity = new Vector2(wallJumpDirection * wallJumpPower.x, wallJumpPower.y); //Jump away from the wall
             wallJumpTimer = wallJumpTime; //Reset wall jump timer
@@ -566,7 +772,7 @@ public class PlayerMovement : MonoBehaviour
             // after leaving the ledge (coyote).
             jumpBufferCounter = jumpBufferTime;
         }
-        else if (context.canceled && rb.linearVelocity.y >= 0 && !isSwimming) //if player taps rather than hold
+        else if (context.canceled && rb.linearVelocity.y >= 0 && !isSwimming && !isClimbing) //if player taps rather than hold
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
         }
@@ -589,8 +795,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (jumpBufferCounter > 0f) jumpBufferCounter -= Time.deltaTime;
 
-        // Swimming keeps its existing always-allowed upward burst.
-        if (jumpBufferCounter > 0f && (coyoteCounter > 0f || isSwimming))
+        // Swimming keeps its existing always-allowed upward burst, and a vine is footing of its
+        // own — the player can always push off one.
+        if (jumpBufferCounter > 0f && (coyoteCounter > 0f || isSwimming || isClimbing))
         {
             PerformGroundJump();
         }
@@ -598,12 +805,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void PerformGroundJump()
     {
+        // Jumping off a vine is a deliberate let-go, so it locks the vine out exactly the way
+        // holding a direction does — otherwise the auto-grab would catch the player again on the
+        // way up and the jump would look like it did nothing.
+        if (isClimbing) ReleaseVine();
+
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jump_height);
 
         // Spend both timers so a single press can never produce two jumps.
         jumpBufferCounter = 0f;
         coyoteCounter = 0f;
-        //audioController.Play(AudioType.Jump);
+        audioController.Play(AudioType.Jump);
+        TutorialManager.Report(TutorialSignal.Jumped);
     }
 
     private void GroundCheck()

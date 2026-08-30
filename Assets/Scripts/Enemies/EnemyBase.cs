@@ -58,8 +58,22 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     [Tooltip("Seconds to wait for the death animation before the object is destroyed.")]
     [SerializeField] protected float deathAnimationDuration = 0.8f;
 
+    [Header("Stun")]
+    [Tooltip("Animation played when the enemy is cursed. The Knight already maps GotHurt to its " +
+             "Knight_Stun clip, so the default picks that up for free.")]
+    [SerializeField] protected AnimationType stunAnimation = AnimationType.GotHurt;
+
     /// <summary>The composed health component. Subclasses use it to deal/take damage and check death.</summary>
     protected Health health;
+
+    /// <summary>
+    /// Held in place and unable to act. Subclasses check this alongside their own isAttacking /
+    /// isBeingKnocked guards.
+    /// </summary>
+    public bool IsStunned { get; private set; }
+
+    private Coroutine stunRoutine;
+    private RigidbodyConstraints2D constraintsBeforeStun;
 
     protected virtual void Awake()
     {
@@ -90,6 +104,83 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
             yield return new WaitForSeconds(Mathf.Max(0.05f, interval));
         }
     }
+
+    protected virtual void OnDisable()
+    {
+        // Never leave a body frozen. DieDestroy sets enabled = false, and a stun coroutine cut
+        // short by that would otherwise never reach the line that restores the constraints.
+        EndStun();
+    }
+
+    /// <summary>
+    /// Pins the enemy in place and stops it acting for <paramref name="duration"/> seconds.
+    /// Cursing an already-stunned enemy refreshes the timer rather than stacking.
+    /// </summary>
+    public void ApplyStun(float duration)
+    {
+        if (duration <= 0f) return;
+        if (health != null && health.IsDead) return;
+
+        if (!IsStunned)
+        {
+            IsStunned = true;
+
+            // Constraints rather than a velocity write. TakeKnockback is a coroutine started by
+            // the *attacker*, so it rewrites this body's velocity every frame for its duration —
+            // zeroing velocity once here would simply be undone on the next frame. Freezing the
+            // position holds the enemy regardless of who writes what.
+            if (rb != null)
+            {
+                constraintsBeforeStun = rb.constraints;
+                rb.linearVelocity = Vector2.zero;
+                rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            }
+
+            CancelActions();
+
+            // Fetched rather than cached: subclasses already own their own animController fields
+            // under that name, and a stun is rare enough that the lookup costs nothing.
+            GetComponent<AnimationController>()?.PlayAnimation(stunAnimation);
+
+            DebugUtils.Log($"{name} stunned for {duration}s");
+        }
+
+        if (stunRoutine != null) StopCoroutine(stunRoutine);
+        stunRoutine = StartCoroutine(StunRoutine(duration));
+    }
+
+    /// <summary>Releases a stun early. Safe to call when not stunned.</summary>
+    public void EndStun()
+    {
+        if (!IsStunned) return;
+        IsStunned = false;
+
+        if (stunRoutine != null)
+        {
+            StopCoroutine(stunRoutine);
+            stunRoutine = null;
+        }
+
+        // Restore what was there before rather than assuming FreezeRotation: enemies may be set
+        // up differently, and stomping that would change how they behave after their first stun.
+        if (rb != null) rb.constraints = constraintsBeforeStun;
+    }
+
+    private IEnumerator StunRoutine(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        EndStun();
+    }
+
+    /// <summary>
+    /// Stops whatever the enemy was mid-way through, so a stun actually interrupts an attack
+    /// instead of freezing it in place with its damage volume still live. Subclasses cancel their
+    /// attack coroutine, clear their isAttacking flag and switch off any hitbox they turned on.
+    ///
+    /// Deliberately not StopAllCoroutines: DetectionRoutine is started in Awake and never
+    /// restarted, so killing it would leave the enemy permanently blind after its first stun.
+    /// </summary>
+    protected virtual void CancelActions() { }
 
     protected abstract IEnumerator BaseAttack();
 
@@ -157,6 +248,10 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     /// </summary>
     protected virtual void HandleDeath()
     {
+        // Before StopAllCoroutines, which would otherwise kill the stun routine on the line
+        // before it restores the constraints.
+        EndStun();
+
         StopAllCoroutines();
         rb.linearVelocity = Vector2.zero;
         rb.isKinematic = true;
