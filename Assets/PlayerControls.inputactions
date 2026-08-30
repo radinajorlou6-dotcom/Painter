@@ -59,6 +59,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Curse",
+                    "type": "Button",
+                    "id": "b012497c-c98d-43c5-bb9d-1a2d7992b10e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -257,6 +266,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5c2c3a9e-5273-4465-aee6-bea438d699b0",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Curse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
