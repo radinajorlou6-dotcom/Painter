@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -63,6 +64,35 @@ public static class ColourTint
     public static float ResolveFade(float duration)
     {
         return duration < 0f ? DrainedPalette.ResolveFade() : duration;
+    }
+
+    /// <summary>
+    /// The wash from locked to restored. Shared so a tilemap that gates the player and a backdrop
+    /// that only decorates fade at the same speed and with the same easing — two implementations
+    /// would drift apart the first time one of them was tuned.
+    ///
+    /// Unscaled time on purpose: collecting a colour is a beat the player should always get to
+    /// watch, including through a HitStop freeze or a pause.
+    /// </summary>
+    public static IEnumerator Fade(Targets targets, Color from, Color to, float duration)
+    {
+        if (targets == null) yield break;
+
+        if (duration <= 0f)
+        {
+            targets.Apply(to);
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            targets.Apply(Color.Lerp(from, to, elapsed / duration));
+            yield return null;
+        }
+
+        targets.Apply(to);
     }
 
     /// <summary>

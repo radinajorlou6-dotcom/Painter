@@ -38,15 +38,39 @@ public class CameraBounds : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        // A CameraBounds sharing an object with a framing zone is always a mistake. The zone is the
+        // thing that frames one room; bounds is the level-wide backstop. Left in place it can win
+        // the singleton on Awake order and pin the camera inside that one room for the whole level,
+        // which looks like the camera being broken rather than like a setup error.
+        if (TryGetComponent(out CameraFramingZone zone))
         {
             DebugUtils.LogWarning(
-                $"More than one CameraBounds in the scene — '{name}' is being ignored in favour of " +
-                $"'{Instance.name}'. Use CameraRoom volumes for areas within a level.");
+                $"'{name}' has both a CameraBounds and a {zone.GetType().Name}. Dropping the " +
+                "CameraBounds — framing one room is the zone's job, while CameraBounds is the " +
+                "level's outer limit and belongs on its own object, one per scene.");
             // Only remove the duplicate component, never the GameObject it lives on.
             Destroy(this);
             return;
         }
+
+        if (Instance != null && Instance != this)
+        {
+            // Keep the bigger box rather than whichever happened to wake first. A level's outer
+            // limit is by definition the largest one, so this resolves a duplicate the way it was
+            // almost certainly meant instead of leaving the camera at the mercy of component order.
+            bool thisIsLarger = Area.size.sqrMagnitude > Instance.Area.size.sqrMagnitude;
+            CameraBounds winner = thisIsLarger ? this : Instance;
+            CameraBounds loser = thisIsLarger ? Instance : this;
+
+            DebugUtils.LogWarning(
+                $"More than one CameraBounds in the scene. Keeping the larger one, '{winner.name}', " +
+                $"and dropping '{loser.name}'. Use a CameraRoom for areas within a level.");
+
+            Instance = winner;
+            Destroy(loser);
+            return;
+        }
+
         Instance = this;
     }
 

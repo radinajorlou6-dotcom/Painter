@@ -1,0 +1,1014 @@
+fileFormatVersion: 2
+guid: 14363e94599d8744287cc90a77899aa5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4407566122218231129
+    second: YuRoses-Sheet_0
+  - first:
+      213: -8535264384488039852
+    second: YuRoses-Sheet_1
+  - first:
+      213: -7429847474960834962
+    second: YuRoses-Sheet_2
+  - first:
+      213: -4705221715449285042
+    second: YuRoses-Sheet_3
+  - first:
+      213: 28756431876286944
+    second: YuRoses-Sheet_4
+  - first:
+      213: -2762667729149406615
+    second: YuRoses-Sheet_5
+  - first:
+      213: 6496905550754959109
+    second: YuRoses-Sheet_6
+  - first:
+      213: 530013840978523916
+    second: YuRoses-Sheet_7
+  - first:
+      213: -7946209196772926531
+    second: YuRoses-Sheet_8
+  - first:
+      213: -7723802381285499021
+    second: YuRoses-Sheet_9
+  - first:
+      213: 903025755948854940
+    second: YuRoses-Sheet_10
+  - first:
+      213: -3202822428702159321
+    second: YuRoses-Sheet_11
+  - first:
+      213: 4387342438687731306
+    second: YuRoses-Sheet_12
+  - first:
+      213: -8801102631482436848
+    second: YuRoses-Sheet_13
+  - first:
+      213: 7982824419509357780
+    second: YuRoses-Sheet_14
+  - first:
+      213: -2820601809342273239
+    second: YuRoses-Sheet_15
+  - first:
+      213: -8801481703846655179
+    second: YuRoses-Sheet_16
+  - first:
+      213: 1907410529142081729
+    second: YuRoses-Sheet_17
+  - first:
+      213: 2510295220551154941
+    second: YuRoses-Sheet_18
+  - first:
+      213: 2120841578958282806
+    second: YuRoses-Sheet_19
+  - first:
+      213: 6688759084731000172
+    second: YuRoses-Sheet_20
+  - first:
+      213: -6051604432446796158
+    second: YuRoses-Sheet_21
+  - first:
+      213: 3404080785785813543
+    second: YuRoses-Sheet_22
+  - first:
+      213: 4308319316713848290
+    second: YuRoses-Sheet_23
+  - first:
+      213: -6095495368051343338
+    second: YuRoses-Sheet_24
+  - first:
+      213: -5324485290879008877
+    second: YuRoses-Sheet_25
+  - first:
+      213: -6750539560370303994
+    second: YuRoses-Sheet_26
+  - first:
+      213: 8208878526515318643
+    second: YuRoses-Sheet_27
+  - first:
+      213: 2729667803051469490
+    second: YuRoses-Sheet_28
+  - first:
+      213: 6488311046477798532
+    second: YuRoses-Sheet_29
+  - first:
+      213: 3067521528182465219
+    second: YuRoses-Sheet_30
+  - first:
+      213: -7942339224160179342
+    second: YuRoses-Sheet_31
+  - first:
+      213: 351138456906162459
+    second: YuRoses-Sheet_32
+  - first:
+      213: -4123214385185855305
+    second: YuRoses-Sheet_33
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: YuRoses-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7aae221d6fd25d2c0800000000000000
+      internalID: -4407566122218231129
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45a1c8a9346ac8980800000000000000
+      internalID: -8535264384488039852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6e50a72611e3e890800000000000000
+      internalID: -7429847474960834962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e46f03577c1b3beb0800000000000000
+      internalID: -4705221715449285042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e96efa82d9266000800000000000000
+      internalID: 28756431876286944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 338
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9625d9b665809a9d0800000000000000
+      internalID: -2762667729149406615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50f43042d25a92a50800000000000000
+      internalID: 6496905550754959109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 466
+        y: 0
+        width: 27
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c07b09db7ccfa5700800000000000000
+      internalID: 530013840978523916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 531
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbb586b16d469b190800000000000000
+      internalID: -7946209196772926531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 595
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37f592c18aa8fc490800000000000000
+      internalID: -7723802381285499021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_10
+      rect:
+        serializedVersion: 2
+        x: 659
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9e2c5ef321388c00800000000000000
+      internalID: 903025755948854940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_11
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72ecd8a68f94d83d0800000000000000
+      internalID: -3202822428702159321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_12
+      rect:
+        serializedVersion: 2
+        x: 787
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6e6afde3b8f2ec30800000000000000
+      internalID: 4387342438687731306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_13
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 013dbb279c33cd580800000000000000
+      internalID: -8801102631482436848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_14
+      rect:
+        serializedVersion: 2
+        x: 915
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4dc4b25c380b8ce60800000000000000
+      internalID: 7982824419509357780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_15
+      rect:
+        serializedVersion: 2
+        x: 979
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 929645d39953bd8d0800000000000000
+      internalID: -2820601809342273239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_16
+      rect:
+        serializedVersion: 2
+        x: 1043
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53bce19c50bdad580800000000000000
+      internalID: -8801481703846655179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_17
+      rect:
+        serializedVersion: 2
+        x: 1107
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c88a5635cb787a10800000000000000
+      internalID: 1907410529142081729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_18
+      rect:
+        serializedVersion: 2
+        x: 1171
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfcff46f33c56d220800000000000000
+      internalID: 2510295220551154941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_19
+      rect:
+        serializedVersion: 2
+        x: 1235
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 630efaaed2ebe6d10800000000000000
+      internalID: 2120841578958282806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_20
+      rect:
+        serializedVersion: 2
+        x: 1299
+        y: 0
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c65ee81f2fe33dc50800000000000000
+      internalID: 6688759084731000172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_21
+      rect:
+        serializedVersion: 2
+        x: 1361
+        y: 0
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28e44dad4d1640ca0800000000000000
+      internalID: -6051604432446796158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_22
+      rect:
+        serializedVersion: 2
+        x: 1427
+        y: 0
+        width: 26
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72afe776079bd3f20800000000000000
+      internalID: 3404080785785813543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_23
+      rect:
+        serializedVersion: 2
+        x: 1491
+        y: 0
+        width: 26
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2edbea397993acb30800000000000000
+      internalID: 4308319316713848290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_24
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 0
+        width: 60
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 610c2411243786ba0800000000000000
+      internalID: -6095495368051343338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_25
+      rect:
+        serializedVersion: 2
+        x: 1605
+        y: 0
+        width: 56
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39f3d5996d0ab16b0800000000000000
+      internalID: -5324485290879008877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_26
+      rect:
+        serializedVersion: 2
+        x: 1673
+        y: 0
+        width: 47
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60c08e529044152a0800000000000000
+      internalID: -6750539560370303994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_27
+      rect:
+        serializedVersion: 2
+        x: 1743
+        y: 0
+        width: 30
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37f0741078bcbe170800000000000000
+      internalID: 8208878526515318643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_28
+      rect:
+        serializedVersion: 2
+        x: 1811
+        y: 0
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ba24bb876ab1e520800000000000000
+      internalID: 2729667803051469490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_29
+      rect:
+        serializedVersion: 2
+        x: 1875
+        y: 0
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48c5d8d258c1b0a50800000000000000
+      internalID: 6488311046477798532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_30
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 0
+        width: 25
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c2ed24d396029a20800000000000000
+      internalID: 3067521528182465219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_31
+      rect:
+        serializedVersion: 2
+        x: 2002
+        y: 0
+        width: 28
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27be7425e8427c190800000000000000
+      internalID: -7942339224160179342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_32
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b11eedee09e7fd400800000000000000
+      internalID: 351138456906162459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: YuRoses-Sheet_33
+      rect:
+        serializedVersion: 2
+        x: 2130
+        y: 0
+        width: 27
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b86736cc5667c6c0800000000000000
+      internalID: -4123214385185855305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      YuRoses-Sheet_0: -4407566122218231129
+      YuRoses-Sheet_1: -8535264384488039852
+      YuRoses-Sheet_10: 903025755948854940
+      YuRoses-Sheet_11: -3202822428702159321
+      YuRoses-Sheet_12: 4387342438687731306
+      YuRoses-Sheet_13: -8801102631482436848
+      YuRoses-Sheet_14: 7982824419509357780
+      YuRoses-Sheet_15: -2820601809342273239
+      YuRoses-Sheet_16: -8801481703846655179
+      YuRoses-Sheet_17: 1907410529142081729
+      YuRoses-Sheet_18: 2510295220551154941
+      YuRoses-Sheet_19: 2120841578958282806
+      YuRoses-Sheet_2: -7429847474960834962
+      YuRoses-Sheet_20: 6688759084731000172
+      YuRoses-Sheet_21: -6051604432446796158
+      YuRoses-Sheet_22: 3404080785785813543
+      YuRoses-Sheet_23: 4308319316713848290
+      YuRoses-Sheet_24: -6095495368051343338
+      YuRoses-Sheet_25: -5324485290879008877
+      YuRoses-Sheet_26: -6750539560370303994
+      YuRoses-Sheet_27: 8208878526515318643
+      YuRoses-Sheet_28: 2729667803051469490
+      YuRoses-Sheet_29: 6488311046477798532
+      YuRoses-Sheet_3: -4705221715449285042
+      YuRoses-Sheet_30: 3067521528182465219
+      YuRoses-Sheet_31: -7942339224160179342
+      YuRoses-Sheet_32: 351138456906162459
+      YuRoses-Sheet_33: -4123214385185855305
+      YuRoses-Sheet_4: 28756431876286944
+      YuRoses-Sheet_5: -2762667729149406615
+      YuRoses-Sheet_6: 6496905550754959109
+      YuRoses-Sheet_7: 530013840978523916
+      YuRoses-Sheet_8: -7946209196772926531
+      YuRoses-Sheet_9: -7723802381285499021
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

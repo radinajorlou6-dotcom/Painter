@@ -97,6 +97,10 @@ public class SlingshotAbility : MonoBehaviour
             if (!IsShiftHeld()) return;
             if (slingshotsLeft <= 0) return;
 
+            // Checked even though the slingshot is normally the one ability water and vines allow:
+            // the rule is a list in the Inspector, so it has to be asked rather than assumed.
+            if (playerMovement != null && playerMovement.IsAbilityBlocked(AbilityType.Slingshot)) return;
+
             dragStart = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             isDragging = true;
             EnablePreviewLine();

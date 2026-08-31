@@ -25,7 +25,10 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
     [SerializeField] private float deathAnimationDuration = 1f;
     [Tooltip("Seconds for the screen to fade to/from black.")]
     [SerializeField] private float fadeDuration = 0.75f;
-    [Tooltip("The death menu panel (Respawn / Exit buttons). Shown after the fade.")]
+    [Tooltip("Respawn straight away instead of stopping on the death menu. The screen is already " +
+             "black at that point, so the whole death reads as a blink rather than an interruption.")]
+    [SerializeField] private bool autoRespawn = true;
+    [Tooltip("The death menu panel (Respawn / Exit buttons). Only used when Auto Respawn is off.")]
     [SerializeField] private GameObject deathMenu;
 
     private Health health;
@@ -104,8 +107,17 @@ public class PlayerHealth : MonoBehaviour, IKnockbackable
         if (ScreenFader.Instance != null)
             yield return ScreenFader.Instance.FadeOut(fadeDuration);
 
-        // 3) Now freeze the game, hand input to the UI, and present the choices.
+        // 3) Freeze the game and hand input to the UI. Done even when respawning automatically,
+        //    so the player can't act during the black frames.
         GameManager.Instance?.UpdateGameState(GameManager.GameState.Died);
+
+        // 4) Either go straight back in, or stop and present the choices.
+        if (autoRespawn)
+        {
+            yield return RespawnSequence();
+            yield break;
+        }
+
         if (deathMenu != null) deathMenu.SetActive(true);
     }
 

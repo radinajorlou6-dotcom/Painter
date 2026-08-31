@@ -59,9 +59,21 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     [SerializeField] protected float deathAnimationDuration = 0.8f;
 
     [Header("Stun")]
-    [Tooltip("Animation played when the enemy is cursed. The Knight already maps GotHurt to its " +
-             "Knight_Stun clip, so the default picks that up for free.")]
+    [Tooltip("Animation played while the enemy is cursed. Defaults to GotHurt because the Knight " +
+             "already maps that to its Knight_Stun clip — switch to Stunned once you've added a " +
+             "row for it in this enemy's AnimationController map.")]
     [SerializeField] protected AnimationType stunAnimation = AnimationType.GotHurt;
+
+    [Tooltip("Keep the stun clip playing for the whole stun instead of once. Lets a short clip " +
+             "cover a long stun without the Animator state itself being set to loop. Untick if " +
+             "the clip is a one-shot that should settle on its final frame.")]
+    [SerializeField] protected bool loopStunAnimation = true;
+
+    /// <summary>
+    /// Cached separately from the subclasses' own animController fields, which are private to them
+    /// and named the same — the stun needs its own handle and uses it every frame while held.
+    /// </summary>
+    private AnimationController stunAnimator;
 
     /// <summary>The composed health component. Subclasses use it to deal/take damage and check death.</summary>
     protected Health health;
@@ -79,6 +91,7 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     {
         rb = GetComponent<Rigidbody2D>();
         health = GetComponent<Health>();
+        stunAnimator = GetComponent<AnimationController>();
         health.Died += HandleDeath;
         StartCoroutine(DetectionRoutine());
     }
@@ -93,6 +106,22 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     {
         GroundCheck();
         CollideCheck();
+
+        // Runs in the base rather than in each subclass so every enemy holds its stun pose, even
+        // the ones whose own Update returns early the moment they're stunned.
+        if (IsStunned) MaintainStunAnimation();
+    }
+
+    /// <summary>
+    /// Re-issues the stun clip once its uninterruptible lock expires, so a short clip covers a long
+    /// stun. Only when unlocked — re-issuing every frame would restart it and pin it on frame zero.
+    /// </summary>
+    private void MaintainStunAnimation()
+    {
+        if (!loopStunAnimation || stunAnimator == null) return;
+        if (stunAnimator.IsPlayingUninterruptible()) return;
+
+        stunAnimator.PlayAnimation(stunAnimation);
     }
 
     protected IEnumerator DetectionRoutine()
@@ -137,10 +166,7 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
             }
 
             CancelActions();
-
-            // Fetched rather than cached: subclasses already own their own animController fields
-            // under that name, and a stun is rare enough that the lookup costs nothing.
-            GetComponent<AnimationController>()?.PlayAnimation(stunAnimation);
+            stunAnimator?.PlayAnimation(stunAnimation);
 
             DebugUtils.Log($"{name} stunned for {duration}s");
         }

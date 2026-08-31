@@ -18,6 +18,14 @@ public enum AnimationType
     //KnightEnemy
     Walk, Charge, Bash,
 
+    //Curse — CurseCharge/CurseCast play on the caster, Stunned on the victim.
+    //Append only, never insert: the inspector map on every prefab stores these by index, so
+    //inserting one silently repoints every existing row to a different animation.
+    CurseCharge, CurseCast, Stunned,
+
+    //Boss — placeholders to map to real states in the Inspector.
+    BossTeleportOut, BossTeleportIn, BossMelee, BossRanged, BossShielded, BossFrenzy, BossSpikes,
+
     //TODO: BaseEnemy does not use this script yet might add later
 }
 

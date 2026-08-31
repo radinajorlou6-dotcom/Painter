@@ -83,6 +83,25 @@ public class ParallaxLayer : MonoBehaviour
              "multiplier any zone in the level uses.")]
     [SerializeField] private float loopCoverage = 1.5f;
 
+    [Header("Follow Limits")]
+    [Tooltip("Stop following once the camera passes a point on the map. Past it the layer freezes " +
+             "exactly where it was and the camera walks away from it, which is how one background " +
+             "hands over to another across a level.\n\n" +
+             "Per axis so a side-scroller can pin the horizontal handover and leave vertical free.")]
+    [SerializeField] private bool limitFollowX;
+    [SerializeField] private bool limitFollowY;
+
+    [Tooltip("The stretch of the map, in WORLD camera positions, over which this layer still " +
+             "follows. Only the axes ticked above are used. Leave one side far out (-999 / 999) " +
+             "for a one-sided limit.")]
+    [SerializeField] private Vector2 followMin = new Vector2(-999f, -999f);
+    [SerializeField] private Vector2 followMax = new Vector2(999f, 999f);
+
+    [Tooltip("How far past the boundary the layer takes to fade away, so neighbouring backdrops " +
+             "cross-fade instead of both being on screen at the handover. 0 cuts instantly, which " +
+             "is fine when the boundary sits behind a wall.")]
+    [SerializeField] private float fadeOutDistance = 10f;
+
     [Header("Room")]
     [Tooltip("Bind this layer to one room and it stops drifting across the level.\n\n" +
              "Left empty, a layer measures its parallax from wherever the camera started the level, " +
@@ -91,7 +110,10 @@ public class ParallaxLayer : MonoBehaviour
              "one room.\n\n" +
              "Set, it measures from the room's centre instead. The art sits exactly where you " +
              "placed it when the camera is centred in the room, and drifts only as far as the " +
-             "camera can pan inside it — which the room confine already limits.")]
+             "camera can pan inside it — which the room confine already limits.\n\n" +
+             "Loop X works with this: the tiling repeats across the room and then freezes at its " +
+             "edge rather than following the camera out. That's the combination you want for a " +
+             "room too wide to cover with one piece of art.")]
     [SerializeField] private CameraRoom room;
 
     [Tooltip("Switch the layer's renderers off while the player is in a different room. Usually " +
@@ -123,18 +145,6 @@ public class ParallaxLayer : MonoBehaviour
 
     private void Awake()
     {
-        // Binding to a room and looping pull in opposite directions: the loop snap keeps the row
-        // straddling the camera, which drags the layer along into the next room — exactly what
-        // binding it to one room is meant to prevent. Drop looping and say so.
-        if (room != null && (loopX || loopY))
-        {
-            DebugUtils.LogWarning(
-                $"ParallaxLayer '{name}' is bound to room '{room.name}' and set to loop. Looping " +
-                "is off: a looping layer follows the camera wherever it goes.");
-            loopX = false;
-            loopY = false;
-        }
-
         // Copies are built here rather than on the first driven frame so they exist before any
         // Start() runs — BackgroundColourReveal collects renderers in Start and needs to see them.
         // Only the *origin* has to wait for the camera to settle; the viewport size doesn't.
@@ -177,13 +187,36 @@ public class ParallaxLayer : MonoBehaviour
 
         autoScrollOffset += autoScrollSpeed * Time.deltaTime;
 
+        // The whole follow-limit feature is this one substitution. Clamping the camera position
+        // rather than the layer's own position means that past the boundary the input simply stops
+        // changing, so the layer holds exactly where it was when the camera crossed — no latch, no
+        // extra state, and it picks straight back up on the way back.
+        Vector3 effectiveCamera = cameraPosition;
+
+        // A room binding is the same clamp with the bounds supplied by the room. This is what lets
+        // looping and a room coexist: inside the room the tile row tracks the camera and tiles
+        // across it as normal, and at the edge the row freezes with the layer instead of being
+        // dragged along into the next room. The camera is confined to the room anyway while the
+        // player is in it, so this only ever bites once they've left.
+        if (room != null)
+        {
+            Bounds roomBounds = room.RoomBounds;
+            effectiveCamera.x = Mathf.Clamp(effectiveCamera.x, roomBounds.min.x, roomBounds.max.x);
+            effectiveCamera.y = Mathf.Clamp(effectiveCamera.y, roomBounds.min.y, roomBounds.max.y);
+        }
+
+        if (limitFollowX) effectiveCamera.x = Mathf.Clamp(effectiveCamera.x, followMin.x, followMax.x);
+        if (limitFollowY) effectiveCamera.y = Mathf.Clamp(effectiveCamera.y, followMin.y, followMax.y);
+
+        ApplyFadeOut(cameraPosition);
+
         // A room-bound layer measures from the room's centre, so it sits where it was placed
         // whenever the camera is centred there and can only wander as far as the camera pans
         // inside the room. Everything else measures from where the camera started the level, which
         // accumulates over the whole level — right for a sky, wrong for one room's backdrop.
         Vector3 reference = room != null ? room.RoomBounds.center : cameraOrigin;
 
-        Vector3 travel = cameraPosition - reference;
+        Vector3 travel = effectiveCamera - reference;
         Vector3 target = layerOrigin;
         target.x += travel.x * parallaxFactor.x + autoScrollOffset.x;
         target.y += travel.y * parallaxFactor.y + autoScrollOffset.y;
@@ -193,7 +226,10 @@ public class ParallaxLayer : MonoBehaviour
         // nothing to see — no seam, no jump, and no cap on how far the player can walk.
         if (loopX && span.x > 0f)
         {
-            target.x += Mathf.Round((cameraPosition.x - target.x) / span.x) * span.x;
+            // Clamped camera, not the raw one: a frozen layer whose tiling still chased the camera
+            // would never actually stop. Feeding the same clamped value here freezes the row with
+            // the layer, so walking on eventually reveals the end of it — which is the handover.
+            target.x += Mathf.Round((effectiveCamera.x - target.x) / span.x) * span.x;
             // Keep the drift bounded too. The snap absorbs a shift of exactly one span, so wrapping
             // here is invisible — it just stops the offset growing without limit in a long session.
             autoScrollOffset.x = Mathf.Repeat(autoScrollOffset.x, span.x);
@@ -201,7 +237,7 @@ public class ParallaxLayer : MonoBehaviour
 
         if (loopY && span.y > 0f)
         {
-            target.y += Mathf.Round((cameraPosition.y - target.y) / span.y) * span.y;
+            target.y += Mathf.Round((effectiveCamera.y - target.y) / span.y) * span.y;
             autoScrollOffset.y = Mathf.Repeat(autoScrollOffset.y, span.y);
         }
 
@@ -364,6 +400,65 @@ public class ParallaxLayer : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Fades the layer out once the camera is past a boundary, so a backdrop handing over to its
+    /// neighbour cross-fades rather than both sitting on screen at once.
+    ///
+    /// Overshoot is measured on the raw camera position — the clamped one stops moving at the
+    /// boundary by definition, so it can't tell you how far beyond it you are.
+    /// </summary>
+    private void ApplyFadeOut(Vector3 cameraPosition)
+    {
+        if (!limitFollowX && !limitFollowY) return;
+
+        float overshoot = 0f;
+        if (limitFollowX) overshoot = Mathf.Max(overshoot, AxisOvershoot(cameraPosition.x, followMin.x, followMax.x));
+        if (limitFollowY) overshoot = Mathf.Max(overshoot, AxisOvershoot(cameraPosition.y, followMin.y, followMax.y));
+
+        // A zero distance is a deliberate hard cut, not a divide by zero.
+        float alpha = fadeOutDistance <= 0f
+            ? (overshoot > 0f ? 0f : 1f)
+            : 1f - Mathf.Clamp01(overshoot / fadeOutDistance);
+
+        SetRenderersAlpha(alpha);
+    }
+
+    private static float AxisOvershoot(float value, float min, float max)
+    {
+        if (value > max) return value - max;
+        if (value < min) return min - value;
+        return 0f;
+    }
+
+    /// <summary>
+    /// Writes alpha and leaves RGB alone, which is what lets a layer be faded *and* drained at the
+    /// same time. ColourReveal / ColourCurtain / ColourControl drive the same renderers' colour on
+    /// state changes, and this runs every frame — a whole-colour write here would wipe their tint
+    /// the moment the player walked near a boundary.
+    /// </summary>
+    private void SetRenderersAlpha(float alpha)
+    {
+        if (renderers == null) return;
+
+        bool visible = alpha > 0.001f;
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null) continue;
+
+            // Nothing to draw at zero, so stop drawing it rather than paying for a transparent quad.
+            if (renderer.enabled != visible) renderer.enabled = visible;
+            if (!visible) continue;
+
+            if (renderer is SpriteRenderer sprite)
+            {
+                Color colour = sprite.color;
+                colour.a = alpha;
+                sprite.color = colour;
+            }
+        }
+    }
+
     private void SetRenderersEnabled(bool visible)
     {
         if (renderers == null) return;
@@ -372,6 +467,44 @@ public class ParallaxLayer : MonoBehaviour
         {
             if (renderer != null && renderer.enabled != visible) renderer.enabled = visible;
         }
+    }
+
+    /// <summary>
+    /// Draws the follow boundaries and the width of the cross-fade. These are world coordinates,
+    /// which are all but unreadable as numbers in the Inspector — seeing where the handover
+    /// actually falls on the map is the difference between tuning this and guessing at it.
+    /// </summary>
+    private void OnDrawGizmosSelected()
+    {
+        if (!limitFollowX && !limitFollowY) return;
+
+        Vector3 centre = transform.position;
+        const float reach = 40f; // how far the marker lines extend, purely so they're findable
+
+        if (limitFollowX)
+        {
+            DrawBound(new Vector3(followMin.x, centre.y, 0f), Vector3.up, reach, -1f);
+            DrawBound(new Vector3(followMax.x, centre.y, 0f), Vector3.up, reach, 1f);
+        }
+
+        if (limitFollowY)
+        {
+            DrawBound(new Vector3(centre.x, followMin.y, 0f), Vector3.right, reach, -1f);
+            DrawBound(new Vector3(centre.x, followMax.y, 0f), Vector3.right, reach, 1f);
+        }
+    }
+
+    /// <summary>Solid line at the boundary, dimmer one where the layer has fully faded out.</summary>
+    private void DrawBound(Vector3 point, Vector3 along, float reach, float outwardSign)
+    {
+        Gizmos.color = new Color(0.3f, 1f, 0.6f, 0.9f);
+        Gizmos.DrawLine(point - along * reach, point + along * reach);
+
+        if (fadeOutDistance <= 0f) return;
+
+        Vector3 outward = new Vector3(along.y, along.x, 0f) * (fadeOutDistance * outwardSign);
+        Gizmos.color = new Color(0.3f, 1f, 0.6f, 0.25f);
+        Gizmos.DrawLine(point + outward - along * reach, point + outward + along * reach);
     }
 
     private static bool IsValidSortingLayer(string layerName)

@@ -22,6 +22,11 @@ public class PlayerCombat : MonoBehaviour
     
 
     [Header("Ranged Attack")]
+    [Tooltip("Untick to disable the player's projectile for this level. A tap that would have " +
+             "fired simply does nothing — the drag-to-slash attack is unaffected. Set per scene " +
+             "on the Player instance, so one level can go melee-only without a separate prefab.")]
+    [SerializeField] private bool allowRangedAttack = true;
+
     [SerializeField] private ObjectPooling bulletPool;
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
@@ -96,6 +101,15 @@ public class PlayerCombat : MonoBehaviour
     public float GetMaxSweepAngle() => maxSweepAngle;
 
     // Exposed so CombatInput can drive the same animation hub for platform-draw visuals.
+    // --- Read-only views for the HUD. Exposed as properties rather than making the fields public
+    //     so the UI can only observe the shield, never quietly reshape it.
+    public int ShieldHitsRemaining => currentHitsRemaining;
+    public int MaxShieldHits => maxShieldHits;
+    public float ShieldPaintUsed => currentPaintUsed;
+    public float MaxShieldPaint => maxPaintAmount;
+    /// <summary>True while the shield is broken and replenishing, so the HUD can grey it out.</summary>
+    public bool ShieldIsLocked => shieldIsLocked;
+
     public AnimationController Animation => animController;
 
     // Exposed so CombatInput can start/stop the weapon "hold" while a slash is being built.
@@ -300,6 +314,10 @@ public class PlayerCombat : MonoBehaviour
 
     public void RangedAttack(Vector2 targetWorldPos)
     {
+        // Switched off for this level, or no pool wired up. Checked before the cooldown so a
+        // disabled projectile never quietly consumes the shot timer either.
+        if (!allowRangedAttack || bulletPool == null) return;
+
         // 1. FIXED COOLDOWN LOGIC: Check against the actual game clock
         if (Time.time < nextFireTime) return;
 

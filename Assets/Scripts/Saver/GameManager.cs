@@ -51,6 +51,12 @@ public class GameManager : MonoBehaviour, ISaveable
     [Tooltip("Colours the world begins a new game with. These count as already restored, so their tilemaps are coloured in and passable from the start.")]
     [SerializeField] private List<PaintColour> startingColours = new List<PaintColour>();
 
+    [Header("Autosave")]
+    [Tooltip("Write the save whenever a colour is restored. Colour unlocks are the game's " +
+             "milestones, so they double as the autosave points — and the save carries the " +
+             "respawn point with it, so dying returns the player to the room they unlocked in.")]
+    [SerializeField] private bool autosaveOnColourUnlock = true;
+
     // --- Singleton + events ---
     public static GameManager Instance { get; private set; }
     public GameState CurrentState { get; private set; }
@@ -61,9 +67,12 @@ public class GameManager : MonoBehaviour, ISaveable
     public int maxLevelReached { get; private set; } = 1;
     public int lastLevelPlayed { get; private set; } = 1;
 
-    // --- Checkpoint (in-level respawn point; reset each time a new level loads) ---
+    // --- Checkpoint (in-level respawn point; cleared when a *different* level loads) ---
     public Vector3 LastCheckpoint { get; private set; }
     public bool HasCheckpoint { get; private set; }
+
+    /// <summary>Build index the checkpoint belongs to, so it can't be applied in another level.</summary>
+    private int checkpointLevel = -1;
 
     public Dictionary<AbilityType, bool> unlockedAbilities { get; private set; } = new Dictionary<AbilityType, bool>();
 
@@ -159,15 +168,23 @@ public class GameManager : MonoBehaviour, ISaveable
         if (scene.buildIndex > 0 && scene.name != mainMenuSceneName)
         {
             UpdateMaxLevelReached(scene.buildIndex);
-            HasCheckpoint = false; // fresh level: respawn at the player's start until a checkpoint is hit
+
+            // Only discard a checkpoint that belongs to a *different* level. Clearing it
+            // unconditionally would throw away the respawn point a Continue had just restored,
+            // because the load happens before the scene it refers to has finished loading.
+            if (checkpointLevel != scene.buildIndex) HasCheckpoint = false;
         }
     }
 
-    /// <summary>Records the active respawn point. Called by Checkpoint triggers.</summary>
+    /// <summary>
+    /// Records the active respawn point. Called by Checkpoint triggers and by a paint bucket as
+    /// it is emptied, so the autosave that follows an unlock brings the player back to that room.
+    /// </summary>
     public void SetCheckpoint(Vector3 position)
     {
         LastCheckpoint = position;
         HasCheckpoint = true;
+        checkpointLevel = SceneManager.GetActiveScene().buildIndex;
     }
     #endregion
 
@@ -197,6 +214,12 @@ public class GameManager : MonoBehaviour, ISaveable
         // the bucket state. Both are saved, so neither can quietly disagree after a load.
         if (!unlockedColours.Contains(colour)) unlockedColours.Add(colour);
         OnColourUnlocked?.Invoke(colour);
+
+        // Autosave last, once the unlock and everything listening to it have settled. Restoring a
+        // colour is the game's unit of progress, so it is the natural thing to checkpoint on —
+        // anything granted alongside it must therefore be applied *before* this call, or the save
+        // will be one step behind.
+        if (autosaveOnColourUnlock) SaveGame();
     }
 
     public void UnlockAbility(AbilityType ability)
@@ -236,7 +259,13 @@ public class GameManager : MonoBehaviour, ISaveable
             lastLevelPlayed = lastLevelPlayed,
             unlockedColours = new List<PaintColour>(unlockedColours),
             unlockedAbilities = new Dictionary<AbilityType, bool>(unlockedAbilities),
-            emptiedBuckets = new Dictionary<PaintColour, bool>(bucketStates)
+            emptiedBuckets = new Dictionary<PaintColour, bool>(bucketStates),
+
+            hasCheckpoint = HasCheckpoint,
+            checkpointX = LastCheckpoint.x,
+            checkpointY = LastCheckpoint.y,
+            checkpointZ = LastCheckpoint.z,
+            checkpointLevel = checkpointLevel
         };
     }
 
@@ -259,6 +288,12 @@ public class GameManager : MonoBehaviour, ISaveable
         bucketStates = data.emptiedBuckets != null
             ? new Dictionary<PaintColour, bool>(data.emptiedBuckets)
             : new Dictionary<PaintColour, bool>();
+
+        // Older saves predate the checkpoint too, and default to no respawn point — which sends
+        // the player to the level's start, exactly as they behaved before it existed.
+        HasCheckpoint = data.hasCheckpoint;
+        LastCheckpoint = new Vector3(data.checkpointX, data.checkpointY, data.checkpointZ);
+        checkpointLevel = data.checkpointLevel;
 
         // Applied last so the Inspector's starting unlocks survive an older save file.
         GrantStartingUnlocks();

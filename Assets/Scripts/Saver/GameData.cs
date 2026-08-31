@@ -39,6 +39,21 @@ public class GameData
     /// re-grey every colour on load, even though the player had already restored it.</summary>
     public Dictionary<PaintColour, bool> emptiedBuckets;
 
+    /// <summary>
+    /// Where in the level the player comes back, recorded by the autosave that runs on each
+    /// colour unlock. Kept as three floats rather than a Vector3 so the JSON stays plain data —
+    /// serializing a Unity struct drags in its derived properties (normalized, magnitude, ...)
+    /// and makes the file both fragile and unreadable.
+    ///
+    /// checkpointLevel is what stops a respawn point leaking between levels: it is compared
+    /// against the loaded scene's build index, and a mismatch discards the point.
+    /// </summary>
+    public bool hasCheckpoint;
+    public float checkpointX;
+    public float checkpointY;
+    public float checkpointZ;
+    public int checkpointLevel;
+
     public GameData()
     {
         saveVersion = SaveService.CurrentVersion;

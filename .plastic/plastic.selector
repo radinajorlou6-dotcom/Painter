@@ -1,4 +1,3 @@
 repository "Painter game/Painter game@3574407112768@cloud"
   path "/"
-    br "/main"
-    co "/main"
+    smartbranch "/main" changeset "16"

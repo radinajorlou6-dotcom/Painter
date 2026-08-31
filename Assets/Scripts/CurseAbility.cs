@@ -40,6 +40,18 @@ public class CurseAbility : MonoBehaviour
     [SerializeField] private Color invalidColour = new Color(0.5f, 0.5f, 0.5f, 0.5f);
     [SerializeField] private float tetherWidth = 0.08f;
 
+    [Header("Caster Animation")]
+    [Tooltip("The player's AnimationController. Leave empty to find it on this object or its children.")]
+    [SerializeField] private AnimationController casterAnimator;
+
+    [Tooltip("Play an animation while the button is held.")]
+    [SerializeField] private bool playChargeAnimation = true;
+    [SerializeField] private AnimationType chargeAnimation = AnimationType.CurseCharge;
+
+    [Tooltip("Play an animation when a curse actually lands. Nothing plays on a miss.")]
+    [SerializeField] private bool playCastAnimation = true;
+    [SerializeField] private AnimationType castAnimation = AnimationType.CurseCast;
+
     [Header("Feel")]
     [Tooltip("Frames of freeze on a successful curse. 0 for none.")]
     [SerializeField] private float castHitStop = 0.06f;
@@ -50,6 +62,7 @@ public class CurseAbility : MonoBehaviour
     [SerializeField] private AudioType castSound = AudioType.GotHurt;
 
     private Camera mainCamera;
+    private PlayerMovement playerMovement;
     private LineRenderer tether;
     private EnemyBase target;
     private bool isAiming;
@@ -57,9 +70,33 @@ public class CurseAbility : MonoBehaviour
 
     private InputAction curseAction;
 
+    /// <summary>
+    /// How much of the cooldown is left, 0 (ready) to 1 (just cast). For the HUD — a fraction
+    /// rather than seconds so a bar can use it directly without knowing the cooldown length.
+    /// </summary>
+    public float CooldownRemaining01
+    {
+        get
+        {
+            if (curseCooldown <= 0f) return 0f;
+
+            float remaining = nextCurseTime - Time.time;
+            return Mathf.Clamp01(remaining / curseCooldown);
+        }
+    }
+
+    /// <summary>True when the curse can actually be cast: unlocked, off cooldown, and not blocked.</summary>
+    public bool IsReady =>
+        GameManager.Instance != null
+        && GameManager.Instance.IsAbilityUnlocked(AbilityType.Curse)
+        && Time.time >= nextCurseTime
+        && (playerMovement == null || !playerMovement.IsAbilityBlocked(AbilityType.Curse));
+
     private void Awake()
     {
         mainCamera = Camera.main;
+        playerMovement = GetComponentInParent<PlayerMovement>();
+        if (casterAnimator == null) casterAnimator = GetComponentInChildren<AnimationController>();
         CreateTether();
         HideTether();
     }
@@ -125,16 +162,56 @@ public class CurseAbility : MonoBehaviour
         else if (context.canceled) ReleaseCurse();
     }
 
+    /// <summary>
+    /// An empty layer mask matches nothing, so every hover would report "no target" and every
+    /// release would quietly do nothing — indistinguishable from bad aim. It is never a deliberate
+    /// setting, so say so once rather than letting it look like a broken ability.
+    /// </summary>
+    private void Start()
+    {
+        if (enemyLayers.value == 0)
+        {
+            DebugUtils.LogWarning(
+                $"CurseAbility on '{name}' has Enemy Layers set to Nothing, so it can never find a " +
+                "target. Set it to the Enemies layer in the Inspector.");
+        }
+    }
+
     private void BeginAiming()
     {
         // Gate only the press. SlingshotAbility gates the whole handler, so an ability lost
         // mid-gesture swallows the release too and leaves it stuck aiming forever.
-        if (GameManager.Instance == null) return;
-        if (!GameManager.Instance.IsAbilityUnlocked(AbilityType.Curse)) return;
-        if (Time.time < nextCurseTime) return;
+        if (GameManager.Instance == null)
+        {
+            DebugUtils.LogWarning("Curse pressed with no GameManager in the scene.");
+            return;
+        }
+
+        // Logged rather than silent: a locked ability and a broken binding look identical from the
+        // outside — nothing happens — and this is the far more common of the two.
+        if (!GameManager.Instance.IsAbilityUnlocked(AbilityType.Curse))
+        {
+            DebugUtils.Log("Curse is locked. Tick it into GameManager's Starting Abilities, or " +
+                           "collect the paint bucket that grants it.");
+            return;
+        }
+
+        if (Time.time < nextCurseTime)
+        {
+            DebugUtils.Log($"Curse on cooldown for another {nextCurseTime - Time.time:0.0}s");
+            return;
+        }
+
+        if (playerMovement != null && playerMovement.IsAbilityBlocked(AbilityType.Curse))
+        {
+            DebugUtils.Log("Curse is unavailable while swimming or climbing.");
+            return;
+        }
 
         isAiming = true;
         if (tether != null) tether.enabled = true;
+
+        PlayCasterAnimation(playChargeAnimation, chargeAnimation);
     }
 
     private void Update()
@@ -143,6 +220,15 @@ public class CurseAbility : MonoBehaviour
 
         target = FindTargetUnderCursor(out Vector2 cursorWorld);
         DrawTether(cursorWorld, target != null);
+
+        // A hold lasts as long as the player wants it to, so the charge clip has to be renewed.
+        // Re-issuing only once its uninterruptible lock has expired is what makes a short clip
+        // cover an arbitrarily long hold — and is why it must not be re-issued every frame, which
+        // would pin it on frame zero.
+        if (playChargeAnimation && casterAnimator != null && !casterAnimator.IsPlayingUninterruptible())
+        {
+            casterAnimator.PlayAnimation(chargeAnimation);
+        }
     }
 
     private void ReleaseCurse()
@@ -153,16 +239,33 @@ public class CurseAbility : MonoBehaviour
         StopAiming();
 
         // A miss is free: no stun, no cooldown, nothing to undo.
-        if (cursed == null) return;
+        if (cursed == null)
+        {
+            DebugUtils.Log("Curse released with nothing under the cursor — no stun, no cooldown.");
+            return;
+        }
 
         cursed.ApplyStun(stunDuration);
         nextCurseTime = Time.time + curseCooldown;
+
+        PlayCasterAnimation(playCastAnimation, castAnimation);
 
         if (castHitStop > 0f) HitStop.Instance?.Freeze(castHitStop);
         if (castShakeIntensity > 0f) CameraShake.Instance?.Shake(castShakeIntensity, castShakeDuration);
         cursed.GetComponent<AudioController>()?.Play(castSound);
 
         DebugUtils.Log($"Cursed {cursed.name} for {stunDuration}s");
+    }
+
+    /// <summary>
+    /// Plays a clip on the caster's own AnimationController. Mark these clips **uninterruptible**
+    /// in that component's map — PlayerMovement pushes Idle/Run/Jump every frame, and an
+    /// interruptible curse clip would be overwritten before a single frame of it was seen.
+    /// </summary>
+    private void PlayCasterAnimation(bool enabled, AnimationType type)
+    {
+        if (!enabled || casterAnimator == null) return;
+        casterAnimator.PlayAnimation(type);
     }
 
     private void StopAiming()

@@ -59,9 +59,13 @@ public class CombatInput : MonoBehaviour
     public float currentDrawInk = 0f; // Current total ink used
     private bool isDrawActive = false;
 
+    // Swimming and climbing lock most abilities out; PlayerMovement owns that rule.
+    private PlayerMovement playerMovement;
+
     void Start()
     {
         mainCam = Camera.main;
+        playerMovement = GetComponentInParent<PlayerMovement>();
         StartCoroutine(RemoveDrawLines(10f)); // Start the coroutine to remove old drawn lines every 10 seconds
     }
 
@@ -240,8 +244,11 @@ public class CombatInput : MonoBehaviour
     {
         if (context.started)
         {
-            if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed || 
+            if (isDrawActive || isDragging || Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed ||
                 !GameManager.Instance.IsAbilityUnlocked(AbilityType.ShieldDraw)) return; // Prevent shielding while drawing or slashing
+
+            // Hands are full in water and on a vine.
+            if (playerMovement != null && playerMovement.IsAbilityBlocked(AbilityType.ShieldDraw)) return;
 
             isShieldActive = true;
             playerCombat.StartNewShield();
@@ -260,6 +267,7 @@ public class CombatInput : MonoBehaviour
         if (context.started)
         {
             if (!GameManager.Instance.IsAbilityUnlocked(AbilityType.PlatformDraw)) return;
+            if (playerMovement != null && playerMovement.IsAbilityBlocked(AbilityType.PlatformDraw)) return;
             Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             if (playerCollider.OverlapPoint(mousePos)) return; // Prevent drawing if mouse is over the player
             if (numOfLines >= maxLines) return;

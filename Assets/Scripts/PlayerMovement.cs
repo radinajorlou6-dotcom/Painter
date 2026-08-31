@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -157,6 +158,30 @@ public class PlayerMovement : MonoBehaviour
     private float vineDismountSign;     //Which side is being held, so switching sides restarts the hold
     public bool isClimbing { get; private set; }
     public bool IsClimbing() => isClimbing;
+
+    [Header("Ability Restrictions")]
+    [Tooltip("Abilities that keep working while swimming or hanging on a vine. Anything not " +
+             "listed here is blocked in both states.\n\n" +
+             "Swimming and climbing are hands-full states — the player is holding onto something " +
+             "or pushing through water — so drawing and casting shouldn't be available. The " +
+             "slingshot is the exception because launching yourself is how you get OUT of them.")]
+    [SerializeField]
+    private List<AbilityType> abilitiesAllowedWhileSwimmingOrClimbing = new List<AbilityType>
+    {
+        AbilityType.Slingshot
+    };
+
+    /// <summary>
+    /// Whether an ability is currently locked out by the player's movement state. The whole rule
+    /// lives here rather than as a condition repeated in each ability, so changing what water and
+    /// vines allow is one list in the Inspector instead of a hunt through four scripts.
+    /// </summary>
+    public bool IsAbilityBlocked(AbilityType ability)
+    {
+        if (!isSwimming && !isClimbing) return false;
+
+        return !abilitiesAllowedWhileSwimmingOrClimbing.Contains(ability);
+    }
 
     void Awake()
     {
