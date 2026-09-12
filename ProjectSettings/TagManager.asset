@@ -8,6 +8,7 @@ TagManager:
   - Shield
   - Spikes
   - Weakpoint
+  - Ignorables
   layers:
   - Default
   - TransparentFX

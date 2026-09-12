@@ -29,28 +29,16 @@ public class BossAI : EnemyBase
     // ---------------------------------------------------------------- Teleporting
 
     [Header("Arena")]
-    [Tooltip("The boss only acts while the player is inside this volume. Outside it she stands " +
-             "idle: no attacks, no teleporting, no frenzy blinking.\n\n" +
-             "Point it at any Collider2D — the box on the room's CameraRoom works well, since the " +
-             "fight and the camera framing then share exactly the same footprint. Leave it empty " +
-             "and she is active everywhere, which is the old behaviour.")]
+    [Tooltip("The boss only acts while the player is inside this volume.")]
     [SerializeField] private Collider2D arena;
 
-    [Tooltip("Barriers that seal the arena once the player is inside — a door, a wall, a slab of " +
-             "collider across each entrance. Switched OFF at startup so the player can walk in, " +
-             "ON the moment they do, and OFF again when the boss dies.\n\n" +
-             "Put them just outside the Arena collider's edges. A barrier that overlaps where the " +
-             "player is standing when it appears will shove them.")]
+    [Tooltip("Barriers that seal the arena once the player is inside")]
     [SerializeField] private GameObject[] arenaBarriers;
 
     [Tooltip("Untick to leave the arena open and let the player walk out mid-fight.")]
     [SerializeField] private bool lockArenaOnEntry = true;
 
-    [Tooltip("Start the whole fight over when the player dies: barriers down, health and phases " +
-             "restored, weakpoints back, boss returned to her first anchor.\n\n" +
-             "This is what stops a sealed arena becoming a dead end. The player respawns at their " +
-             "last checkpoint, which is almost always outside the arena, so without a reset the " +
-             "barriers would still be up with no way back in.")]
+    [Tooltip("Start the whole fight over when the player dies")]
     [SerializeField] private bool resetOnPlayerDeath = true;
 
     [Header("Teleport Anchors")]
@@ -67,6 +55,7 @@ public class BossAI : EnemyBase
     [Tooltip("The tell. The boss stands still this long before committing to an attack, and this " +
              "pause is the player's whole window to read and react.")]
     [SerializeField] private float idlePauseDuration = 0.5f;
+    //TODO: Add indicator animation
 
     [Tooltip("Seconds after an attack lands before the boss blinks away.")]
     [SerializeField] private float attackCooldown = 0.6f;
@@ -87,6 +76,7 @@ public class BossAI : EnemyBase
 
     [Header("Duel — Ranged")]
     [SerializeField] private float rangedWindup = 0.45f;
+    //TODO: add windup animation
     [SerializeField] private float projectileSpeed = 14f;
     [Tooltip("Pool of projectiles. Their Bullet component must have Fired By set to Enemy, or the " +
              "shots will pass through the player and hurt the boss's own side.")]
@@ -120,7 +110,7 @@ public class BossAI : EnemyBase
 
     [Tooltip("Minimum seconds between spike attacks. This is the 'every once in a while' — when " +
              "it has elapsed the next attack is spikes, whatever the distance to the player.")]
-    [SerializeField] private float spikeAttackInterval = 8f;
+    [SerializeField] private float spikeAttackInterval = 20f;
 
     [Tooltip("Seconds she spends in the summoning animation before the spikes appear. The spikes " +
              "then telegraph again on their own as they rise.")]
@@ -149,6 +139,7 @@ public class BossAI : EnemyBase
     [Tooltip("Seconds of real vulnerability each landed stun buys. Independent of how long the " +
              "stun itself holds the boss.")]
     [SerializeField] private float stunVulnerabilityWindow = 3f;
+    //TODO: will probably remove this later the stun timer is enough 
 
     // ---------------------------------------------------------------- Animation placeholders
 
@@ -156,6 +147,11 @@ public class BossAI : EnemyBase
     [Tooltip("Leave empty to use the AnimationController on this object.")]
     [SerializeField] private AnimationController animController;
     [SerializeField] private AnimationType idleAnimation = AnimationType.Idle;
+    //TODO: Implement these
+    /* 
+    [SerializeField] private AnimationType meleeIndicator = AnimationType.BossMeleeIndicator;
+    [SerializeField] private AnimationType rangedIndicator = AnimationType.BossRangedIndicator;
+    */
     [SerializeField] private AnimationType meleeAnimation = AnimationType.BossMelee;
     [SerializeField] private AnimationType rangedAnimation = AnimationType.BossRanged;
     [SerializeField] private AnimationType teleportOutAnimation = AnimationType.BossTeleportOut;
@@ -357,6 +353,9 @@ public class BossAI : EnemyBase
     protected override void GroundCheck() { }
     protected override void CollideCheck() { }
 
+    //this boss should not take knockback
+    public override IEnumerator TakeKnockback(Vector2 direction, float force, float duration) { yield break;}
+
     /// <summary>
     /// The arena lock is driven from Update rather than from the phase coroutines, because it has
     /// to react to the player crossing the line and nothing else — a boss who happens to be
@@ -507,7 +506,7 @@ public class BossAI : EnemyBase
     {
         BeginPhase(BossPhase.Frenzy);
 
-        health.Invulnerable = true;
+        //health.Invulnerable = true;
         frenzyStunsLanded = 0;
 
         DebugUtils.Log($"Boss entering Frenzy phase — {frenzyStunsRequired} stuns to break it");
@@ -544,8 +543,7 @@ public class BossAI : EnemyBase
             }
             else
             {
-                // Otherwise distance decides, not the AI's mood — the player can position to force
-                // whichever one they would rather deal with.
+                // Otherwise distance decides
                 float distance = player != null
                     ? Vector2.Distance(transform.position, player.position)
                     : float.PositiveInfinity;

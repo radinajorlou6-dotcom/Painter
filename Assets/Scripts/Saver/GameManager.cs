@@ -49,7 +49,12 @@ public class GameManager : MonoBehaviour, ISaveable
     };
 
     [Tooltip("Colours the world begins a new game with. These count as already restored, so their tilemaps are coloured in and passable from the start.")]
-    [SerializeField] private List<PaintColour> startingColours = new List<PaintColour>();
+    [SerializeField] private List<PaintColour> startingColours = new List<PaintColour>()
+    {
+        PaintColour.Red,
+        PaintColour.Blue,
+        PaintColour.Green
+    };
 
     [Header("Autosave")]
     [Tooltip("Write the save whenever a colour is restored. Colour unlocks are the game's " +

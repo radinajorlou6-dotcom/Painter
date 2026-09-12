@@ -37,7 +37,7 @@ public class Bullet : MonoBehaviour, IPoolable
     private void OnTriggerEnter2D(Collider2D collision)
     {
         DebugUtils.Log("Bullet collided with: " + collision.gameObject.name);
-
+        if (collision.CompareTag("Ignorables")) return; // Ignorables should never stop anything
         if (firedBy == Owner.Player)
         {
             // Never stopped by whoever fired it, or by their own shield.

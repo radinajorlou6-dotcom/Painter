@@ -86,11 +86,13 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
 
     private Coroutine stunRoutine;
     private RigidbodyConstraints2D constraintsBeforeStun;
+    private SpriteRenderer spriteRenderer;
 
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         health = GetComponent<Health>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         stunAnimator = GetComponent<AnimationController>();
         health.Died += HandleDeath;
         StartCoroutine(DetectionRoutine());
@@ -349,7 +351,7 @@ public abstract class EnemyBase : MonoBehaviour, IKnockbackable
     protected virtual void Flip()
     {
         dirIsRight = !dirIsRight;
-        transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+        if (spriteRenderer != null) spriteRenderer.flipX = !dirIsRight;
     }
 
     protected virtual void OnDrawGizmosSelected()
